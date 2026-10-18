@@ -183,7 +183,7 @@ export function MemoryPlayground() {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={2}
-            className="mt-2 w-full resize-none rounded-lg border border-line bg-white px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-accent"
+            className="mt-2 w-full resize-none rounded-lg border border-line bg-white px-3 py-2.5 text-[13.5px] text-ink outline-none transition-colors focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40"
           />
 
           <div className="mt-4 flex flex-wrap gap-2">
@@ -249,7 +249,7 @@ export function MemoryPlayground() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleSearch();
               }}
-              className="w-full rounded-lg border border-line bg-white px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-accent"
+              className="w-full rounded-lg border border-line bg-white px-3 py-2.5 text-[13.5px] text-ink outline-none transition-colors focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40"
             />
             <button
               type="button"

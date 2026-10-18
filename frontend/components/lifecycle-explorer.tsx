@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { DocsSection } from "./docs-section";
+import { useTabList } from "../lib/use-tabs";
 
 type State = {
   key: string;
@@ -65,6 +66,11 @@ const STATES: State[] = [
 export function LifecycleExplorer() {
   const [active, setActive] = useState(0);
   const state = STATES[active];
+  const { register, onKeyDown } = useTabList({
+    count: STATES.length,
+    active,
+    onChange: setActive,
+  });
 
   return (
     <DocsSection
@@ -77,6 +83,7 @@ export function LifecycleExplorer() {
         <div
           role="tablist"
           aria-label="Memory states"
+          onKeyDown={onKeyDown}
           className="flex flex-wrap items-center gap-1.5"
         >
           {STATES.map((s, i) => (
@@ -85,6 +92,8 @@ export function LifecycleExplorer() {
                 type="button"
                 role="tab"
                 id={`life-tab-${s.key}`}
+                ref={register(i)}
+                tabIndex={active === i ? 0 : -1}
                 aria-selected={active === i}
                 aria-controls="life-panel"
                 onClick={() => setActive(i)}
@@ -109,6 +118,7 @@ export function LifecycleExplorer() {
       <div
         id="life-panel"
         role="tabpanel"
+        tabIndex={0}
         aria-labelledby={`life-tab-${state.key}`}
         className="rounded-xl border border-line bg-white p-6"
       >

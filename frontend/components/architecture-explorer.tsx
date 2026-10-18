@@ -3,6 +3,7 @@
 import { Fragment, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { DocsSection } from "./docs-section";
+import { useTabList } from "../lib/use-tabs";
 
 type Stage = {
   key: string;
@@ -83,6 +84,11 @@ const STAGES: Stage[] = [
 export function ArchitectureExplorer() {
   const [active, setActive] = useState(0);
   const stage = STAGES[active];
+  const { register, onKeyDown } = useTabList({
+    count: STAGES.length,
+    active,
+    onChange: setActive,
+  });
 
   return (
     <DocsSection
@@ -95,6 +101,7 @@ export function ArchitectureExplorer() {
         <div
           role="tablist"
           aria-label="Architecture stages"
+          onKeyDown={onKeyDown}
           className="flex items-stretch gap-1.5 overflow-x-auto pb-1"
         >
           {STAGES.map((s, i) => (
@@ -103,6 +110,8 @@ export function ArchitectureExplorer() {
                 type="button"
                 role="tab"
                 id={`arch-tab-${s.key}`}
+                ref={register(i)}
+                tabIndex={active === i ? 0 : -1}
                 aria-selected={active === i}
                 aria-controls="arch-panel"
                 onClick={() => setActive(i)}
@@ -141,6 +150,7 @@ export function ArchitectureExplorer() {
       <div
         id="arch-panel"
         role="tabpanel"
+        tabIndex={0}
         aria-labelledby={`arch-tab-${stage.key}`}
         className="rounded-xl border border-line bg-white p-6"
       >

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { DocsSection } from "./docs-section";
+import { useTabList } from "../lib/use-tabs";
 
 type Field = { name: string; type: string; note: string; required?: boolean };
 
@@ -22,10 +23,22 @@ const ENDPOINTS: Endpoint[] = [
     path: "/health",
     summary: "Liveness probe",
     description:
-      "Confirms the service is up. It touches no database and needs no key, so it is safe to poll.",
+      "Confirms the process is serving. It touches no database and needs no key, so it is safe to poll from a load balancer.",
     auth: false,
     gets: [{ name: "status", type: "string", note: 'Always "ok" when the process is serving' }],
-    notes: "Returned without authentication — the only route that is.",
+    notes:
+      "Unauthenticated. Liveness only — it does not check the database.",
+  },
+  {
+    method: "GET",
+    path: "/ready",
+    summary: "Readiness probe",
+    description:
+      "Confirms the service can reach its database. Wire this one into an orchestrator so it never routes traffic to an instance that is up but cannot query.",
+    auth: false,
+    gets: [{ name: "status", type: "string", note: 'Always "ready" when the database answered' }],
+    notes:
+      "Unauthenticated, like /health. Returns 503 when the database is unreachable.",
   },
   {
     method: "POST",
@@ -189,20 +202,26 @@ function FieldList({ title, fields }: { title: string; fields: Field[] }) {
 
 /** Interactive REST reference. Pick a route on the left; read its contract on the right. */
 export function ApiExplorer() {
-  const [active, setActive] = useState(1);
+  const [active, setActive] = useState(2);
   const endpoint = ENDPOINTS[active];
+  const { register, onKeyDown } = useTabList({
+    count: ENDPOINTS.length,
+    active,
+    onChange: setActive,
+  });
 
   return (
     <DocsSection
       id="api"
       index="06"
       title="REST API"
-      intro="Eight routes over a JSON interface. Everything under v1 requires an API key; the health probe does not. Pick a route to read exactly what it accepts and returns."
+      intro="Nine routes over a JSON interface. Everything under v1 requires an API key; the two probes do not. Pick a route to read exactly what it accepts and returns."
     >
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
         <div
           role="tablist"
           aria-label="Endpoints"
+          onKeyDown={onKeyDown}
           className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 lg:mx-0 lg:flex-col lg:gap-1 lg:overflow-visible lg:px-0 lg:pb-0"
         >
           {ENDPOINTS.map((e, i) => {
@@ -213,6 +232,8 @@ export function ApiExplorer() {
                 type="button"
                 role="tab"
                 id={`api-tab-${i}`}
+                ref={register(i)}
+                tabIndex={selected ? 0 : -1}
                 aria-selected={selected}
                 aria-controls="api-panel"
                 onClick={() => setActive(i)}
@@ -244,6 +265,7 @@ export function ApiExplorer() {
         <div
           id="api-panel"
           role="tabpanel"
+          tabIndex={0}
           aria-labelledby={`api-tab-${active}`}
           className="overflow-hidden rounded-xl border border-line bg-white"
         >

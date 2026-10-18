@@ -44,7 +44,7 @@ export function ContradictionExplainer() {
                 id="cx-existing"
                 value={existing}
                 onChange={(e) => setExisting(e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-line bg-white px-3 py-2.5 text-[13px] text-ink outline-none focus:border-accent"
+                className="mt-1.5 w-full rounded-lg border border-line bg-white px-3 py-2.5 text-[13px] text-ink outline-none transition-colors focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40"
               />
             </div>
             <div>
@@ -55,7 +55,7 @@ export function ContradictionExplainer() {
                 id="cx-incoming"
                 value={incoming}
                 onChange={(e) => setIncoming(e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-line bg-white px-3 py-2.5 text-[13px] text-ink outline-none focus:border-accent"
+                className="mt-1.5 w-full rounded-lg border border-line bg-white px-3 py-2.5 text-[13px] text-ink outline-none transition-colors focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/40"
               />
             </div>
             <div>

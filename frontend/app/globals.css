@@ -6,6 +6,9 @@
   :root {
     --background: #f7f7f5;
     --foreground: #0a0a0f;
+    /* The site is light-only. Without this, native chrome (range thumbs,
+       scrollbars, autofill) follows the OS dark theme and clashes. */
+    color-scheme: light;
   }
 
   html {
