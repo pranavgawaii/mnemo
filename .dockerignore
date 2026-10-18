@@ -1,0 +1,22 @@
+# Backend image only — the Next.js site is deployed separately.
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+*.tsbuildinfo
+
+# Frontend / Node
+frontend
+node_modules
+.next
+
+# Repo metadata
+.git
+.github
+.env
+
+# Docs / tests / benchmark are not needed at runtime
+tests
+benchmark
+*.md
