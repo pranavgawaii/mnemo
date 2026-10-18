@@ -87,18 +87,39 @@ def list_memories(
 
 
 @router.get("/memories/{memory_id}", response_model=MemoryOut)
-def get_memory(memory_id: uuid.UUID, db: Session = Depends(get_db)) -> MemoryOut:
-    """Fetch a single memory by id."""
-    memory = memory_service.get_memory(db, memory_id=memory_id)
+def get_memory(
+    memory_id: uuid.UUID,
+    namespace: str | None = Query(default=None, min_length=1, max_length=128),
+    db: Session = Depends(get_db),
+) -> MemoryOut:
+    """Fetch a single memory by id.
+
+    Optionally scoped by ``namespace``: when the parameter is given and the
+    memory lives in a different namespace, this returns 404 rather than
+    revealing that the id exists elsewhere.
+    """
+    memory = memory_service.get_memory(
+        db, memory_id=memory_id, namespace=namespace
+    )
     if memory is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Memory not found.")
     return MemoryOut.model_validate(memory)
 
 
 @router.delete("/memories/{memory_id}", response_model=MemoryOut)
-def delete_memory(memory_id: uuid.UUID, db: Session = Depends(get_db)) -> MemoryOut:
-    """Soft-delete a memory (``is_active=False``). Rows are never hard-deleted."""
-    memory = memory_service.soft_delete_memory(db, memory_id=memory_id)
+def delete_memory(
+    memory_id: uuid.UUID,
+    namespace: str | None = Query(default=None, min_length=1, max_length=128),
+    db: Session = Depends(get_db),
+) -> MemoryOut:
+    """Soft-delete a memory (``is_active=False``). Rows are never hard-deleted.
+
+    Accepts the same optional ``namespace`` scope as the fetch route, so a
+    caller cannot soft-delete a memory outside the namespace it names.
+    """
+    memory = memory_service.soft_delete_memory(
+        db, memory_id=memory_id, namespace=namespace
+    )
     if memory is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Memory not found.")
     return MemoryOut.model_validate(memory)

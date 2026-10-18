@@ -160,14 +160,30 @@ def list_memories(
     return list(rows), int(total or 0)
 
 
-def get_memory(db: Session, *, memory_id: uuid.UUID) -> Memory | None:
-    """Fetch a single memory by id (active or not)."""
-    return db.get(Memory, memory_id)
+def get_memory(
+    db: Session, *, memory_id: uuid.UUID, namespace: str | None = None
+) -> Memory | None:
+    """Fetch a single memory by id (active or not).
 
-
-def soft_delete_memory(db: Session, *, memory_id: uuid.UUID) -> Memory | None:
-    """Soft-delete a memory (``is_active=False``). Never hard-deletes."""
+    When ``namespace`` is provided the memory must belong to it; any mismatch
+    returns ``None`` so the route can answer 404 without leaking the id.
+    """
     memory = db.get(Memory, memory_id)
+    if memory is None:
+        return None
+    if namespace is not None and memory.namespace != namespace:
+        return None
+    return memory
+
+
+def soft_delete_memory(
+    db: Session, *, memory_id: uuid.UUID, namespace: str | None = None
+) -> Memory | None:
+    """Soft-delete a memory (``is_active=False``). Never hard-deletes.
+
+    Honours the same optional ``namespace`` scope as :func:`get_memory`.
+    """
+    memory = get_memory(db, memory_id=memory_id, namespace=namespace)
     if memory is None:
         return None
     memory.is_active = False

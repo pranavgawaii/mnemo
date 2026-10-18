@@ -30,6 +30,14 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      # /ready actually queries Postgres, so this fails while migrations or the
+      # embedding model are still loading and only passes once the API can serve.
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
     volumes:
       - mnemo_models:/models
 
