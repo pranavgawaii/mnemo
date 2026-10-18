@@ -1,0 +1,108 @@
+import { ArrowRight } from "lucide-react";
+import { AnimatedSection } from "./animated-section";
+import { ANCHORS } from "../lib/site";
+
+const cards = [
+  {
+    kicker: "What it is",
+    title: "A memory service for agents",
+    body: (
+      <>
+        Mnemo is a small HTTP service that stores facts an AI agent learns and
+        hands them back later. It is not a chatbot and not a vector database you
+        have to assemble — it is one FastAPI app over Postgres&nbsp;+&nbsp;pgvector
+        with an API you can call in three lines of <code>curl</code>.
+      </>
+    ),
+  },
+  {
+    kicker: "Why it matters",
+    title: "Context windows forget",
+    body: (
+      <>
+        An agent that only sees the current conversation re-learns the same
+        things forever, and a naïve memory store has the opposite problem: it
+        answers with whatever is <em>nearest</em>, even if that fact is stale or
+        contradicts a newer one. Mnemo ranks by relevance
+        (<span className="font-mono text-[12px]">similarity × decay × importance</span>)
+        and flags conflicts instead of silently overwriting them.
+      </>
+    ),
+  },
+  {
+    kicker: "How to explore",
+    title: "Read, run, or poke it",
+    body: (
+      <>
+        Try the{" "}
+        <a href={ANCHORS.playground} className="text-accent-ink underline decoration-line underline-offset-4 hover:decoration-accent-ink">
+          interactive playground
+        </a>{" "}
+        to see a store and a recall, read the{" "}
+        <a href={ANCHORS.docs} className="text-accent-ink underline decoration-line underline-offset-4 hover:decoration-accent-ink">
+          developer guide
+        </a>{" "}
+        for the exact API, or run the whole stack locally with{" "}
+        <span className="font-mono text-[12px]">docker compose up</span>.
+      </>
+    ),
+  },
+];
+
+/**
+ * The opening argument, set on its own white band so it reads as a distinct
+ * chapter rather than a continuation of the hero: a heading, then three
+ * numbered editorial columns.
+ */
+export function ProductExplainer() {
+  return (
+    <section className="w-full border-y border-line bg-white">
+      <div className="max-w-frame mx-auto px-6 py-24 md:py-28">
+        <AnimatedSection className="max-w-[640px]">
+          <span className="font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] text-accent-ink">
+            Overview
+          </span>
+          <h2 className="mt-5 text-[28px] md:text-[34px] font-medium leading-[1.15] tracking-[-0.02em] text-ink text-balance">
+            A small, self-contained memory service — not another vector database
+            to assemble.
+          </h2>
+        </AnimatedSection>
+
+        <div className="mt-14 grid gap-x-10 gap-y-10 md:grid-cols-3">
+          {cards.map((card, i) => (
+            <AnimatedSection
+              key={card.kicker}
+              delay={i * 90}
+              className="flex flex-col border-t border-line pt-6"
+            >
+              <div className="flex items-baseline gap-3">
+                <span className="font-mono text-[11px] tabular-nums text-faint">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span className="font-mono text-[10.5px] font-bold uppercase tracking-[0.14em] text-accent-ink">
+                  {card.kicker}
+                </span>
+              </div>
+              <h3 className="mt-4 text-[19px] font-medium leading-snug tracking-[-0.01em] text-ink">
+                {card.title}
+              </h3>
+              <p className="mt-3 text-[13.5px] leading-[1.7] text-muted">
+                {card.body}
+              </p>
+            </AnimatedSection>
+          ))}
+        </div>
+
+        <AnimatedSection delay={280} className="mt-12">
+          <a
+            href={ANCHORS.howItWorks}
+            className="group inline-flex items-center gap-2 font-mono text-[11.5px] text-muted hover:text-ink transition-colors"
+          >
+            Follow one fact through the system
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" strokeWidth={1.8} />
+          </a>
+        </AnimatedSection>
+      </div>
+    </section>
+  );
+}
