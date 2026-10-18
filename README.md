@@ -130,12 +130,13 @@ All routes require an `X-API-Key` header.
 | `POST` | `/v1/memories` | Store a memory; returns any contradictions it triggers |
 | `POST` | `/v1/memories/search` | Semantic search, relevance-ranked |
 | `GET` | `/v1/memories` | Paginated list for a namespace |
-| `GET` | `/v1/memories/{id}` | Fetch one |
-| `DELETE` | `/v1/memories/{id}` | Soft-delete (`is_active=False`) |
+| `GET` | `/v1/memories/{id}` | Fetch one (optional `?namespace=` scope) |
+| `DELETE` | `/v1/memories/{id}` | Soft-delete (`is_active=False`; optional `?namespace=` scope) |
 | `GET` | `/v1/contradictions` | List flagged contradictions |
 | `POST` | `/v1/contradictions/resolve` | Resolve by naming the winner |
 
-`GET /health` is unauthenticated. Full request/response schemas are in
+`GET /health` (liveness) and `GET /ready` (readiness — queries the database)
+are unauthenticated. Full request/response schemas are in
 `app/models/schemas.py` and rendered at `/docs`.
 
 ---
@@ -208,6 +209,12 @@ PYTHONPATH=. pytest tests/test_core.py -v
 export DATABASE_URL=postgresql+psycopg://mnemo:mnemo@localhost:5432/mnemo
 PYTHONPATH=. pytest tests/ -v
 ```
+
+`tests/test_frontend_parity.py` parses both `app/core/` and
+`frontend/lib/mnemo.ts` and asserts the browser-side mirror of the thresholds,
+limits and negation markers still matches the backend — it needs no database and
+runs in CI alongside `test_core.py` (see `.github/workflows/ci.yml`, which also
+typechecks and builds the frontend).
 
 ---
 
