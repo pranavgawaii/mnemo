@@ -1,0 +1,38 @@
+# Local stack: Postgres+pgvector and the FastAPI API.
+# `docker compose up` brings up both; the API runs migrations on start.
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: mnemo
+      POSTGRES_PASSWORD: mnemo
+      POSTGRES_DB: mnemo
+    ports:
+      - "5432:5432"
+    volumes:
+      - mnemo_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mnemo -d mnemo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg://mnemo:mnemo@db:5432/mnemo
+      MNEMO_API_KEY: ${MNEMO_API_KEY:-dev-local-key-change-me}
+      EMBEDDING_MODEL: all-MiniLM-L6-v2
+      EMBEDDING_DIM: "384"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - mnemo_models:/models
+
+volumes:
+  mnemo_pgdata:
+  mnemo_models:
