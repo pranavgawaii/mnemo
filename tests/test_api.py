@@ -16,6 +16,43 @@ def test_health(client):
 
 
 @requires_db
+def test_ready_checks_database(client):
+    # Requires a reachable database, so this assertion is only meaningful when
+    # the DB-integration tests are running at all.
+    resp = client.get("/ready")
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "ready"}
+
+
+@requires_db
+def test_get_and_delete_honour_optional_namespace(client, namespace):
+    mem = client.post(
+        "/v1/memories",
+        json={"content": "namespaced fact", "namespace": namespace},
+    ).json()["memory"]
+
+    # Omitted -> backwards-compatible: fetch by id across namespaces.
+    assert client.get(f"/v1/memories/{mem['id']}").status_code == 200
+
+    # Correct namespace -> 200.
+    ok = client.get(f"/v1/memories/{mem['id']}?namespace={namespace}")
+    assert ok.status_code == 200
+
+    # A different namespace -> 404, without revealing that the id exists.
+    other = f"{namespace}-other"
+    assert client.get(f"/v1/memories/{mem['id']}?namespace={other}").status_code == 404
+
+    # Delete scoped to the wrong namespace must not delete anything.
+    assert client.delete(f"/v1/memories/{mem['id']}?namespace={other}").status_code == 404
+    assert client.get(f"/v1/memories/{mem['id']}").json()["is_active"] is True
+
+    # Delete scoped to the right namespace succeeds.
+    deleted = client.delete(f"/v1/memories/{mem['id']}?namespace={namespace}")
+    assert deleted.status_code == 200
+    assert deleted.json()["is_active"] is False
+
+
+@requires_db
 def test_add_requires_api_key(client, namespace):
     resp = client.post(
         "/v1/memories",
