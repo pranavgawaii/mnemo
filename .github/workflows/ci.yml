@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend — logic + parity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Only the pure-logic and source-parsing tests run here: they need
+      # neither torch nor a database, so the job stays fast and hermetic.
+      # The DB-integration suite in tests/test_api.py exercises real pgvector
+      # and is expected to run where Postgres is reachable (docker compose,
+      # or locally with DATABASE_URL set).
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest==9.1.1 pydantic==2.13.4 pydantic-settings==2.14.2
+
+      - name: Run pure-logic + frontend-parity tests
+        env:
+          PYTHONPATH: .
+        run: python -m pytest tests/test_core.py tests/test_frontend_parity.py -v
+
+  frontend:
+    name: Frontend — typecheck + build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
