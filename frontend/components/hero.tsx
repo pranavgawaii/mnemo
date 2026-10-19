@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { AnimatedSection } from "./animated-section";
 import { MemoryWindow } from "./memory-window";
+import { HeroOrbit } from "./hero-orbit";
 import { PRIMARY_CTA, SECONDARY_CTA } from "../lib/site";
 
 const stack = [
@@ -12,8 +13,9 @@ const stack = [
 
 export function Hero() {
   return (
-    <section id="top" className="relative w-full pt-36 sm:pt-44 lg:pt-48 pb-20">
-      <div className="max-w-frame mx-auto px-6">
+    <section id="top" className="relative w-full pt-28 sm:pt-32 lg:pt-36 pb-14">
+      <HeroOrbit />
+      <div className="relative z-10 max-w-frame mx-auto px-6">
         <div className="flex flex-col lg:flex-row justify-between items-center mb-12 gap-10">
           {/* LEFT: headline */}
           <AnimatedSection delay={100} className="flex-1 w-full text-center lg:text-left">
@@ -69,7 +71,7 @@ export function Hero() {
           right edge, matching the reference composition. */}
       <AnimatedSection
         delay={400}
-        className="w-full relative mt-10 mb-32 md:mb-44 max-w-frame mx-auto px-6 overflow-visible"
+        className="relative z-10 w-full mt-10 mb-20 md:mb-40 max-w-frame mx-auto px-6 overflow-visible"
       >
         <div className="w-full shrink-0 transform md:scale-[1.15] md:origin-top-left relative">
           <MemoryWindow />
@@ -77,18 +79,20 @@ export function Hero() {
       </AnimatedSection>
 
       {/* Stack strip */}
-      <AnimatedSection delay={460} className="max-w-frame mx-auto px-6">
-        <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-3 gap-y-2">
-          {stack.map((item) => (
-            <span
-              key={item}
-              className="font-mono text-[11px] text-muted border border-line rounded-full px-3 py-1 bg-white/70"
-            >
-              {item}
-            </span>
-          ))}
-          <span className="font-mono text-[11px] text-faint">
-            Illustrative product view.
+      <AnimatedSection delay={460} className="relative z-10 max-w-frame mx-auto px-6">
+        <div className="flex flex-col items-center gap-3.5 lg:items-start">
+          <ul className="flex flex-wrap items-center justify-center gap-1.5 lg:justify-start">
+            {stack.map((item) => (
+              <li
+                key={item}
+                className="rounded-[6px] border border-line bg-white px-2.5 py-[5px] text-[12px] font-medium leading-none tracking-[-0.005em] text-ink/75 shadow-[0_1px_1.5px_rgba(10,10,15,0.04)]"
+              >
+                {item}
+              </li>
+            ))}
+          </ul>
+          <span className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-faint">
+            Illustrative product view
           </span>
         </div>
       </AnimatedSection>
