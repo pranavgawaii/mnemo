@@ -1,8 +1,19 @@
 /**
  * Shared section shell for the documentation page. A numbered, linked title,
- * then the section's own content. Sections are separated by a top hairline; the
- * first section inside a chapter drops it (see `.docs-chapter` in globals.css)
- * so nothing doubles up under the chapter rule.
+ * then the section's own content.
+ *
+ * Every section carries its own top hairline, including the first one under a
+ * chapter rule — a boundary you can see is what tells you where a section
+ * starts, and it is the only thing anchoring the heading after the contents
+ * jump you down the page. `mt-10` puts the rule halfway between the two
+ * sections (`pt-10` spaces it from the heading below), so the rule never sits
+ * against the previous section's last block.
+ *
+ * The scroll offset clears exactly the chrome that covers the top of the
+ * viewport: the fixed bar plus its rule and the progress bar under it (66px) on
+ * desktop, and the pinned chip row that sits below them (113px) on narrow
+ * screens. Landing that shallow means a jump shows the section's rule and
+ * heading and nothing sliced in half above them.
  */
 export function DocsSection({
   id,
@@ -20,7 +31,7 @@ export function DocsSection({
   return (
     <section
       id={id}
-      className="group/section scroll-mt-[100px] border-t border-line pt-10"
+      className="group/section mt-10 scroll-mt-[120px] border-t border-line pt-10 lg:scroll-mt-[66px]"
     >
       <div className="flex items-start gap-3">
         {index && (
