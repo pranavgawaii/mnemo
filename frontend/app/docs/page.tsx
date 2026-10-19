@@ -19,9 +19,10 @@ import { MemoryPlayground } from "../../components/memory-playground";
 import { RankingExplorer } from "../../components/ranking-explorer";
 import { ContradictionExplainer } from "../../components/contradiction-explainer";
 import { Evaluation } from "../../components/evaluation";
+import { PLAYGROUND_URL } from "../../lib/site";
 
 export const metadata: Metadata = {
-  title: "Developer guide · Mnemo",
+  title: "Developer guide | Mnemo",
   description:
     "How Mnemo works, how to run it, its retrieval and ranking, the data model, the REST API, and interactive tools.",
 };
@@ -29,7 +30,9 @@ export const metadata: Metadata = {
 /**
  * A chapter break between groups of sections. The heavy top rule and the note
  * are what keep the page from reading as one continuous run of identical
- * sections; the first section under it drops its own hairline (globals.css).
+ * sections. There is deliberately no bottom padding on the header block: the
+ * section under it carries its own hairline and spacing, so every section on
+ * the page starts the same way.
  */
 function Chapter({
   label,
@@ -37,12 +40,12 @@ function Chapter({
   children,
 }: {
   label: string;
-  note: string;
+  note: ReactNode;
   children: ReactNode;
 }) {
   return (
     <div className="docs-chapter mt-16 first:mt-0">
-      <div className="border-t-2 border-ink pb-7 pt-4">
+      <div className="border-t-2 border-ink pt-4">
         <h2 className="text-[12.5px] font-semibold uppercase tracking-[0.2em] text-ink">
           {label}
         </h2>
@@ -69,12 +72,12 @@ export default function DocsPage() {
       <DocsProgress />
 
       <main id="main" className="relative z-10 w-full flex-1">
-        <div className="mx-auto max-w-frame px-6 pb-20 pt-[100px]">
+        <div className="mx-auto max-w-frame px-6 pb-20 pt-[88px]">
           <div className="grid items-start gap-10 lg:grid-cols-[204px_minmax(0,1fr)] xl:gap-14">
             <DocsToc />
 
             <article className="min-w-0">
-              <div id="overview" className="scroll-mt-[100px]">
+              <div id="overview" className="scroll-mt-[120px] lg:scroll-mt-[66px]">
                 <h1 className="text-[30px] font-medium tracking-[-0.03em] text-ink md:text-[36px]">
                   Developer guide
                 </h1>
@@ -122,7 +125,19 @@ export default function DocsPage() {
 
                 <Chapter
                   label="Interactive"
-                  note="Browser-side simulations of the real logic. Nothing here touches the API."
+                  note={
+                    <>
+                      Browser-side simulations of the real logic. Nothing here
+                      touches the API — the same tools also stand alone on the{" "}
+                      <a
+                        href={PLAYGROUND_URL}
+                        className="link-underline font-medium text-accent-ink"
+                      >
+                        playground page
+                      </a>
+                      .
+                    </>
+                  }
                 >
                   <MemoryPlayground />
                   <RankingExplorer />
