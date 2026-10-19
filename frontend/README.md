@@ -1,6 +1,6 @@
 # Mnemo — marketing site + documentation
 
-Two pages for the Mnemo memory service, built with Next.js 15 (App Router) +
+Three pages for the Mnemo memory service, built with Next.js 15 (App Router) +
 Tailwind CSS and matched to the Specboard editorial developer-tool aesthetic
 (same `#F7F7F5` canvas, 1200px frame, `#E5E5E5` hairlines, Outfit + Redaction
 type, and scroll-reveal behaviour).
@@ -15,8 +15,12 @@ type, and scroll-reveal behaviour).
   architecture flow, the memory lifecycle and the REST explorer. The desktop
   rail stays pinned in one place; only the active section highlight moves as you
   scroll.
+- **`/playground`** — a standalone playground on the same shell as the rest of the
+  site: an opening **recall orbit** that ranks memories around a query you pick,
+  then the in-browser sandbox — add & search, the ranking calculator and the
+  contradiction checker.
 
-Both pages are **static at runtime** — nothing calls the API from the browser
+All three pages are **static at runtime** — nothing calls the API from the browser
 (see "Interactive demos"). All technical claims use the real behaviour and
 parameters from `app/` (`app/core/config.py`, `app/core/decay.py`,
 `app/core/contradiction.py`, `app/models/schemas.py`).
@@ -25,9 +29,9 @@ parameters from `app/` (`app/core/config.py`, `app/core/decay.py`,
 
 | Section | Component | Anchor |
 |---|---|---|
-| Minimal full-width nav | `components/site-nav.tsx` | — |
+| Centred-logo nav (wordmark · links · logo · links · Read docs) | `components/site-nav.tsx` | — |
 | Hero + scaled product window | `components/hero.tsx`, `memory-window.tsx` | `/#top` |
-| Recall-path marquee | `components/pipeline-marquee.tsx` | — |
+| Recall-path marquee (full-bleed rules + caption) | `components/pipeline-marquee.tsx` | — |
 | Product explainer (what / why / how to explore) | `components/product-explainer.tsx` | — |
 | How it works — Store → Search → Rank → Review | `components/how-it-works.tsx` | `/#how-it-works` |
 | Mnemo vs other memory layers | `components/differentiator.tsx` | `/#features` |
@@ -46,7 +50,7 @@ pull-quote and the closing CTA back on the background.
 | Section | Component | Anchor |
 |---|---|---|
 | Page title | `app/docs/page.tsx` | `#overview` |
-| Chapter headers (heavy rule + label + note) | `app/docs/page.tsx`, `app/globals.css` | — |
+| Chapter headers (heavy rule + label + note) | `app/docs/page.tsx` | — |
 | Sticky contents (`hook-sidebar`, one continuous rail) | `components/docs-toc.tsx`, `components/ui/hook-sidebar.tsx` | — |
 | **Getting started** · Local setup | `components/documentation.tsx` | `#quickstart` |
 | **Concepts** · How it's built (interactive diagram) | `components/architecture-explorer.tsx` | `#architecture` |
@@ -62,7 +66,16 @@ pull-quote and the closing CTA back on the background.
 The sections are grouped into five chapters — **Getting started**, **Concepts**,
 **Reference**, **Guides** and **Interactive** — each opened by a heavy rule, a
 label and a one-line note, so the page reads as chapters rather than one
-continuous run of sections.
+continuous run of sections. Every section then carries its own `1px` hairline
+(`components/docs-section.tsx`), including the first one under a chapter header,
+with even space either side of it — so a boundary is visible wherever you land,
+and the rule never sits against the previous section's last block.
+
+Sections set `scroll-margin-top` to clear exactly the chrome covering the top of
+the viewport (120px on narrow screens, where the pinned chip row sits under the
+bar; 66px on desktop, where only the progress bar does), so a contents jump
+lands with the section's rule and heading showing and nothing sliced in half
+above them.
 
 The docs page carries **no code blocks**. The REST API is documented by an
 interactive explorer — pick a route and read its request/response **field
@@ -70,31 +83,53 @@ lists** — and configuration values are shown as plain-language rows and cells
 rather than shell snippets or formulas rendered as code.
 
 The desktop sidebar is the `hook-sidebar` component from the
-[`swamimalode07/rare-ui`](https://github.com/swamimalode07/rare-ui) shadcn
-registry, vendored verbatim into `components/ui/hook-sidebar.tsx` (it needs
-`motion` and the `cn` helper in `lib/utils.ts`). `components/docs-toc.tsx` renders
-**one** `HookSidebar` for the whole page — a single continuous rail, flattened
-from `DOC_NAV`, so the marker never resets between groups — and drives it with an
-`IntersectionObserver` scroll-spy. The aside is `sticky` with its own scroll area;
-this only works because `html, body` use `overflow-x: clip` (never `hidden`, which
-would create a scroll container and break stickiness). The
-shared section shell is `components/docs-section.tsx`; static product mocks
+[`swamimalode07/rare-ui`](https://github.com/swamimalode07/rare-ui) registry,
+vendored verbatim into `components/ui/hook-sidebar.tsx` (it needs `motion` and
+the `cn` helper in `lib/utils.ts`). `components/docs-toc.tsx` renders **one**
+`HookSidebar` for the whole page — a single continuous dashed indigo rail,
+flattened from `DOC_NAV` so the marker never resets between chapters — and drives
+it with an `IntersectionObserver` scroll-spy. The aside is `sticky` with its own
+scroll area; this only works because `html, body` use `overflow-x: clip` (never
+`hidden`, which would create a scroll container and break stickiness).
+The shared section shell is `components/docs-section.tsx`; static product mocks
 (write, cosine match, decay curve, flagged contradiction) live in
 `components/visuals.tsx`. Cross-page anchors are centralised in `lib/site.ts`
-(`ANCHORS`, `DOC_NAV`, `NAV_LINKS`).
+(`ANCHORS`, `DOC_NAV`, `NAV_LEFT`, `NAV_RIGHT`, `NAV_LINKS`, `NAV_CTA`,
+`PLAYGROUND_URL`).
+
+## Playground page (`/playground`)
+
+| Section | Component | Anchor |
+|---|---|---|
+| Recall orbit — interactive ranking visual | `components/memory-orbit.tsx` | `#recall` |
+| Sandbox — add & search | `components/memory-playground.tsx` | `#sandbox`, `#playground` |
+| Sandbox — ranking calculator | `components/ranking-explorer.tsx` | `#ranking-calculator` |
+| Sandbox — contradiction checker | `components/contradiction-explainer.tsx` | `#contradiction-checker` |
+
+The playground is built on the same shell as the rest of the site — `SiteNav`,
+the light `bg-background` canvas, `SiteFooter` — so it reads as part of the
+product rather than a separate app. `MemoryOrbit`
+places the query at the centre and the six best matches on three counter-rotating
+rings (nearest ring, most relevant); hover or tap a node and the readout
+underneath shows how the match was scored — `similarity × decay × importance`, the
+same formula the service runs. The rings freeze on hover so a node is easy to
+hit, and all motion is off under `prefers-reduced-motion`. The three sandbox
+sections are the same components the docs embed, re-numbered `01`–`03` via an
+optional `index` prop.
 
 ## Interactive demos
 
-Four docs sections are interactive and are **explicitly labelled simulations**:
+Three docs sections are interactive and are **explicitly labelled simulations**:
 
-- **Pipeline walkthrough** (`#pipeline`) — step through Store → Search → Rank →
-  Review.
 - **Playground** (`#playground`) — add a memory, search, see the ranking
   breakdown, then introduce a contradictory fact and resolve it.
 - **Ranking calculator** (`#ranking-calculator`) — a calculator over the real
   scoring formula in `app/core/decay.py`.
 - **Contradiction checker** (`#contradiction-checker`) — runs the ported
   two-stage heuristic from `app/core/contradiction.py`.
+
+The same three tools also stand alone on `/playground`, alongside the recall
+orbit. They are one set of components, used in both places.
 
 The real API authenticates every request with a private `X-API-Key`, which a
 public page must not embed, so the demos do not call the backend. They reuse the
@@ -111,7 +146,7 @@ API section, so the docs page contains no runnable code snippets.
 ```bash
 cd frontend
 pnpm install
-pnpm dev          # http://localhost:3005  (docs at /docs)
+pnpm dev          # http://localhost:3005  (docs at /docs, playground at /playground)
 ```
 
 Production build:
@@ -135,7 +170,7 @@ Copy `.env.example` to `.env.local`:
 
 | Variable | Effect |
 |---|---|
-| `NEXT_PUBLIC_GITHUB_URL` | Turns the primary nav / hero / footer CTA into "View on GitHub". When unset, the primary CTA falls back to the docs page — no placeholder URL is invented. |
+| `NEXT_PUBLIC_GITHUB_URL` | Adds a "GitHub" link to the navbar and the footer, and turns the hero / final CTA into "View on GitHub". When unset, those links are hidden and the primary CTA falls back to the docs page — no placeholder URL is invented. The navbar's own corner button always reads "Read docs". |
 
 ## Content accuracy
 
