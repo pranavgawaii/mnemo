@@ -57,7 +57,7 @@ mnemo/
 │   ├── tests/                # unit (core) + DB-integration (api)
 │   ├── docker-compose.yml    # Postgres+pgvector + API
 │   ├── Dockerfile
-│   ├── requirements.txt
+│   ├── requirements-api.txt
 │   └── .env.example
 ├── package.json              # web dependencies + scripts
 ├── next.config.mjs
@@ -97,7 +97,7 @@ boot and listens on <http://localhost:8000> (interactive docs at `/docs`).
 ```bash
 cd backend
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-api.txt
 cp .env.example .env
 
 export DATABASE_URL=postgresql+psycopg://mnemo:mnemo@localhost:5432/mnemo

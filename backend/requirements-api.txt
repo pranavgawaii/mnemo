@@ -1,3 +1,5 @@
+# API dependencies. The -api suffix keeps Vercel's monorepo detector from
+# treating backend/ as a separate Python project.
 # Pinned to the versions this project is verified against on Python 3.14.
 fastapi==0.139.2
 uvicorn[standard]==0.51.0
