@@ -9,7 +9,7 @@ const nextSteps = [
 
 export function FinalCta() {
   return (
-    <section className="relative w-full pt-20 md:pt-24 pb-24 md:pb-32">
+    <section className="relative w-full pt-12 md:pt-16 pb-20 md:pb-24">
       <div className="max-w-frame mx-auto px-6">
         <AnimatedSection>
           <div className="rounded-[24px] border border-line bg-white px-6 py-14 sm:px-10 md:px-16 md:py-20 flex flex-col items-center text-center">
