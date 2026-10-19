@@ -1,5 +1,6 @@
 # Local stack: Postgres+pgvector and the FastAPI API.
-# `docker compose up` brings up both; the API runs migrations on start.
+# From this directory, `docker compose up` brings up both; the API runs
+# migrations on start.
 
 services:
   db:

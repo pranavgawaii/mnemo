@@ -1,15 +1,11 @@
-# Backend image only — the Next.js site is deployed separately.
+# Build context is this directory (the API). The Next.js site lives at the
+# repo root and is deployed separately.
 .venv
 venv
 __pycache__
 *.pyc
 .pytest_cache
 *.tsbuildinfo
-
-# Frontend / Node
-frontend
-node_modules
-.next
 
 # Repo metadata
 .git
