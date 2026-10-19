@@ -184,7 +184,11 @@ function DecayCurve({ ageDays }: { ageDays: number }) {
   );
 }
 
-export function RankingExplorer() {
+export function RankingExplorer({
+  index = "12",
+}: {
+  index?: string;
+} = {}) {
   const [a, setA] = useState<Params>(PRESETS[0].a);
   const [b, setB] = useState<Params>(PRESETS[0].b);
   const [note, setNote] = useState(PRESETS[0].note);
@@ -202,7 +206,7 @@ export function RankingExplorer() {
   return (
     <DocsSection
       id="ranking-calculator"
-      index="12"
+      index={index}
       title="Ranking calculator"
       intro="Search does not order by vector distance. Each candidate is scored by the function below, evaluated in Python, then sorted. Move the sliders to see why a memory won."
     >
