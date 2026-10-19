@@ -214,7 +214,7 @@ export const EXAMPLE_MEMORIES = [
 ] as const;
 
 // --------------------------------------------------------------------------- //
-// Operations — mirror `app/services/memory_service.py`
+// Operations — mirror `backend/app/services/memory_service.py`
 // --------------------------------------------------------------------------- //
 function makeId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {

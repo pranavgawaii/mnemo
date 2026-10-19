@@ -91,7 +91,7 @@ const SANS_STACK = '"Inter Tight", "Inter Variable", "Inter", "Helvetica Neue", 
 const MONO_STACK = '"JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace'
 
 // #region halftone
-// Pure helpers, lifted out and executed by tests/halftone-wordmark-footer.test.mjs.
+// Pure helpers, kept framework-free so they can be unit-tested in isolation.
 
 /** Hex → [r, g, b] in 0–255, or null for anything that isn't #rgb / #rrggbb. */
 export function hwfHex(hex: string) {

@@ -2,7 +2,7 @@
  * Product visuals used across the landing page. Each one is a small, static
  * mock of a real piece of Mnemo behaviour — a write, a cosine match, the decay
  * curve, or a flagged contradiction. Values are illustrative; field shapes and
- * parameters match `app/models/schemas.py` and `app/core/config.py`.
+ * parameters match `backend/app/models/schemas.py` and `backend/app/core/config.py`.
  */
 
 export function StoreVisual() {

@@ -692,7 +692,7 @@ const RANK_PRESETS: { label: string; a: RankParams; b: RankParams; note: string 
     label: "A clearly better match still wins",
     a: { similarity: 0.85, ageDays: 1000, importance: 1 },
     b: { similarity: 0.45, ageDays: 0, importance: 5 },
-    note: "A stronger semantic match wins even at age 1000 days with the lowest importance and a floored decay factor. This invariant is pinned by tests/test_core.py.",
+    note: "A stronger semantic match wins even at age 1000 days with the lowest importance and a floored decay factor. This invariant is pinned by backend/tests/test_core.py.",
   },
   {
     label: "The decay floor in effect",
@@ -786,7 +786,7 @@ function RankingPane() {
       </div>
 
       <p className="font-mono text-[10.5px] leading-[1.7] text-faint">
-        The same function lives in app/core/decay.py. None of these numbers came
+        The same function lives in backend/app/core/decay.py. None of these numbers came
         from a search; a real result also carries the raw cosine similarity and
         age returned by the API.
       </p>
@@ -1103,7 +1103,7 @@ function HeuristicChecker() {
           Test the heuristic
         </h3>
         <span className="font-mono text-[10.5px] text-faint">
-          app/core/contradiction.py, in the browser
+          backend/app/core/contradiction.py, in the browser
         </span>
       </div>
 

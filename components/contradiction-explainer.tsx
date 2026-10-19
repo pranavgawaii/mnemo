@@ -30,7 +30,7 @@ export function ContradictionExplainer({
         <>
           The stages below are the exact logic from{" "}
           <span className="font-mono text-[12px] text-ink">
-            app/core/contradiction.py
+            backend/app/core/contradiction.py
           </span>
           , ported to the browser. Similarity would normally come from the vector
           search; set it manually here.

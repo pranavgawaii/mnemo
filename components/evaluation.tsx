@@ -18,7 +18,7 @@ const RESULTS = [
 ];
 
 const PROCEDURE = [
-  "Seed a dedicated 'benchmark' namespace with the 60 memories from benchmark/dataset.json, backdating created_at from each row's age_days so decay is genuinely exercised.",
+  "Seed a dedicated 'benchmark' namespace with the 60 memories from backend/benchmark/dataset.json, backdating created_at from each row's age_days so decay is genuinely exercised.",
   "Run every one of the 50 hand-labelled queries through the real search path (app.services.memory_service.search) — same embedder, same pgvector query, same re-ranking.",
   "A query counts as correct at rank k if any of its gold memory ids appears in the top k. Several questions have more than one defensible answer, so gold lists can hold multiple ids.",
   "Report top-1, top-3 and MRR. The --no-decay mode re-ranks by raw cosine only, so decay's contribution is measured rather than asserted.",
@@ -120,7 +120,7 @@ export function Evaluation() {
             half-life to 180 days, raising the floor to 0.7 and narrowing
             importance to 0.9–1.1 brought it to{" "}
             <span className="text-ink font-medium">94%</span>.{" "}
-            <span className="font-mono text-[12px]">tests/test_core.py</span> pins
+            <span className="font-mono text-[12px]">backend/tests/test_core.py</span> pins
             the invariant so it cannot regress.
           </p>
         </div>

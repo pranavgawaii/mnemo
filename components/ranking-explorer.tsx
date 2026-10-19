@@ -26,7 +26,7 @@ const PRESETS: { label: string; a: Params; b: Params; note: string }[] = [
     label: "A clearly better match still wins",
     a: { similarity: 0.85, ageDays: 1000, importance: 1 },
     b: { similarity: 0.45, ageDays: 0, importance: 5 },
-    note: "A stronger semantic match wins even at age 1000 days with the lowest importance and a floored decay factor. This invariant is pinned by tests/test_core.py.",
+    note: "A stronger semantic match wins even at age 1000 days with the lowest importance and a floored decay factor. This invariant is pinned by backend/tests/test_core.py.",
   },
   {
     label: "The decay floor in effect",
@@ -246,7 +246,7 @@ export function RankingExplorer({
 
           <p className="font-mono text-[10.5px] leading-[1.7] text-faint">
             The calculator evaluates the exact function in{" "}
-            <span className="text-muted">app/core/decay.py</span>. None of these
+            <span className="text-muted">backend/app/core/decay.py</span>. None of these
             numbers come from a search — real results also show the raw cosine
             similarity and age returned by the API.
           </p>

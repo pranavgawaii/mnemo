@@ -22,8 +22,9 @@ type, and scroll-reveal behaviour).
 
 All three pages are **static at runtime** — nothing calls the API from the browser
 (see "Interactive demos"). All technical claims use the real behaviour and
-parameters from `app/` (`app/core/config.py`, `app/core/decay.py`,
-`app/core/contradiction.py`, `app/models/schemas.py`).
+parameters from `backend/app/` (`backend/app/core/config.py`,
+`backend/app/core/decay.py`, `backend/app/core/contradiction.py`,
+`backend/app/models/schemas.py`).
 
 ## Landing page (`/`)
 
@@ -124,9 +125,9 @@ Three docs sections are interactive and are **explicitly labelled simulations**:
 - **Playground** (`#playground`) — add a memory, search, see the ranking
   breakdown, then introduce a contradictory fact and resolve it.
 - **Ranking calculator** (`#ranking-calculator`) — a calculator over the real
-  scoring formula in `app/core/decay.py`.
+  scoring formula in `backend/app/core/decay.py`.
 - **Contradiction checker** (`#contradiction-checker`) — runs the ported
-  two-stage heuristic from `app/core/contradiction.py`.
+  two-stage heuristic from `backend/app/core/contradiction.py`.
 
 The same three tools also stand alone on `/playground`, alongside the recall
 orbit. They are one set of components, used in both places.
@@ -134,7 +135,7 @@ orbit. They are one set of components, used in both places.
 The real API authenticates every request with a private `X-API-Key`, which a
 public page must not embed, so the demos do not call the backend. They reuse the
 exact ranking formula and contradiction logic (`lib/mnemo.ts`, a deliberate port
-of `app/core/`) over an in-browser store (`lib/playground.ts`). The one thing
+of `backend/app/core/`) over an in-browser store (`lib/playground.ts`). The one thing
 that is *not* faithful is similarity: the live service embeds text with
 `all-MiniLM-L6-v2`, while `lib/playground.ts` approximates relatedness with a
 lexical + topic score. That approximation is always labelled "illustrative" in
@@ -144,7 +145,6 @@ API section, so the docs page contains no runnable code snippets.
 ## Run
 
 ```bash
-cd frontend
 pnpm install
 pnpm dev          # http://localhost:3005  (docs at /docs, playground at /playground)
 ```
@@ -176,16 +176,16 @@ Copy `.env.example` to `.env.local`:
 
 Every technical claim on either page is taken from the source:
 
-- Ranking is `similarity × decay × importance` (`app/core/decay.py`).
-- Decay: 180-day half-life, floor 0.7; importance band 0.9–1.1 (`app/core/config.py`).
+- Ranking is `similarity × decay × importance` (`backend/app/core/decay.py`).
+- Decay: 180-day half-life, floor 0.7; importance band 0.9–1.1 (`backend/app/core/config.py`).
 - Contradictions: 0.82 similarity gate, then a negation-marker heuristic
-  (`app/core/contradiction.py`); resolution soft-deletes the loser
-  (`app/services/memory_service.py`).
-- Endpoints, request/response shapes and constraints match `app/api/routes.py`
-  and `app/models/schemas.py`; the data model matches
-  `alembic/versions/0001_initial_schema.py`.
+  (`backend/app/core/contradiction.py`); resolution soft-deletes the loser
+  (`backend/app/services/memory_service.py`).
+- Endpoints, request/response shapes and constraints match `backend/app/api/routes.py`
+  and `backend/app/models/schemas.py`; the data model matches
+  `backend/alembic/versions/0001_initial_schema.py`.
 - Benchmark figures (60 memories, 50 queries, top-1/top-3/MRR and the raw-cosine
-  baseline) come from `benchmark/` and the root `README.md`.
+  baseline) come from `backend/benchmark/` and the root `README.md`.
 
 Deliberately **not** claimed: rate limiting, per-tenant keys, row-level security,
 LLM verdicts, or any benchmark other than the repository's own. The docs state

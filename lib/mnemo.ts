@@ -6,15 +6,15 @@
  * strings as the running service. They are not a second implementation with
  * its own opinions — keep them in sync with:
  *
- *   - `app/core/config.py`        (defaults / thresholds)
- *   - `app/core/decay.py`         (decay + importance + relevance)
- *   - `app/core/contradiction.py` (similarity gate + negation heuristic)
+ *   - `backend/app/core/config.py`        (defaults / thresholds)
+ *   - `backend/app/core/decay.py`         (decay + importance + relevance)
+ *   - `backend/app/core/contradiction.py` (similarity gate + negation heuristic)
  *
  * Anything that cannot be derived from the repository is not here.
  */
 
 // --------------------------------------------------------------------------- //
-// Configuration (app/core/config.py)
+// Configuration (backend/app/core/config.py)
 // --------------------------------------------------------------------------- //
 export const EMBEDDING_MODEL = "all-MiniLM-L6-v2";
 export const EMBEDDING_DIM = 384;
@@ -34,7 +34,7 @@ export const LIST_LIMIT_DEFAULT = 20;
 export const LIST_LIMIT_MAX = 100;
 
 // --------------------------------------------------------------------------- //
-// Scoring (app/core/decay.py)
+// Scoring (backend/app/core/decay.py)
 // --------------------------------------------------------------------------- //
 
 /** Exponential decay factor for a memory of `ageDays`, floored at `floor`. */
@@ -70,7 +70,7 @@ export function relevanceScore(
 }
 
 // --------------------------------------------------------------------------- //
-// Contradiction detection (app/core/contradiction.py)
+// Contradiction detection (backend/app/core/contradiction.py)
 // --------------------------------------------------------------------------- //
 
 /**
@@ -183,7 +183,7 @@ export function checkContradiction(
 }
 
 // --------------------------------------------------------------------------- //
-// API shapes (app/models/schemas.py)
+// API shapes (backend/app/models/schemas.py)
 // --------------------------------------------------------------------------- //
 export interface MemoryOut {
   id: string;
