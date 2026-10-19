@@ -15,7 +15,7 @@ export function DocsProgress() {
     <motion.div
       aria-hidden
       style={{ scaleX }}
-      className="fixed inset-x-0 top-[76px] z-40 h-[2px] origin-left bg-accent"
+      className="fixed inset-x-0 top-16 z-40 h-[2px] origin-left bg-accent"
     />
   );
 }
