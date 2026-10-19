@@ -30,21 +30,44 @@ function StageSet() {
   );
 }
 
+/**
+ * The recall path. The marquee itself is unchanged — the strip, its pill and
+ * the scrolling stage names are exactly as before. What changed is the framing:
+ * the whole section now sits on its own surface. A full-bleed band in
+ * `hairline` wraps the strip *and* the caption underneath, so the two read as
+ * one block instead of a strip with a line of copy floating below it on the
+ * same background as the hero. The track is edge-masked so the looping stage
+ * names dissolve in and out instead of being sliced mid-word against the pill.
+ *
+ * The band only carries a top border and no bottom margin: the section below it
+ * already opens with its own top border on white, so the two meet flush. That
+ * removes the dead strip of page background that used to sit between the
+ * caption and the next section.
+ */
 export function PipelineMarquee() {
   return (
-    <div className="max-w-frame mx-auto px-6 mt-20 md:mt-28 mb-12">
-      <div className="flex flex-col md:flex-row items-center border-t border-b border-line py-8 gap-8 w-full overflow-hidden">
-        <div className="border border-line rounded-[6px] px-3 py-1.5 text-[12px] font-medium text-muted whitespace-nowrap bg-white/50 shrink-0 uppercase tracking-widest z-10 relative">
-          The recall path
-        </div>
+    <section
+      aria-label="The recall path"
+      className="mt-14 border-t border-line bg-hairline pb-6 md:mt-20"
+    >
+      <div className="py-8">
+        <div className="mx-auto flex w-full max-w-frame flex-col items-center gap-8 overflow-hidden px-6 md:flex-row">
+          <div className="relative z-10 shrink-0 rounded-[6px] border border-line bg-white/50 px-3 py-1.5 text-[12px] font-medium text-muted whitespace-nowrap uppercase tracking-widest">
+            The recall path
+          </div>
 
-        <div className="flex-1 w-full min-w-0 overflow-hidden relative">
-          <div className="flex w-max animate-marquee">
-            <StageSet />
-            <StageSet />
+          <div className="relative min-w-0 w-full flex-1 overflow-hidden [-webkit-mask-image:linear-gradient(to_right,transparent,black_44px,black_calc(100%_-_44px),transparent)] [mask-image:linear-gradient(to_right,transparent,black_44px,black_calc(100%_-_44px),transparent)]">
+            <div className="flex w-max animate-marquee">
+              <StageSet />
+              <StageSet />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <p className="mx-auto mt-6 max-w-[46ch] px-6 text-center text-[13.5px] leading-relaxed text-muted">
+        Every write and every search moves through the same six steps.
+      </p>
+    </section>
   );
 }
