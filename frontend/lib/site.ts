@@ -44,6 +44,16 @@ export const SECONDARY_CTA: Cta = {
 };
 
 /**
+ * The navbar's right-hand button. Points at the docs on purpose: the repo now
+ * already has its own link in the nav, so the call to action stays focused.
+ */
+export const NAV_CTA: Cta = {
+  label: "Read docs",
+  href: DOCS_URL,
+  external: false,
+};
+
+/**
  * Cross-page anchors. Root-absolute paths so they resolve correctly from both
  * the landing page and the docs page.
  */
