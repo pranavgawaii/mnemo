@@ -56,7 +56,12 @@ export function PipelineMarquee() {
             The recall path
           </div>
 
-          <div className="relative min-w-0 w-full flex-1 overflow-hidden [-webkit-mask-image:linear-gradient(to_right,transparent,black_44px,black_calc(100%_-_44px),transparent)] [mask-image:linear-gradient(to_right,transparent,black_44px,black_calc(100%_-_44px),transparent)]">
+          {/* The inline pill eats the ticker's left edge, so above `md` the mask
+              keeps a fully-hidden lead-in. Without it the tail of a stage name
+              ("bed", "d") stayed legible right beside the pill instead of
+              dissolving. Small screens stack the pill, so the edge there is the
+              page gutter and a shorter fade is enough. */}
+          <div className="relative min-w-0 w-full flex-1 overflow-hidden [-webkit-mask-image:linear-gradient(to_right,transparent,transparent_10px,black_60px,black_calc(100%_-_60px),transparent_calc(100%_-_10px),transparent)] [mask-image:linear-gradient(to_right,transparent,transparent_10px,black_60px,black_calc(100%_-_60px),transparent_calc(100%_-_10px),transparent)] md:[-webkit-mask-image:linear-gradient(to_right,transparent,transparent_28px,black_104px,black_calc(100%_-_104px),transparent_calc(100%_-_28px),transparent)] md:[mask-image:linear-gradient(to_right,transparent,transparent_28px,black_104px,black_calc(100%_-_104px),transparent_calc(100%_-_28px),transparent)]">
             <div className="flex w-max animate-marquee">
               <StageSet />
               <StageSet />
@@ -65,7 +70,7 @@ export function PipelineMarquee() {
         </div>
       </div>
 
-      <p className="mx-auto mt-6 max-w-[46ch] px-6 text-center text-[13.5px] leading-relaxed text-muted">
+      <p className="mt-6 px-6 text-center text-[13.5px] leading-relaxed text-muted text-balance">
         Every write and every search moves through the same six steps.
       </p>
     </section>

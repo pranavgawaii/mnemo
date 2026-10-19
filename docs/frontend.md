@@ -166,11 +166,11 @@ Port `3005` is used so an existing dev server on `3000` is not disturbed.
 
 ## Configuration (optional)
 
-Copy `.env.example` to `.env.local`:
+Copy `.env.example` to `.env.local` only to override the default:
 
 | Variable | Effect |
 |---|---|
-| `NEXT_PUBLIC_GITHUB_URL` | Adds a "GitHub" link to the navbar and the footer, and turns the hero / final CTA into "View on GitHub". When unset, those links are hidden and the primary CTA falls back to the docs page — no placeholder URL is invented. The navbar's own corner button always reads "Read docs". |
+| `NEXT_PUBLIC_GITHUB_URL` | Repository URL used by the "GitHub" nav/footer links and the "View on GitHub" CTAs. Defaults to `https://github.com/pranavgawaii/mnemo`, so the links appear without any setup. The navbar's own corner button always reads "Read docs". |
 
 ## Content accuracy
 

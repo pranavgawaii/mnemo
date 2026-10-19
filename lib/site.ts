@@ -1,4 +1,10 @@
-export const GITHUB_URL = process.env.NEXT_PUBLIC_GITHUB_URL ?? null;
+/**
+ * Repository URL. Defaults to this project's repository so the GitHub links
+ * and "View on GitHub" CTAs are always present; override with
+ * `NEXT_PUBLIC_GITHUB_URL` when pointing at a fork or mirror.
+ */
+export const GITHUB_URL =
+  process.env.NEXT_PUBLIC_GITHUB_URL ?? "https://github.com/pranavgawaii/mnemo";
 
 /** Dedicated technical documentation + interactive tools page. */
 export const DOCS_URL = "/docs";
@@ -17,9 +23,7 @@ export const NAV_LEFT: NavLink[] = [
 /** Links that sit beside the centred logo. */
 export const NAV_RIGHT: NavLink[] = [
   { label: "Playground", href: PLAYGROUND_URL },
-  ...(GITHUB_URL
-    ? [{ label: "GitHub", href: GITHUB_URL, external: true }]
-    : []),
+  { label: "GitHub", href: GITHUB_URL, external: true },
 ];
 
 /** Flat list, used by the mobile menu. */
@@ -28,13 +32,14 @@ export const NAV_LINKS: NavLink[] = [...NAV_LEFT, ...NAV_RIGHT];
 type Cta = { label: string; href: string; external: boolean };
 
 /**
- * Primary call to action. Points at the repository when one is configured,
- * otherwise falls back to the documentation page — no placeholder URL is
- * invented.
+ * Primary call to action. Points at the repository by default; set
+ * `NEXT_PUBLIC_GITHUB_URL` to override it.
  */
-export const PRIMARY_CTA: Cta = GITHUB_URL
-  ? { label: "View on GitHub", href: GITHUB_URL, external: true }
-  : { label: "Read the docs", href: DOCS_URL, external: false };
+export const PRIMARY_CTA: Cta = {
+  label: "View on GitHub",
+  href: GITHUB_URL,
+  external: true,
+};
 
 /** Secondary call to action shown next to the primary one. */
 export const SECONDARY_CTA: Cta = {

@@ -63,7 +63,7 @@ mnemo/
 ├── next.config.mjs
 ├── tailwind.config.ts
 ├── tsconfig.json
-├── .env.example              # web env (NEXT_PUBLIC_GITHUB_URL)
+├── .env.example              # optional web env override
 ├── docs/frontend.md          # component map
 └── .github/workflows/ci.yml
 ```
@@ -248,9 +248,9 @@ pnpm build      # production build
 pnpm typecheck  # tsc --noEmit
 ```
 
-See [`docs/frontend.md`](docs/frontend.md) for the component map. To surface a
-"View on GitHub" CTA, set `NEXT_PUBLIC_GITHUB_URL` in `.env.local` (see
-`.env.example`).
+See [`docs/frontend.md`](docs/frontend.md) for the component map. The "View on
+GitHub" CTAs default to this repository; set `NEXT_PUBLIC_GITHUB_URL` in
+`.env.local` only to point them elsewhere (see `.env.example`).
 
 ### Deploying the web app
 

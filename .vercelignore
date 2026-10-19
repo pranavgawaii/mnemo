@@ -1,11 +1,14 @@
 # The web deployment is the Next.js app at the repo root. Keep the API,
 # Python env, tests and tooling out of the upload.
-backend/
-.venv/
+#
+# Paths are anchored to the repo root: an unanchored `docs/` also matches
+# `app/docs/`, which would remove the /docs route from the deployment.
+/backend/
+/.venv/
 __pycache__/
 *.pyc
 .pytest_cache/
-tests/
-benchmark/
-docs/
-.github/
+/tests/
+/benchmark/
+/docs/
+/.github/
