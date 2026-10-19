@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { displayFont } from "./display-font";
+import { ScrollManager } from "../components/scroll-manager";
 // @ts-ignore
 import "./globals.css";
 
@@ -22,11 +23,11 @@ const redaction = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Mnemo — Persistent memory API for AI agents",
+  title: "Mnemo | Persistent memory API for AI agents",
   description:
     "Mnemo gives AI agents persistent recall: pgvector semantic search, time-decay ranking, and deterministic contradiction detection with a soft-delete audit trail.",
   openGraph: {
-    title: "Mnemo — Persistent memory API for AI agents",
+    title: "Mnemo | Persistent memory API for AI agents",
     description:
       "Semantic recall, time-decay ranking, and deterministic contradiction detection. Built with FastAPI, PostgreSQL and pgvector.",
     type: "website",
@@ -50,8 +51,9 @@ export default function RootLayout({
       >
         <noscript>
           {/* Without JS the scroll-reveal never fires — keep content visible. */}
-          <style>{`[data-reveal="pending"]{opacity:1 !important}`}</style>
+          <style suppressHydrationWarning>{`[data-reveal="pending"]{opacity:1 !important}`}</style>
         </noscript>
+        <ScrollManager />
         {children}
       </body>
     </html>
