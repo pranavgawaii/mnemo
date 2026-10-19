@@ -1,0 +1,11 @@
+# The web deployment is the Next.js app at the repo root. Keep the API,
+# Python env, tests and tooling out of the upload.
+backend/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+tests/
+benchmark/
+docs/
+.github/
