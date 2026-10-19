@@ -1,14 +1,16 @@
 import HalftoneWordmarkFooter, {
   type FooterColumn,
 } from "./ui/halftone-wordmark-footer";
+import { LogoMark } from "./logo";
 import { displayFont } from "../app/display-font";
 import { ANCHORS, DOCS_URL, GITHUB_URL } from "../lib/site";
 
 /**
  * Site footer. Wraps the halftone wordmark footer with Mnemo's own content:
- * the wordmark reads "mnemo", the link columns mirror the site anchors, and
- * the palette stays light to match the page (#F7F7F5 / near-black ink) with
- * the brand indigo as the accent.
+ * the wordmark reads "mnemo", the brand line carries the logo mark beside the
+ * name, the link columns mirror the site anchors, and the palette stays light
+ * to match the page (#F7F7F5 / near-black ink) with the brand indigo as the
+ * accent.
  */
 const columns: FooterColumn[] = [
   {
@@ -33,7 +35,12 @@ export function SiteFooter() {
   return (
     <HalftoneWordmarkFooter
       wordmark="mnemo"
-      label="Mnemo"
+      label={
+        <>
+          <LogoMark className="h-6 w-6 shrink-0" />
+          Mnemo
+        </>
+      }
       meta="A persistent-memory service for AI agents"
       columns={columns}
       backToTop
