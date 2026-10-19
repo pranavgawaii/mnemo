@@ -41,7 +41,11 @@ const IMPORTANCE_LABELS: Record<number, string> = {
 
 type Explanation = { tone: "note" | "warn" | "ok"; title: string; body: string };
 
-export function MemoryPlayground() {
+export function MemoryPlayground({
+  index = "11",
+}: {
+  index?: string;
+} = {}) {
   const [store, setStore] = useState<PlaygroundState>(() => initialPlaygroundState());
   const [content, setContent] = useState("Pranav lives in Bengaluru");
   const [importance, setImportance] = useState(4);
@@ -149,7 +153,7 @@ export function MemoryPlayground() {
   return (
     <DocsSection
       id="playground"
-      index="11"
+      index={index}
       title="Memory playground"
       intro="Store a fact, search for it, watch the ranking, then try to contradict it. Add and search run against a simulated store in your browser."
     >
