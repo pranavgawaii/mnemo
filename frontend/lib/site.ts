@@ -3,11 +3,27 @@ export const GITHUB_URL = process.env.NEXT_PUBLIC_GITHUB_URL ?? null;
 /** Dedicated technical documentation + interactive tools page. */
 export const DOCS_URL = "/docs";
 
-export const NAV_LINKS = [
+/** Standalone interactive playground — its own page, its own bar. */
+export const PLAYGROUND_URL = "/playground";
+
+export type NavLink = { label: string; href: string; external?: boolean };
+
+/** Links that sit on the left, beside the wordmark. */
+export const NAV_LEFT: NavLink[] = [
   { label: "How it works", href: "/#how-it-works" },
   { label: "Features", href: "/#features" },
-  { label: "Developer guide", href: DOCS_URL },
-] as const;
+];
+
+/** Links that sit beside the centred logo. */
+export const NAV_RIGHT: NavLink[] = [
+  { label: "Playground", href: PLAYGROUND_URL },
+  ...(GITHUB_URL
+    ? [{ label: "GitHub", href: GITHUB_URL, external: true }]
+    : []),
+];
+
+/** Flat list, used by the mobile menu. */
+export const NAV_LINKS: NavLink[] = [...NAV_LEFT, ...NAV_RIGHT];
 
 type Cta = { label: string; href: string; external: boolean };
 
@@ -50,9 +66,9 @@ export const ANCHORS = {
   evaluation: `${DOCS_URL}#evaluation`,
   limitations: `${DOCS_URL}#limitations`,
   troubleshooting: `${DOCS_URL}#troubleshooting`,
-  playground: `${DOCS_URL}#playground`,
-  rankingCalculator: `${DOCS_URL}#ranking-calculator`,
-  contradictionChecker: `${DOCS_URL}#contradiction-checker`,
+  playground: PLAYGROUND_URL,
+  rankingCalculator: `${PLAYGROUND_URL}#ranking-calculator`,
+  contradictionChecker: `${PLAYGROUND_URL}#contradiction-checker`,
 } as const;
 
 export interface DocNavGroup {
