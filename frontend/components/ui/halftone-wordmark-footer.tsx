@@ -38,8 +38,8 @@ export interface FooterColumn {
 export interface HalftoneWordmarkFooterProps {
   /** The giant word printed in dots. Lowercase reads best. */
   wordmark?: string
-  /** Top-left studio line. */
-  label?: string
+  /** Top-left studio line. A node, so the host can set a mark beside the name. */
+  label?: React.ReactNode
   /** The muted line under it. */
   meta?: string
   /** Link columns along the top. */
