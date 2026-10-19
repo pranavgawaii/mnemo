@@ -35,7 +35,7 @@ export function DesignNotes() {
   return (
     <section
       id="principle"
-      className="w-full scroll-mt-[120px] pt-24 md:pt-32 pb-4"
+      className="w-full scroll-mt-[108px] pt-24 md:pt-32 pb-4"
     >
       <div className="max-w-frame mx-auto px-6">
         <div className="grid md:grid-cols-[1fr_1.15fr] gap-14 md:gap-20 items-start">
