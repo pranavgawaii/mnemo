@@ -8,8 +8,8 @@ import { AnimatedSection } from "./animated-section";
  */
 export function PrincipleQuote() {
   return (
-    <section id="principle" className="w-full scroll-mt-[120px]">
-      <AnimatedSection className="max-w-[1000px] mx-auto px-6 py-24 md:py-32 flex flex-col items-center text-center">
+    <section id="principle" className="w-full scroll-mt-16">
+      <AnimatedSection className="max-w-[1000px] mx-auto px-6 pt-12 md:pt-16 pb-16 md:pb-20 flex flex-col items-center text-center">
         <span className="text-[11px] font-bold tracking-[0.16em] uppercase text-muted">
           Design principle
         </span>
