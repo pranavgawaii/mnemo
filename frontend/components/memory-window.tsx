@@ -38,14 +38,16 @@ function Row({
 export function MemoryWindow() {
   return (
     <div className="w-full relative">
-      {/* Ambient glow under the window */}
+      {/* Ambient glow under the window. Kept vertically inside the card: the
+          blobs stop well above its bottom edge so the 90px blur can't leak into
+          the stack strip underneath (it used to wash the chips). */}
       <div className="absolute inset-0 -z-10 pointer-events-none">
-        <div className="absolute top-[70px] -left-[70px] w-[360px] h-[560px] bg-[#C7D2FE] rounded-full blur-[90px] opacity-50 mix-blend-multiply" />
-        <div className="absolute top-[90px] left-1/2 -translate-x-1/2 w-[560px] h-[560px] bg-[#E7D9FB] rounded-full blur-[90px] opacity-45 mix-blend-multiply" />
-        <div className="absolute top-[70px] -right-[70px] w-[360px] h-[560px] bg-[#BFE3F7] rounded-full blur-[90px] opacity-45 mix-blend-multiply" />
+        <div className="absolute top-[70px] bottom-[150px] -left-[70px] w-[360px] bg-[#C7D2FE] rounded-full blur-[90px] opacity-50 mix-blend-multiply" />
+        <div className="absolute top-[90px] bottom-[150px] left-1/2 -translate-x-1/2 w-[560px] bg-[#E7D9FB] rounded-full blur-[90px] opacity-45 mix-blend-multiply" />
+        <div className="absolute top-[70px] bottom-[150px] -right-[70px] w-[360px] bg-[#BFE3F7] rounded-full blur-[90px] opacity-45 mix-blend-multiply" />
       </div>
 
-      <div className="w-full bg-white/30 backdrop-blur-[40px] rounded-[24px] border border-white/60 shadow-[0_50px_100px_-20px_rgba(40,25,70,0.16)] flex sm:pr-2 sm:py-2 sm:pl-0">
+      <div className="w-full bg-white/30 backdrop-blur-[40px] rounded-[24px] border border-white/60 shadow-[0_28px_56px_-26px_rgba(40,25,70,0.18)] flex sm:pr-2 sm:py-2 sm:pl-0">
         {/* LEFT ICON RAIL */}
         <div className="hidden sm:flex w-[44px] flex-col items-center py-2 gap-3 shrink-0">
           <div className="w-7 h-7 flex items-center justify-center mb-1">
