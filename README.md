@@ -33,28 +33,39 @@ a soft-delete audit trail.
 
 ```
 mnemo/
-├── app/                      # FastAPI backend
-│   ├── api/
-│   │   ├── deps.py           # single API-key auth
-│   │   └── routes.py         # /v1/memories, /v1/contradictions
-│   ├── core/
-│   │   ├── config.py         # env-backed settings
-│   │   ├── embedding.py      # local sentence-transformers embedding
-│   │   ├── decay.py          # time-decay × importance scoring
-│   │   └── contradiction.py  # similarity gate + negation heuristic
-│   ├── db/session.py         # engine + session
-│   ├── models/               # SQLAlchemy models + Pydantic schemas
-│   ├── services/
-│   │   └── memory_service.py # pgvector queries + flag/resolve flow
-│   └── main.py               # app entrypoint + /health
-├── alembic/                  # migrations
-├── benchmark/                # retrieval benchmark (dataset + runner)
-├── tests/                    # unit (core) + DB-integration (api)
-├── frontend/                 # Next.js 15 marketing site + docs
-├── docker-compose.yml        # Postgres+pgvector + API
-├── Dockerfile
-├── requirements.txt
-└── .env.example
+├── app/                      # Next.js 15 App Router (marketing site + docs)
+├── components/               # React components
+├── lib/                      # client-side logic + page content
+├── public/                   # fonts and static assets
+├── backend/                  # FastAPI service
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── deps.py       # single API-key auth
+│   │   │   └── routes.py     # /v1/memories, /v1/contradictions
+│   │   ├── core/
+│   │   │   ├── config.py     # env-backed settings
+│   │   │   ├── embedding.py  # local sentence-transformers embedding
+│   │   │   ├── decay.py      # time-decay × importance scoring
+│   │   │   └── contradiction.py  # similarity gate + negation heuristic
+│   │   ├── db/session.py     # engine + session
+│   │   ├── models/           # SQLAlchemy models + Pydantic schemas
+│   │   ├── services/
+│   │   │   └── memory_service.py # pgvector queries + flag/resolve flow
+│   │   └── main.py           # app entrypoint + /health
+│   ├── alembic/              # migrations
+│   ├── benchmark/            # retrieval benchmark (dataset + runner)
+│   ├── tests/                # unit (core) + DB-integration (api)
+│   ├── docker-compose.yml    # Postgres+pgvector + API
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── .env.example
+├── package.json              # web dependencies + scripts
+├── next.config.mjs
+├── tailwind.config.ts
+├── tsconfig.json
+├── .env.example              # web env (NEXT_PUBLIC_GITHUB_URL)
+├── docs/frontend.md          # component map
+└── .github/workflows/ci.yml
 ```
 
 **Search path:** embed the query locally → pgvector cosine-distance scan filtered
@@ -74,6 +85,7 @@ Requires Postgres 16+ with the `pgvector` extension.
 ### Docker (recommended)
 
 ```bash
+cd backend
 docker compose up
 ```
 
@@ -83,6 +95,7 @@ boot and listens on <http://localhost:8000> (interactive docs at `/docs`).
 ### Local
 
 ```bash
+cd backend
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
@@ -137,7 +150,7 @@ All routes require an `X-API-Key` header.
 
 `GET /health` (liveness) and `GET /ready` (readiness — queries the database)
 are unauthenticated. Full request/response schemas are in
-`app/models/schemas.py` and rendered at `/docs`.
+`backend/app/models/schemas.py` and rendered at `/docs`.
 
 ---
 
@@ -157,7 +170,7 @@ are unauthenticated. Full request/response schemas are in
 
 ## Benchmark
 
-`benchmark/` holds 60 seed memories from a personal-assistant memory — profile,
+`backend/benchmark/` holds 60 seed memories from a personal-assistant memory — profile,
 habits, health, people, side projects, infrastructure — and 50 hand-labelled
 natural-language queries. Queries are paraphrases rather than substrings, so the
 benchmark measures semantic recall rather than keyword overlap. `created_at` is
@@ -165,6 +178,7 @@ backdated per memory, and several facts are deliberately superseded by fresher
 ones, so the decay ranking is genuinely exercised.
 
 ```bash
+cd backend
 export DATABASE_URL=postgresql+psycopg://mnemo:mnemo@localhost:5432/mnemo
 PYTHONPATH=. python benchmark/run.py
 
@@ -188,7 +202,7 @@ while cosine similarity across the corpus spans under 3× — so the decay term
 didn't nudge the ranking, it *dictated* it, degenerating search into "newest
 first". That configuration scored **36% top-3**. Widening the half-life to 180
 days, raising the floor to 0.7, and narrowing importance to 0.9–1.1 brought it to
-94%. `tests/test_core.py` now pins the invariant so it can't regress.
+94%. `backend/tests/test_core.py` now pins the invariant so it can't regress.
 
 **Honest caveat.** On this benchmark decay is worth about +2 points of top-1 over
 raw cosine and nothing at top-3. Its value shows up on the six recency-sensitive
@@ -201,6 +215,8 @@ headline number as an in-sample result.
 ## Testing
 
 ```bash
+cd backend
+
 # Pure-logic unit tests (decay + contradiction) — no DB needed
 PYTHONPATH=. pytest tests/test_core.py -v
 
@@ -210,32 +226,37 @@ export DATABASE_URL=postgresql+psycopg://mnemo:mnemo@localhost:5432/mnemo
 PYTHONPATH=. pytest tests/ -v
 ```
 
-`tests/test_frontend_parity.py` parses both `app/core/` and
-`frontend/lib/mnemo.ts` and asserts the browser-side mirror of the thresholds,
-limits and negation markers still matches the backend — it needs no database and
-runs in CI alongside `test_core.py` (see `.github/workflows/ci.yml`, which also
-typechecks and builds the frontend).
+`backend/tests/test_frontend_parity.py` parses both `backend/app/core/` and
+`lib/mnemo.ts` and asserts the browser-side mirror of the thresholds, limits and
+negation markers still matches the backend — it needs no database and runs in CI
+alongside `test_core.py` (see `.github/workflows/ci.yml`, which also typechecks
+and builds the web app).
 
 ---
 
 ## Frontend
 
-`frontend/` is a Next.js 15 (App Router) + Tailwind marketing site and an
+The repo root is a Next.js 15 (App Router) + Tailwind marketing site and an
 interactive documentation page. Both are **static at runtime** — the demos reuse
-the real ranking formula and contradiction logic ported into `frontend/lib/`, so
-no API key is ever exposed in the browser.
+the real ranking formula and contradiction logic ported into `lib/`, so no API
+key is ever exposed in the browser.
 
 ```bash
-cd frontend
 pnpm install
 pnpm dev        # http://localhost:3005  (docs at /docs)
 pnpm build      # production build
 pnpm typecheck  # tsc --noEmit
 ```
 
-See [`frontend/README.md`](frontend/README.md) for the component map. To surface
-a "View on GitHub" CTA, set `NEXT_PUBLIC_GITHUB_URL` in `frontend/.env.local`
-(see `frontend/.env.example`).
+See [`docs/frontend.md`](docs/frontend.md) for the component map. To surface a
+"View on GitHub" CTA, set `NEXT_PUBLIC_GITHUB_URL` in `.env.local` (see
+`.env.example`).
+
+### Deploying the web app
+
+Import the **repo root** as the Vercel project — the Next.js app is at the root,
+and `.vercelignore` keeps `backend/` out of the upload. The API is deployed
+separately from `backend/` (Docker image or any Python host).
 
 ---
 
@@ -245,7 +266,7 @@ a "View on GitHub" CTA, set `NEXT_PUBLIC_GITHUB_URL` in `frontend/.env.local`
   similarity gate (0.82) establishes the two memories are about the same thing,
   then a negation-marker heuristic checks whether exactly one side carries a
   polarity flip ("no longer", "stopped", "former", …) while sharing subject
-  matter. No LLM call, so it's cheap and explainable — `app/core/contradiction.py`
+  matter. No LLM call, so it's cheap and explainable — `backend/app/core/contradiction.py`
   has an `llm_check` slot to swap in a model verdict later without touching call
   sites, with the similarity gate still running first.
 - **Contradictions are flagged, never auto-resolved.** Resolution is an explicit
