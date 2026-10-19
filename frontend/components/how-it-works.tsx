@@ -91,10 +91,10 @@ export function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="relative w-full scroll-mt-[120px] py-24 md:py-28"
+      className="relative w-full scroll-mt-16 pt-12 md:pt-16 pb-16 md:pb-20"
     >
       <div className="max-w-frame mx-auto px-6">
-        <AnimatedSection className="text-center mb-20">
+        <AnimatedSection className="text-center mb-14">
           <span className="text-[11px] font-bold tracking-[0.16em] uppercase text-muted">
             How it works
           </span>
@@ -105,7 +105,7 @@ export function HowItWorks() {
           </h2>
         </AnimatedSection>
 
-        <div className="flex flex-col gap-20 md:gap-24">
+        <div className="flex flex-col gap-16 md:gap-20">
           {steps.map((step) => (
             <AnimatedSection
               key={step.title}
