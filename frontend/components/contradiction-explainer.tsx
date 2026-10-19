@@ -9,7 +9,11 @@ import {
   checkContradiction,
 } from "../lib/mnemo";
 
-export function ContradictionExplainer() {
+export function ContradictionExplainer({
+  index = "13",
+}: {
+  index?: string;
+} = {}) {
   const [existing, setExisting] = useState("Pranav lives in Bengaluru");
   const [incoming, setIncoming] = useState("Pranav no longer lives in Bengaluru");
   const [similarity, setSimilarity] = useState(0.93);
@@ -20,7 +24,7 @@ export function ContradictionExplainer() {
   return (
     <DocsSection
       id="contradiction-checker"
-      index="13"
+      index={index}
       title="Contradiction checker"
       intro={
         <>
