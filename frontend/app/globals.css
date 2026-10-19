@@ -39,11 +39,56 @@
     border-radius: 4px;
   }
 
-  /* The first section inside a docs chapter sits directly beneath the chapter's
-     heavy rule, so it drops its own hairline and top padding. */
-  .docs-chapter > section:first-of-type {
-    border-top-width: 0;
-    padding-top: 0;
+  /* The footer brand line reads as the navbar wordmark: the mark sits beside
+     the name with no tile behind it — a white chip read as a sticker pasted
+     onto the warm grey, and the mark's own rounded square is already a frame.
+     Both are `currentColor`, so the indigo hover below warms them together.
+
+     The footer's small type is set a touch larger than the vendored default.
+     Every selector here is kept two classes deep because the component's own
+     <style> lands in the body, after this stylesheet — at equal specificity
+     the vendored rules would win the tie. */
+  .hwf-root .hwf-top {
+    font-size: 13.5px;
+  }
+
+  .hwf-root .hwf-rule {
+    font-size: 13px;
+  }
+
+  .hwf-top .hwf-brand strong {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 16px;
+  }
+
+  .hwf-top .hwf-brand span {
+    font-size: 13.5px;
+  }
+
+  .hwf-top .hwf-col h3 {
+    font-size: 13.5px;
+  }
+
+  /* The footer's "Mnemo" word warms to the brand indigo on hover. */
+  .hwf-brand strong {
+    transition: color 0.2s ease;
+  }
+
+  .hwf-brand strong:hover {
+    color: #4f46e5;
+  }
+
+  /* The footer credit ("Pranav Gawai") warms to the brand indigo on hover.
+     `a[href]` out-specifies the vendored footer's own `.hwf-note a` rule, so
+     this works without editing the registry component. */
+  .hwf-note a[href] {
+    transition: opacity 0.25s ease, color 0.2s ease;
+  }
+
+  .hwf-note a[href]:hover {
+    color: #4f46e5;
   }
 }
 
@@ -78,6 +123,23 @@
   .grain {
     background-image: radial-gradient(rgba(10, 10, 15, 0.035) 1px, transparent 1px);
     background-size: 22px 22px;
+  }
+
+  /* Navbar links: the exact underline sweep the footer's "Back to top" uses —
+     a hairline that runs out from the left in the link's own colour, which
+     turns theme-indigo on hover. Width hugs the label, so it also works in
+     the stacked mobile menu. */
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0% 1px;
+    transition: color 0.2s ease, background-size 0.35s cubic-bezier(0.2, 0.7, 0.1, 1);
+  }
+
+  .link-underline:hover,
+  .link-underline:focus-visible {
+    background-size: 100% 1px;
   }
 }
 
@@ -137,6 +199,58 @@
     animation: none;
   }
   .animate-marquee {
+    animation: none;
+  }
+  .link-underline {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Memory orbit — components/memory-orbit.tsx (the playground's recall visual)
+   --------------------------------------------------------------------------- */
+@keyframes orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes orbit-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.14);
+  }
+}
+
+.orbit-spin,
+.orbit-upright {
+  animation-name: orbit-spin;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: var(--orbit-dur, 60s);
+}
+
+.orbit-core-pulse {
+  animation: orbit-pulse 4.5s ease-in-out infinite;
+}
+
+/* Freeze the rings while the pointer is over the stage, so a node is easy to
+   hit. The counter-rotation pauses with the ring, so nodes stay upright. */
+.orbit-stage:hover .orbit-spin,
+.orbit-stage:hover .orbit-upright,
+.orbit-stage:hover .orbit-core-pulse {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit-spin,
+  .orbit-upright,
+  .orbit-core-pulse {
     animation: none;
   }
 }
