@@ -23,10 +23,10 @@ export function Differentiator() {
   return (
     <section
       id="features"
-      className="w-full scroll-mt-[120px] border-y border-line bg-white"
+      className="w-full scroll-mt-16 border-y border-line bg-white"
     >
-      <div className="max-w-frame mx-auto px-6 py-24 md:py-28">
-        <AnimatedSection className="text-center mb-14">
+      <div className="max-w-frame mx-auto px-6 pt-12 md:pt-16 pb-16 md:pb-20">
+        <AnimatedSection className="text-center mb-12">
           <div className="text-[11px] font-bold tracking-[0.14em] text-muted uppercase mb-6">
             The Mnemo difference
           </div>
