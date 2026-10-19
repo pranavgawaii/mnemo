@@ -57,7 +57,7 @@ const cards = [
 export function ProductExplainer() {
   return (
     <section className="w-full border-y border-line bg-white">
-      <div className="max-w-frame mx-auto px-6 py-24 md:py-28">
+      <div className="max-w-frame mx-auto px-6 pt-12 md:pt-16 pb-16 md:pb-20">
         <AnimatedSection className="max-w-[640px]">
           <span className="font-mono text-[10.5px] font-bold uppercase tracking-[0.16em] text-accent-ink">
             Overview
