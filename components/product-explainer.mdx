@@ -2,59 +2,54 @@ import { ArrowRight } from "lucide-react";
 import { AnimatedSection } from "./animated-section";
 import { ANCHORS } from "../lib/site";
 
-const cards = [
-  {
-    kicker: "What it is",
-    title: "A memory service for agents",
-    body: (
-      <>
-        Mnemo is a small HTTP service that stores facts an AI agent learns and
-        hands them back later. It is not a chatbot and not a vector database you
-        have to assemble — it is one FastAPI app over Postgres&nbsp;+&nbsp;pgvector
-        with an API you can call in three lines of <code>curl</code>.
-      </>
-    ),
-  },
-  {
-    kicker: "Why it matters",
-    title: "Context windows forget",
-    body: (
-      <>
-        An agent that only sees the current conversation re-learns the same
-        things forever, and a naïve memory store has the opposite problem: it
-        answers with whatever is <em>nearest</em>, even if that fact is stale or
-        contradicts a newer one. Mnemo ranks by relevance
-        (<span className="font-mono text-[12px]">similarity × decay × importance</span>)
-        and flags conflicts instead of silently overwriting them.
-      </>
-    ),
-  },
-  {
-    kicker: "How to explore",
-    title: "Read, run, or poke it",
-    body: (
-      <>
-        Try the{" "}
-        <a href={ANCHORS.playground} className="text-accent-ink underline decoration-line underline-offset-4 hover:decoration-accent-ink">
-          interactive playground
-        </a>{" "}
-        to see a store and a recall, read the{" "}
-        <a href={ANCHORS.docs} className="text-accent-ink underline decoration-line underline-offset-4 hover:decoration-accent-ink">
-          developer guide
-        </a>{" "}
-        for the exact API, or run the whole stack locally with{" "}
-        <span className="font-mono text-[12px]">docker compose up</span>.
-      </>
-    ),
-  },
-];
+{(() => {
+  const cards = [
+    {
+      kicker: "What it is",
+      title: "A memory service for agents",
+      body: (
+        <>
+          Mnemo is a small HTTP service that stores facts an AI agent learns and
+          hands them back later. It is not a chatbot and not a vector database you
+          have to assemble. It is one FastAPI app over Postgres&nbsp;+&nbsp;pgvector
+          with an API you can call in three lines of <code>curl</code>.
+        </>
+      ),
+    },
+    {
+      kicker: "Why it matters",
+      title: "Context windows forget",
+      body: (
+        <>
+          An agent that only sees the current conversation re-learns the same
+          things forever, and a naïve memory store has the opposite problem: it
+          answers with whatever is <em>nearest</em>, even if that fact is stale or
+          contradicts a newer one. Mnemo ranks by relevance
+          (<span className="font-mono text-[12px]">similarity × decay × importance</span>)
+          and flags conflicts instead of silently overwriting them.
+        </>
+      ),
+    },
+    {
+      kicker: "How to explore",
+      title: "Read, run, or poke it",
+      body: (
+        <>
+          Try the{" "}
+          <a href={ANCHORS.playground} className="text-accent-ink underline decoration-line underline-offset-4 hover:decoration-accent-ink">
+            interactive playground
+          </a>{" "}
+          to see a store and a recall, read the{" "}
+          <a href={ANCHORS.docs} className="text-accent-ink underline decoration-line underline-offset-4 hover:decoration-accent-ink">
+            developer guide
+          </a>{" "}
+          for the exact API, or run the whole stack locally with{" "}
+          <span className="font-mono text-[12px]">docker compose up</span>.
+        </>
+      ),
+    },
+  ];
 
-/**
- * The opening argument, set on its own white band so it reads as a distinct
- * chapter rather than a continuation of the hero: a heading, then three
- * numbered editorial columns.
- */
-export function ProductExplainer() {
   return (
     <section className="w-full border-y border-line bg-white">
       <div className="max-w-frame mx-auto px-6 pt-12 md:pt-16 pb-16 md:pb-20">
@@ -63,7 +58,7 @@ export function ProductExplainer() {
             Overview
           </span>
           <h2 className="mt-5 text-[28px] md:text-[34px] font-medium leading-[1.15] tracking-[-0.02em] text-ink text-balance">
-            A small, self-contained memory service — not another vector database
+            A small, self-contained memory service: not another vector database
             to assemble.
           </h2>
         </AnimatedSection>
@@ -105,4 +100,4 @@ export function ProductExplainer() {
       </div>
     </section>
   );
-}
+})()}

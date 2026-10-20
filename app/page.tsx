@@ -1,16 +1,18 @@
 import { SiteNav } from "../components/site-nav";
-import { Hero } from "../components/hero";
-import { PipelineMarquee } from "../components/pipeline-marquee";
-import { ProductExplainer } from "../components/product-explainer";
-import { HowItWorks } from "../components/how-it-works";
-import { Differentiator } from "../components/differentiator";
-import { PrincipleQuote } from "../components/principle-quote";
-import { FinalCta } from "../components/final-cta";
+import Hero from "../components/hero.mdx";
+import PipelineMarquee from "../components/pipeline-marquee.mdx";
+import ProductExplainer from "../components/product-explainer.mdx";
+import HowItWorks from "../components/how-it-works.mdx";
+import Differentiator from "../components/differentiator.mdx";
+import PrincipleQuote from "../components/principle-quote.mdx";
+import FinalCta from "../components/final-cta.mdx";
 import { SiteFooter } from "../components/site-footer";
+import { StructuredData } from "../components/structured-data";
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-background">
+      <StructuredData />
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-ink focus:px-4 focus:py-2 focus:text-[13px] focus:text-white"

@@ -1,50 +1,36 @@
-const stages = [
-  { label: "Store", tone: "ink" as const },
-  { label: "Embed", tone: "ink" as const },
-  { label: "Vector scan", tone: "ink" as const },
-  { label: "Re-rank", tone: "accent" as const },
-  { label: "Recall", tone: "success" as const },
-  { label: "Flag", tone: "ink" as const },
-];
+{(() => {
+  const stages = [
+    { label: "Store", tone: "ink" },
+    { label: "Embed", tone: "ink" },
+    { label: "Vector scan", tone: "ink" },
+    { label: "Re-rank", tone: "accent" },
+    { label: "Recall", tone: "success" },
+    { label: "Flag", tone: "ink" },
+  ];
 
-const toneClass: Record<(typeof stages)[number]["tone"], string> = {
-  ink: "text-ink",
-  accent: "text-accent",
-  success: "text-[#16A34A]",
-};
+  const toneClass = {
+    ink: "text-ink",
+    accent: "text-accent",
+    success: "text-[#16A34A]",
+  };
 
-function StageSet() {
-  return (
-    <div className="flex items-center gap-16 md:gap-24 whitespace-nowrap px-8 md:px-12">
-      {stages.map((stage) => (
-        <div
-          key={stage.label}
-          className={`shrink-0 tracking-tight text-[28px] ${toneClass[stage.tone]} ${
-            stage.tone === "ink" ? "" : "font-medium"
-          }`}
-        >
-          {stage.label}
-        </div>
-      ))}
-    </div>
-  );
-}
+  function StageSet() {
+    return (
+      <div className="flex items-center gap-16 md:gap-24 whitespace-nowrap px-8 md:px-12">
+        {stages.map((stage) => (
+          <div
+            key={stage.label}
+            className={`shrink-0 tracking-tight text-[28px] ${toneClass[stage.tone]} ${
+              stage.tone === "ink" ? "" : "font-medium"
+            }`}
+          >
+            {stage.label}
+          </div>
+        ))}
+      </div>
+    );
+  }
 
-/**
- * The recall path. The marquee itself is unchanged — the strip, its pill and
- * the scrolling stage names are exactly as before. What changed is the framing:
- * the whole section now sits on its own surface. A full-bleed band in
- * `hairline` wraps the strip *and* the caption underneath, so the two read as
- * one block instead of a strip with a line of copy floating below it on the
- * same background as the hero. The track is edge-masked so the looping stage
- * names dissolve in and out instead of being sliced mid-word against the pill.
- *
- * The band only carries a top border and no bottom margin: the section below it
- * already opens with its own top border on white, so the two meet flush. That
- * removes the dead strip of page background that used to sit between the
- * caption and the next section.
- */
-export function PipelineMarquee() {
   return (
     <section
       aria-label="The recall path"
@@ -63,8 +49,8 @@ export function PipelineMarquee() {
               page gutter and a shorter fade is enough. */}
           <div className="relative min-w-0 w-full flex-1 overflow-hidden [-webkit-mask-image:linear-gradient(to_right,transparent,transparent_10px,black_60px,black_calc(100%_-_60px),transparent_calc(100%_-_10px),transparent)] [mask-image:linear-gradient(to_right,transparent,transparent_10px,black_60px,black_calc(100%_-_60px),transparent_calc(100%_-_10px),transparent)] md:[-webkit-mask-image:linear-gradient(to_right,transparent,transparent_28px,black_104px,black_calc(100%_-_104px),transparent_calc(100%_-_28px),transparent)] md:[mask-image:linear-gradient(to_right,transparent,transparent_28px,black_104px,black_calc(100%_-_104px),transparent_calc(100%_-_28px),transparent)]">
             <div className="flex w-max animate-marquee">
-              <StageSet />
-              <StageSet />
+              {StageSet()}
+              {StageSet()}
             </div>
           </div>
         </div>
@@ -75,4 +61,4 @@ export function PipelineMarquee() {
       </p>
     </section>
   );
-}
+})()}
