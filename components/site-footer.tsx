@@ -3,7 +3,7 @@ import HalftoneWordmarkFooter, {
 } from "./ui/halftone-wordmark-footer";
 import { LogoMark } from "./logo";
 import { displayFont } from "../app/display-font";
-import { ANCHORS, DOCS_URL, GITHUB_URL } from "../lib/site";
+import { ANCHORS, CONTACT_EMAIL, DOCS_URL, GITHUB_URL, PLAYGROUND_URL } from "../lib/site";
 
 /**
  * Site footer. Wraps the halftone wordmark footer with Mnemo's own content:
@@ -25,6 +25,13 @@ const columns: FooterColumn[] = [
     links: [
       { label: "Developer guide", href: DOCS_URL },
       ...(GITHUB_URL ? [{ label: "GitHub", href: GITHUB_URL }] : []),
+    ],
+  },
+  {
+    title: "Contact",
+    links: [
+      { label: "Playground", href: PLAYGROUND_URL },
+      { label: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}` },
     ],
   },
 ];
