@@ -126,5 +126,73 @@ class ResolveRequest(BaseModel):
     winner_memory_id: uuid.UUID
 
 
+# --------------------------------------------------------------------------- #
+# Namespace administration
+# --------------------------------------------------------------------------- #
+class MemoryExportItem(BaseModel):
+    """One memory in a namespace export.
+
+    Embeddings are intentionally omitted. The text is the source of truth and
+    is re-embedded on import, which keeps a backup portable across models.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    content: str
+    importance: int
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class ContradictionExportItem(BaseModel):
+    """One contradiction in a namespace export, including its audit state."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    new_memory_id: uuid.UUID
+    existing_memory_id: uuid.UUID
+    similarity: float
+    reason: str
+    status: str
+    resolved_winner_id: uuid.UUID | None
+    created_at: datetime
+    resolved_at: datetime | None
+
+
+class MemoryExport(BaseModel):
+    """Portable snapshot of a namespace."""
+
+    version: int = 1
+    namespace: str
+    exported_at: datetime
+    memories: list[MemoryExportItem]
+    contradictions: list[ContradictionExportItem] = Field(default_factory=list)
+
+
+class ImportanceCount(BaseModel):
+    """How many memories carry one importance value."""
+
+    importance: int
+    count: int
+
+
+class NamespaceStats(BaseModel):
+    """Aggregate counts for one namespace."""
+
+    namespace: str
+    total_memories: int
+    active_memories: int
+    inactive_memories: int
+    open_contradictions: int
+    resolved_contradictions: int
+    average_importance: float | None
+    oldest_memory_at: datetime | None
+    newest_memory_at: datetime | None
+    importance_counts: list[ImportanceCount]
+
+
 # Rebuild forward reference (MemoryCreateResult -> ContradictionOut).
 MemoryCreateResult.model_rebuild()

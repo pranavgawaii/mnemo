@@ -8,19 +8,24 @@ response goes through a Pydantic schema; ORM objects are never returned raw.
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import require_api_key
 from app.db.session import get_db
 from app.models.schemas import (
+    ContradictionExportItem,
     ContradictionList,
     ContradictionOut,
     MemoryCreate,
     MemoryCreateResult,
+    MemoryExport,
+    MemoryExportItem,
     MemoryList,
     MemoryOut,
+    NamespaceStats,
     ResolveRequest,
     SearchRequest,
     SearchResponse,
@@ -29,6 +34,43 @@ from app.models.schemas import (
 from app.services import memory_service
 
 router = APIRouter(prefix="/v1", dependencies=[Depends(require_api_key)])
+
+
+# --------------------------------------------------------------------------- #
+# Namespace administration
+# --------------------------------------------------------------------------- #
+@router.get("/namespaces/{namespace}/export", response_model=MemoryExport)
+def export_namespace(
+    namespace: str = Path(..., min_length=1, max_length=128),
+    db: Session = Depends(get_db),
+) -> MemoryExport:
+    """Export every memory and contradiction in a namespace.
+
+    Soft-deleted memories are included. The snapshot is portable between
+    deployments because vectors are re-derived from the text on import.
+    """
+    memories, contradictions = memory_service.export_namespace(
+        db, namespace=namespace
+    )
+    return MemoryExport(
+        namespace=namespace,
+        exported_at=datetime.now(timezone.utc),
+        memories=[MemoryExportItem.model_validate(memory) for memory in memories],
+        contradictions=[
+            ContradictionExportItem.model_validate(contradiction)
+            for contradiction in contradictions
+        ],
+    )
+
+
+@router.get("/namespaces/{namespace}/stats", response_model=NamespaceStats)
+def namespace_stats(
+    namespace: str = Path(..., min_length=1, max_length=128),
+    db: Session = Depends(get_db),
+) -> NamespaceStats:
+    """Return aggregate memory and contradiction counts for one namespace."""
+    stats = memory_service.namespace_stats(db, namespace=namespace)
+    return NamespaceStats(namespace=namespace, **stats)
 
 
 # --------------------------------------------------------------------------- #

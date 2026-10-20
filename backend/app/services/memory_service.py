@@ -7,15 +7,18 @@ handlers. Every query filters by ``namespace`` — the tenant/bucket boundary.
 from __future__ import annotations
 
 import uuid
+from collections import Counter
 from datetime import datetime, timezone
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.contradiction import LlmCheck, check_contradiction
 from app.core.decay import relevance_score
 from app.core.embedding import embed
 from app.models.models import Contradiction, Memory
+from app.models.schemas import MemoryExport
 
 # How many nearest neighbours to inspect for contradictions when adding.
 _CONTRADICTION_CANDIDATES = 5
@@ -242,3 +245,164 @@ def resolve_contradiction(
     db.commit()
     db.refresh(contradiction)
     return contradiction, None
+
+
+# --------------------------------------------------------------------------- #
+# Namespace administration
+# --------------------------------------------------------------------------- #
+def export_namespace(
+    db: Session, *, namespace: str
+) -> tuple[list[Memory], list[Contradiction]]:
+    """Return every memory and contradiction in a namespace.
+
+    Soft-deleted memories are included on purpose: an export is a backup of the
+    audit trail, not just the active recall set.
+    """
+    memories = (
+        db.execute(
+            select(Memory)
+            .where(Memory.namespace == namespace)
+            .order_by(Memory.created_at, Memory.id)
+        )
+        .scalars()
+        .all()
+    )
+    contradictions = (
+        db.execute(
+            select(Contradiction)
+            .where(Contradiction.namespace == namespace)
+            .order_by(Contradiction.created_at, Contradiction.id)
+        )
+        .scalars()
+        .all()
+    )
+    return list(memories), list(contradictions)
+
+
+def namespace_stats(db: Session, *, namespace: str) -> dict[str, object]:
+    """Aggregate memory and contradiction counts for one namespace."""
+    memory_rows = db.execute(
+        select(Memory.is_active, Memory.importance).where(
+            Memory.namespace == namespace
+        )
+    ).all()
+    total = len(memory_rows)
+    active = sum(1 for row in memory_rows if row.is_active)
+    importance_counts = Counter(row.importance for row in memory_rows)
+
+    contradiction_rows = db.execute(
+        select(Contradiction.status, func.count())
+        .where(Contradiction.namespace == namespace)
+        .group_by(Contradiction.status)
+    ).all()
+    contradiction_counts = {status: int(count) for status, count in contradiction_rows}
+
+    bounds = db.execute(
+        select(func.min(Memory.created_at), func.max(Memory.created_at)).where(
+            Memory.namespace == namespace
+        )
+    ).one()
+    oldest, newest = bounds
+
+    return {
+        "total_memories": total,
+        "active_memories": active,
+        "inactive_memories": total - active,
+        "open_contradictions": contradiction_counts.get("open", 0),
+        "resolved_contradictions": contradiction_counts.get("resolved", 0),
+        "average_importance": (
+            sum(row.importance for row in memory_rows) / total if total else None
+        ),
+        "oldest_memory_at": oldest,
+        "newest_memory_at": newest,
+        "importance_counts": [
+            {"importance": importance, "count": importance_counts[importance]}
+            for importance in sorted(importance_counts)
+        ],
+    }
+
+
+def import_namespace(
+    db: Session,
+    *,
+    namespace: str,
+    payload: MemoryExport,
+    preserve_ids: bool = False,
+) -> tuple[int, int]:
+    """Restore an export into an empty namespace.
+
+    Timestamps, soft-delete state and contradiction audit records are
+    preserved. Ids are remapped by default so a snapshot can be restored into
+    another namespace on the same database. Pass ``preserve_ids=True`` for a
+    disaster-recovery restore into an empty database.
+
+    The namespace must be empty so an import can never merge into or overwrite
+    live data. Text is re-embedded with the configured model; the export
+    deliberately does not carry vectors.
+    """
+    existing = db.scalar(
+        select(func.count()).select_from(Memory).where(Memory.namespace == namespace)
+    )
+    if existing:
+        raise ValueError(
+            f"Namespace '{namespace}' already contains memories. Import into an empty namespace."
+        )
+
+    memory_ids = {item.id for item in payload.memories}
+    if len(memory_ids) != len(payload.memories):
+        raise ValueError("Export contains duplicate memory ids.")
+
+    for item in payload.contradictions:
+        if item.new_memory_id not in memory_ids or item.existing_memory_id not in memory_ids:
+            raise ValueError("Export contains a contradiction that references an unknown memory.")
+        if item.resolved_winner_id is not None and item.resolved_winner_id not in memory_ids:
+            raise ValueError("Export contains a winner that references an unknown memory.")
+
+    memory_ids_map: dict[uuid.UUID, uuid.UUID] = {}
+
+    try:
+        for item in payload.memories:
+            new_id = item.id if preserve_ids else uuid.uuid4()
+            memory_ids_map[item.id] = new_id
+            db.add(
+                Memory(
+                    id=new_id,
+                    namespace=namespace,
+                    content=item.content,
+                    importance=item.importance,
+                    embedding=embed(item.content),
+                    is_active=item.is_active,
+                    created_at=item.created_at,
+                    updated_at=item.updated_at,
+                )
+            )
+        db.flush()
+
+        for item in payload.contradictions:
+            db.add(
+                Contradiction(
+                    id=item.id if preserve_ids else uuid.uuid4(),
+                    namespace=namespace,
+                    new_memory_id=memory_ids_map[item.new_memory_id],
+                    existing_memory_id=memory_ids_map[item.existing_memory_id],
+                    similarity=item.similarity,
+                    reason=item.reason,
+                    status=item.status,
+                    resolved_winner_id=(
+                        memory_ids_map[item.resolved_winner_id]
+                        if item.resolved_winner_id is not None
+                        else None
+                    ),
+                    created_at=item.created_at,
+                    resolved_at=item.resolved_at,
+                )
+            )
+
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise ValueError(
+            "Import conflicts with an existing row. Use an empty namespace."
+        ) from exc
+
+    return len(payload.memories), len(payload.contradictions)
