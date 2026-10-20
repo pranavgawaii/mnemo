@@ -1,0 +1,89 @@
+import { DocsChapter } from "./docs-chapter";
+import {
+  AuthSection,
+  DataModelSection,
+  LimitationsSection,
+  QuickstartSection,
+  RetrievalSection,
+  TroubleshootingSection,
+} from "./documentation";
+import { ArchitectureExplorer } from "./architecture-explorer";
+import { ApiExplorer } from "./api-explorer";
+import { LifecycleExplorer } from "./lifecycle-explorer";
+import { MemoryPlayground } from "./memory-playground";
+import { RankingExplorer } from "./ranking-explorer";
+import { ContradictionExplainer } from "./contradiction-explainer";
+import { Evaluation } from "./evaluation";
+import { PLAYGROUND_URL } from "../lib/site";
+
+{(
+<>
+  <div id="overview" className="scroll-mt-[120px] lg:scroll-mt-[66px]">
+    <h1 className="text-[30px] font-medium tracking-[-0.03em] text-ink md:text-[36px]">
+      Developer guide
+    </h1>
+    <p className="mt-3 max-w-[680px] text-[15px] leading-[1.7] text-muted">
+      Mnemo is a persistent-memory service for AI agents. Everything below is
+      taken from the repository: how it works, how to run it, the exact REST
+      contracts, and the trade-offs behind it.
+    </p>
+  </div>
+
+  <div className="mt-14">
+    <DocsChapter
+      label="Getting started"
+      note="Run Mnemo locally: a one-command Docker stack, or a Python environment against your own Postgres."
+    >
+      <QuickstartSection />
+    </DocsChapter>
+
+    <DocsChapter
+      label="Concepts"
+      note="How the service is put together, how recall is ranked, and how conflicts are handled."
+    >
+      <ArchitectureExplorer />
+      <RetrievalSection />
+      <LifecycleExplorer />
+    </DocsChapter>
+
+    <DocsChapter
+      label="Reference"
+      note="The exact tables, routes and access model: the parts you look up rather than read."
+    >
+      <DataModelSection />
+      <ApiExplorer />
+      <AuthSection />
+    </DocsChapter>
+
+    <DocsChapter
+      label="Guides"
+      note="What the benchmark measures, what this version does not do, and how to get unstuck."
+    >
+      <Evaluation />
+      <LimitationsSection />
+      <TroubleshootingSection />
+    </DocsChapter>
+
+    <DocsChapter
+      label="Interactive"
+      note={
+        <>
+          Browser-side simulations of the real logic. Nothing here touches the
+          API. The same tools also stand alone on the{" "}
+          <a
+            href={PLAYGROUND_URL}
+            className="link-underline font-medium text-accent-ink"
+          >
+            playground page
+          </a>
+          .
+        </>
+      }
+    >
+      <MemoryPlayground />
+      <RankingExplorer />
+      <ContradictionExplainer />
+    </DocsChapter>
+  </div>
+</>
+)}
