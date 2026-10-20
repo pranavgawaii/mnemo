@@ -27,7 +27,7 @@ const ENDPOINTS: Endpoint[] = [
     auth: false,
     gets: [{ name: "status", type: "string", note: 'Always "ok" when the process is serving' }],
     notes:
-      "Unauthenticated. Liveness only — it does not check the database.",
+      "Unauthenticated. Liveness only. It does not check the database.",
   },
   {
     method: "GET",
@@ -49,8 +49,8 @@ const ENDPOINTS: Endpoint[] = [
     auth: true,
     sends: [
       { name: "content", type: "string", note: "The fact to store", required: true },
-      { name: "namespace", type: "string", note: "Retrieval bucket, 1–128 chars. Default “default”" },
-      { name: "importance", type: "integer", note: "1–5. Default 3" },
+      { name: "namespace", type: "string", note: "Retrieval bucket, 1 to 128 chars. Default “default”" },
+      { name: "importance", type: "integer", note: "1 to 5. Default 3" },
     ],
     gets: [
       { name: "memory", type: "object", note: "The stored row" },
@@ -69,14 +69,14 @@ const ENDPOINTS: Endpoint[] = [
     sends: [
       { name: "query", type: "string", note: "Natural-language question", required: true },
       { name: "namespace", type: "string", note: "Bucket to search. Default “default”" },
-      { name: "limit", type: "integer", note: "1–100. Default 10" },
+      { name: "limit", type: "integer", note: "1 to 100. Default 10" },
     ],
     gets: [
       { name: "query / namespace", type: "string", note: "Echoed back" },
       { name: "hits", type: "array", note: "Ordered by relevance; each has memory, similarity, relevance_score, age_days" },
     ],
     notes:
-      "similarity is raw cosine; relevance_score adds decay and importance. Both are returned so the re-ranking is visible — a freshly stored memory measured 0.838 similarity and 0.880 relevance.",
+      "similarity is raw cosine; relevance_score adds decay and importance. Both are returned so the re-ranking is visible. A freshly stored memory measured 0.838 similarity and 0.880 relevance.",
   },
   {
     method: "GET",
@@ -87,7 +87,7 @@ const ENDPOINTS: Endpoint[] = [
     auth: true,
     sends: [
       { name: "namespace", type: "string", note: "Default “default”" },
-      { name: "limit", type: "integer", note: "1–100. Default 20" },
+      { name: "limit", type: "integer", note: "1 to 100. Default 20" },
       { name: "offset", type: "integer", note: "Default 0" },
     ],
     gets: [
@@ -111,7 +111,7 @@ const ENDPOINTS: Endpoint[] = [
     path: "/v1/memories/{id}",
     summary: "Soft-delete",
     description:
-      "Marks a memory inactive. The row is kept so the audit trail survives — never a hard delete.",
+      "Marks a memory inactive. The row is kept so the audit trail survives. Never a hard delete.",
     auth: true,
     sends: [{ name: "id", type: "uuid", note: "Memory id (path parameter)", required: true }],
     gets: [{ name: "memory", type: "object", note: "The same row, now inactive" }],
@@ -131,7 +131,7 @@ const ENDPOINTS: Endpoint[] = [
       { name: "items", type: "array", note: "Each has id, similarity, reason, status, resolved_winner_id, resolved_at" },
       { name: "total", type: "integer", note: "Count of matches" },
     ],
-    notes: "There is no pagination — every matching row for the namespace is returned.",
+    notes: "There is no pagination. Every matching row for the namespace is returned.",
   },
   {
     method: "POST",
@@ -217,7 +217,7 @@ export function ApiExplorer() {
       title="REST API"
       intro="Nine routes over a JSON interface. Everything under v1 requires an API key; the two probes do not. Pick a route to read exactly what it accepts and returns."
     >
-      <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
         <div
           role="tablist"
           aria-label="Endpoints"

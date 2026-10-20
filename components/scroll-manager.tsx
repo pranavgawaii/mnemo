@@ -12,14 +12,14 @@ import { isSamePageHash, scrollToHash } from "../lib/scroll";
  *
  *  1. Intercept same-page hash clicks. Every nav/footer link is a plain `<a>`,
  *     so clicking "Features" while on the landing page triggered a full document
- *     reload and a native fragment jump — which re-ran the smooth scroll from
+ *     reload and a native fragment jump, which re-ran the smooth scroll from
  *     the top and landed on a stale position. We now preventDefault, scroll with
  *     the navbar offset and push the hash, so it stays a smooth in-page move.
  *  2. Correct the position after a navigation that carried a hash (e.g.
  *     `/playground` → `/#features`). The browser's own jump happens before local
  *     fonts and scroll-reveal animations settle, so we wait for the target to
  *     stop moving and then apply the offset.
- *  3. Cover hash changes we did not intercept — back/forward between hashes, or
+ *  3. Cover hash changes we did not intercept: back/forward between hashes, or
  *     a hash typed or pasted into the URL bar.
  */
 export function ScrollManager() {
@@ -62,7 +62,7 @@ export function ScrollManager() {
   }, []);
 
   // (2) After a navigation (or a cold load) that carries a hash, re-apply the
-  //     offset once the target has stopped moving *and* fonts have settled —
+  //     offset once the target has stopped moving *and* fonts have settled,
   //     `display: swap` swaps the local display face in after first paint, which
   //     shifts every section below it.
   useEffect(() => {
@@ -74,7 +74,7 @@ export function ScrollManager() {
     let lastTop: number | null = null;
     let stableFrames = 0;
 
-    // A final correction once the display face has swapped in — it changes the
+    // A final correction once the display face has swapped in: it changes the
     // height of everything below it, so the position we computed at first paint
     // can go stale.
     if (document.fonts) {

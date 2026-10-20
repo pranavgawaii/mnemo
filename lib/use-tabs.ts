@@ -16,7 +16,7 @@ interface TabListOptions {
  *
  * Arrow keys move between tabs with wrap-around, Home/End jump to the ends, and
  * selection follows focus (the "automatic activation" pattern). ARIA also
- * requires a *roving tabindex* — only the active tab is in the tab order — so
+ * requires a *roving tabindex*: only the active tab is in the tab order, so
  * pair this with `tabIndex={active === i ? 0 : -1}` on each tab and
  * `ref={register(i)}`.
  *

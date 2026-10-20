@@ -48,7 +48,7 @@ const STAGES: Stage[] = [
     facts: [
       { k: "Model", v: "all-MiniLM-L6-v2" },
       { k: "Dimensions", v: "384" },
-      { k: "Normalised", v: "L2 — dot = cosine" },
+      { k: "Normalised", v: "L2: dot = cosine" },
     ],
   },
   {
@@ -68,7 +68,7 @@ const STAGES: Stage[] = [
     label: "Re-rank",
     sub: "decay × importance",
     title: "Re-rank in Python",
-    body: "The over-fetched candidates are re-scored so recency and importance order comparable matches — without ever overriding a clearly better one.",
+    body: "The over-fetched candidates are re-scored so recency and importance order comparable matches, without ever overriding a clearly better one.",
     facts: [
       { k: "Score", v: "similarity × decay × importance" },
       { k: "Half-life", v: "180 days" },

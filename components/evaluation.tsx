@@ -19,7 +19,7 @@ const RESULTS = [
 
 const PROCEDURE = [
   "Seed a dedicated 'benchmark' namespace with the 60 memories from backend/benchmark/dataset.json, backdating created_at from each row's age_days so decay is genuinely exercised.",
-  "Run every one of the 50 hand-labelled queries through the real search path (app.services.memory_service.search) — same embedder, same pgvector query, same re-ranking.",
+  "Run every one of the 50 hand-labelled queries through the real search path (app.services.memory_service.search): same embedder, same pgvector query, same re-ranking.",
   "A query counts as correct at rank k if any of its gold memory ids appears in the top k. Several questions have more than one defensible answer, so gold lists can hold multiple ids.",
   "Report top-1, top-3 and MRR. The --no-decay mode re-ranks by raw cosine only, so decay's contribution is measured rather than asserted.",
 ];
@@ -30,7 +30,7 @@ export function Evaluation() {
       id="evaluation"
       index="08"
       title="Evaluation"
-      intro="A retrieval benchmark ships with the repository and runs against the real search path. These are its numbers — 60 memories, 50 queries, plus a raw-cosine baseline for comparison."
+      intro="A retrieval benchmark ships with the repository and runs against the real search path. These are its numbers: 60 memories, 50 queries, plus a raw-cosine baseline for comparison."
     >
       <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr] lg:gap-8 items-start">
         <div>
@@ -112,13 +112,13 @@ export function Evaluation() {
           <h3 className="text-[15px] font-medium text-ink">What the benchmark caught</h3>
           <p className="mt-3 text-[13.5px] leading-[1.75] text-muted">
             The first scoring used a 30-day half-life with a 0.05 floor and a
-            0.6–1.4 importance band. Together those spanned about 28×, far wider
-            than the &lt;3× spread of cosine similarity — so decay didn&apos;t
+            0.6 to 1.4 importance band. Together those spanned about 28×, far wider
+            than the &lt;3× spread of cosine similarity, so decay didn&apos;t
             nudge the ranking, it dictated it, degenerating search into
             &ldquo;newest first&rdquo;. That configuration scored{" "}
             <span className="text-ink font-medium">36% top-3</span>. Widening the
             half-life to 180 days, raising the floor to 0.7 and narrowing
-            importance to 0.9–1.1 brought it to{" "}
+            importance to 0.9 to 1.1 brought it to{" "}
             <span className="text-ink font-medium">94%</span>.{" "}
             <span className="font-mono text-[12px]">backend/tests/test_core.py</span> pins
             the invariant so it cannot regress.
@@ -131,7 +131,7 @@ export function Evaluation() {
             On this benchmark decay is worth about{" "}
             <span className="font-medium">+2 points of top-1</span> over raw cosine
             and nothing at top-3. Its value shows on the six recency-sensitive
-            queries — where a fact was superseded — taking top-3 from 83% to 100%.
+            queries, where a fact was superseded, taking top-3 from 83% to 100%.
             The parameters were tuned against these same 50 queries, so treat the
             headline as an{" "}
             <span className="font-medium">in-sample</span> result. These numbers

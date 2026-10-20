@@ -5,7 +5,7 @@ import { ArrowUp } from "lucide-react";
 import { HookSidebar } from "./ui/hook-sidebar";
 import { DOC_NAV } from "../lib/site";
 
-// One flat list — the rail is a single continuous line for the whole page, so
+// One flat list: the rail is a single continuous line for the whole page, so
 // the marker never resets between chapters.
 const ITEMS = DOC_NAV.flatMap((group) =>
   group.items.map((item) => ({ label: item.label, href: `#${item.id}` })),
@@ -18,10 +18,10 @@ const RAIL_OVERRIDES =
 
 /**
  * Documentation contents. Desktop is the vendored `hook-sidebar` rail from
- * swamimalode07/rare-ui — one dashed indigo line down the left, with a corner
+ * swamimalode07/rare-ui: one dashed indigo line down the left, with a corner
  * marker that slides to the section in view. A plain `IntersectionObserver`
  * drives it; the aside is `sticky`, which only works because `html, body` use
- * `overflow-x: clip` (see globals.css) — `hidden` would create a scroll
+ * `overflow-x: clip` (see globals.css): `hidden` would create a scroll
  * container and break it. On mobile the same items become a horizontal chip row
  * pinned under the nav.
  */

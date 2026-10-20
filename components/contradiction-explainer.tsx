@@ -126,12 +126,12 @@ export function ContradictionExplainer({
             <StageRow index="1" label="Similarity gate" ok={gatePassed}>
               {gatePassed
                 ? `similarity ${similarity.toFixed(2)} ≥ ${CONTRADICTION_SIM_THRESHOLD}`
-                : `similarity ${similarity.toFixed(2)} < ${CONTRADICTION_SIM_THRESHOLD} — stops here`}
+                : `similarity ${similarity.toFixed(2)} < ${CONTRADICTION_SIM_THRESHOLD}, stops here`}
             </StageRow>
             <StageRow index="2" label="Negation check" ok={verdict.isContradiction} muted={!gatePassed}>
               {gatePassed
                 ? verdict.reason
-                : "not reached — the gate already rejected this pair"}
+                : "not reached: the gate already rejected this pair"}
             </StageRow>
           </div>
 
@@ -177,7 +177,7 @@ export function ContradictionExplainer({
             { t: "Flag", d: "Adding a memory compares it to its 5 nearest neighbours and writes a contradiction row with status: open." },
             { t: "Review", d: "GET /v1/contradictions lists open conflicts so a person can read both sides." },
             { t: "Resolve", d: "POST /v1/contradictions/resolve names the winner. The loser becomes is_active = false." },
-            { t: "Audit", d: "Both rows and the contradiction itself remain in the database — resolved, never erased." },
+            { t: "Audit", d: "Both rows and the contradiction itself remain in the database, resolved, never erased." },
           ].map((step, i, arr) => (
             <div key={step.t} className="flex flex-1 items-stretch gap-3">
               <div className="flex-1 rounded-xl border border-line bg-[#FCFCFB] px-4 py-4">

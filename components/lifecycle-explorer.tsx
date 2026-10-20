@@ -27,7 +27,7 @@ const STATES: State[] = [
   {
     key: "flagged",
     label: "Flagged",
-    title: "Flagged — contradiction open",
+    title: "Flagged: contradiction open",
     body: "A new write cleared the 0.82 cosine gate and a negation marker appears on exactly one side. Mnemo records the pair as an open contradiction instead of deciding which statement is true. Both memories stay retrievable.",
     facts: [
       { k: "Gate", v: "cosine ≥ 0.82" },
@@ -49,8 +49,8 @@ const STATES: State[] = [
   {
     key: "inactive",
     label: "Inactive",
-    title: "Inactive — soft-deleted",
-    body: "The loser is marked inactive. It disappears from lists and search but is never erased — it stays fetchable by id so the history is intact.",
+    title: "Inactive: soft-deleted",
+    body: "The loser is marked inactive. It disappears from lists and search but is never erased. It stays fetchable by id so the history is intact.",
     facts: [
       { k: "is_active", v: "false" },
       { k: "In search", v: "no" },
@@ -77,7 +77,7 @@ export function LifecycleExplorer() {
       id="contradictions"
       index="04"
       title="Contradictions"
-      intro="Mnemo never guesses which statement is true. It finds candidate conflicts with a deterministic, two-stage check — a similarity gate, then a negation-marker test — and hands the decision to a person."
+      intro="Mnemo never guesses which statement is true. It finds candidate conflicts with a deterministic, two-stage check (a similarity gate, then a negation-marker test), and hands the decision to a person."
     >
       <div className="rounded-xl border border-line bg-white p-4 md:p-5">
         <div
@@ -139,7 +139,7 @@ export function LifecycleExplorer() {
       </div>
 
       <p className="text-[13px] leading-[1.7] text-muted">
-        The check is cheap and explainable — no model call by default, and a
+        The check is cheap and explainable: no model call by default, and a
         pluggable slot if you want an LLM verdict later. Try the exact logic in
         the contradiction checker below.
       </p>

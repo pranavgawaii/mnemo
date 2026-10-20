@@ -1,6 +1,6 @@
 /**
  * Product visuals used across the landing page. Each one is a small, static
- * mock of a real piece of Mnemo behaviour — a write, a cosine match, the decay
+ * mock of a real piece of Mnemo behaviour: a write, a cosine match, the decay
  * curve, or a flagged contradiction. Values are illustrative; field shapes and
  * parameters match `backend/app/models/schemas.py` and `backend/app/core/config.py`.
  */
@@ -21,7 +21,7 @@ export function StoreVisual() {
         &ldquo;Pranav is allergic to peanuts&rdquo;
       </p>
 
-      <div className="mt-4 grid grid-cols-3 gap-3 border-t border-hairline pt-4 font-mono text-[11px]">
+      <div className="mt-4 grid grid-cols-3 gap-3 border-t border-hairline pt-4 font-mono text-[11px] [overflow-wrap:anywhere]">
         <div>
           <div className="text-faint">namespace</div>
           <div className="mt-1 text-ink">default</div>
@@ -78,7 +78,7 @@ export function CosineVisual() {
         <text x="66" y="96" className="fill-[#4F46E5]" fontSize="10.5" fontFamily="monospace">cos θ</text>
       </svg>
 
-      <div className="mt-4 grid grid-cols-3 gap-3 border-t border-hairline pt-4 font-mono text-[11px]">
+      <div className="mt-4 grid grid-cols-3 gap-3 border-t border-hairline pt-4 font-mono text-[11px] [overflow-wrap:anywhere]">
         <div>
           <div className="text-faint">similarity</div>
           <div className="mt-1 text-ink">0.85</div>
@@ -142,7 +142,7 @@ export function DecayVisual() {
         </div>
         <div>
           <div className="text-faint">importance</div>
-          <div className="mt-1 text-ink">0.9 – 1.1</div>
+          <div className="mt-1 text-ink">0.9 to 1.1</div>
         </div>
       </div>
     </div>

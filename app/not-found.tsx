@@ -54,7 +54,7 @@ export default function NotFound() {
 
             <p className="mt-5 max-w-[520px] text-[15px] leading-[1.7] text-muted">
               The address doesn&rsquo;t resolve to anything Mnemo stores. Nothing
-              was lost &mdash; the console and the documentation are both still a
+              was lost. The console and the documentation are both still a
               click away.
             </p>
 

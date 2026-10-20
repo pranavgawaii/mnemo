@@ -254,7 +254,7 @@ export function MemoryWindow() {
                     </div>
                     <p className="text-[11px] text-ink">
                       Decay is floored at 0.7, so the recency penalty is capped at
-                      30% — an old memory can never bury a clearly better match.
+                      30%, so an old memory can never bury a clearly better match.
                     </p>
                   </div>
 

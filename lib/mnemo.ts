@@ -4,7 +4,7 @@
  * These constants and functions are deliberate **ports** of the backend, so the
  * interactive demos on this page use the same formula, thresholds and reason
  * strings as the running service. They are not a second implementation with
- * its own opinions — keep them in sync with:
+ * its own opinions: keep them in sync with:
  *
  *   - `backend/app/core/config.py`        (defaults / thresholds)
  *   - `backend/app/core/decay.py`         (decay + importance + relevance)
@@ -56,7 +56,7 @@ export function importanceWeight(importance: number): number {
 
 /**
  * Composite relevance: `similarity * decay(age) * importance`.
- * Not clamped to `[0, 1]` — importance can push it slightly above similarity.
+ * Not clamped to `[0, 1]`: importance can push it slightly above similarity.
  */
 export function relevanceScore(
   similarity: number,

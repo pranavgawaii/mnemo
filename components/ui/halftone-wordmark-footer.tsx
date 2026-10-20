@@ -1,6 +1,6 @@
 "use client"
 
-// Halftone Wordmark Footer — a site footer whose wordmark is set enormous and
+// Halftone Wordmark Footer: a site footer whose wordmark is set enormous and
 // cropped by the bottom edge, printed as a field of halftone dots. Each dot is
 // sized by how much of the letter covers its cell, so the type keeps its edges
 // at any scale. Move across it and the dots part around the pointer on springs,
@@ -56,9 +56,9 @@ export interface HalftoneWordmarkFooterProps {
   dotGap?: number
   /** How far the pointer pushes, in CSS px. Defaults to 80. */
   radius?: number
-  /** How much of the word's cap height hangs below the bottom edge, 0–0.6. Defaults to 0.2. */
+  /** How much of the word's cap height hangs below the bottom edge, 0 to 0.6. Defaults to 0.2. */
   crop?: number
-  /** Print grain over everything, 0–1. Defaults to 0.5. */
+  /** Print grain over everything, 0 to 1. Defaults to 0.5. */
   grain?: number
   /** Pointer and click response. Defaults to true. */
   interactive?: boolean
@@ -93,7 +93,7 @@ const MONO_STACK = '"JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, 
 // #region halftone
 // Pure helpers, kept framework-free so they can be unit-tested in isolation.
 
-/** Hex → [r, g, b] in 0–255, or null for anything that isn't #rgb / #rrggbb. */
+/** Hex → [r, g, b] in 0 to 255, or null for anything that isn't #rgb / #rrggbb. */
 export function hwfHex(hex: string) {
   const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec((hex || "").trim())
   if (!m) return null
@@ -481,7 +481,7 @@ export default function HalftoneWordmarkFooter({
     >
       {/* Static stylesheet. `suppressHydrationWarning` keeps browser extensions
           (e.g. Dark Reader, which stamps a class onto <style> nodes) from
-          tripping a hydration mismatch — the CSS itself is a constant. */}
+          tripping a hydration mismatch. The CSS itself is a constant. */}
       <style suppressHydrationWarning>{HWF_CSS}</style>
       <canvas ref={canvasRef} aria-hidden="true" />
       <span className="hwf-sr">{wordmark}</span>

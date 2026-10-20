@@ -20,7 +20,7 @@ const PRESETS: { label: string; a: Params; b: Params; note: string }[] = [
     label: "Recency breaks a near-tie",
     a: { similarity: 0.85, ageDays: 400, importance: 5 },
     b: { similarity: 0.8, ageDays: 0, importance: 1 },
-    note: "The fresher memory edges ahead because the two similarities are close. Decay reorders comparable matches — it does not decide alone.",
+    note: "The fresher memory edges ahead because the two similarities are close. Decay reorders comparable matches. It does not decide alone.",
   },
   {
     label: "A clearly better match still wins",
@@ -238,7 +238,7 @@ export function RankingExplorer({
               <span className="text-right font-bold text-ink">
                 {winner === "tie"
                   ? "A = B (tie)"
-                  : `${winner} ranks first — ${(winner === "A" ? sa.relevance : sb.relevance).toFixed(3)} vs ${(winner === "A" ? sb.relevance : sa.relevance).toFixed(3)}`}
+                  : `${winner} ranks first: ${(winner === "A" ? sa.relevance : sb.relevance).toFixed(3)} vs ${(winner === "A" ? sb.relevance : sa.relevance).toFixed(3)}`}
               </span>
             </div>
             <p className="mt-2.5 text-[12.5px] leading-[1.65] text-muted">{note}</p>
@@ -247,7 +247,7 @@ export function RankingExplorer({
           <p className="font-mono text-[10.5px] leading-[1.7] text-faint">
             The calculator evaluates the exact function in{" "}
             <span className="text-muted">backend/app/core/decay.py</span>. None of these
-            numbers come from a search — real results also show the raw cosine
+            numbers come from a search. Real results also show the raw cosine
             similarity and age returned by the API.
           </p>
         </div>
@@ -271,11 +271,11 @@ export function RankingExplorer({
             </div>
             <div>
               <div className="font-mono text-[10.5px] text-faint">importance band</div>
-              <div className="mt-1 text-ink">0.90 – 1.10</div>
+              <div className="mt-1 text-ink">0.90 to 1.10</div>
             </div>
             <div>
               <div className="font-mono text-[10.5px] text-faint">clamped?</div>
-              <div className="mt-1 text-ink">no — relevance may exceed similarity</div>
+              <div className="mt-1 text-ink">no, relevance may exceed similarity</div>
             </div>
           </div>
         </div>

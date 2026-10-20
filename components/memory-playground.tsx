@@ -56,7 +56,7 @@ export function MemoryPlayground({
   const [explanation, setExplanation] = useState<Explanation>({
     tone: "note",
     title: "Nothing has happened yet",
-    body: "Add a memory or run a search. Everything below runs in your browser — see the note above.",
+    body: "Add a memory or run a search. Everything below runs in your browser. See the note above.",
   });
   const [lastAction, setLastAction] = useState<"add" | "search" | null>(null);
 
@@ -81,7 +81,7 @@ export function MemoryPlayground({
           `“${text}” is ${(c.similarity * 100).toFixed(0)}% similar to an existing memory ` +
           `(“${c.existing_memory.content}”), which is above the ${CONTRADICTION_SIM_THRESHOLD} gate, ` +
           `and exactly one side carries a negation marker. So Mnemo flagged a conflict instead of ` +
-          `overwriting anything. It does not know which statement is true — a human decides.`,
+          `overwriting anything. It does not know which statement is true. A human decides.`,
       });
     } else {
       setExplanation({
@@ -91,7 +91,7 @@ export function MemoryPlayground({
           `“${text}” was added with importance ${importance} (${IMPORTANCE_LABELS[importance]}). ` +
           `No active memory cleared the ${CONTRADICTION_SIM_THRESHOLD} similarity gate with an opposing ` +
           `polarity, so nothing was flagged. Note: a changed fact phrased without a negation marker ` +
-          `(try “Pranav moved to Pune”) can slip past this heuristic — it looks for polarity flips, not ` +
+          `(try “Pranav moved to Pune”) can slip past this heuristic. It looks for polarity flips, not ` +
           `for a different value.`,
       });
     }
@@ -113,7 +113,7 @@ export function MemoryPlayground({
           `with relevance ${top.relevance_score.toFixed(3)} = similarity ${top.similarity.toFixed(3)} ` +
           `× decay ${decayFactor(top.age_days).toFixed(3)} × importance ${importanceWeight(top.memory.importance).toFixed(2)}. ` +
           `Similarity here is illustrative; the live API computes it with ${EMBEDDING_MODEL}.`
-        : `“${q}” returned no memories yet — add one first.`,
+        : `“${q}” returned no memories yet. Add one first.`,
     });
   }
 
@@ -127,7 +127,7 @@ export function MemoryPlayground({
       : contradiction.new_memory;
     setExplanation({
       tone: "ok",
-      title: "Resolved — the loser was soft-deleted",
+      title: "Resolved: the loser was soft-deleted",
       body:
         `Kept “${winner.content}”. “${loser.content}” is now is_active = false: it drops out of search ` +
         `and listings but its row remains, so the audit trail survives. Nothing is ever hard-deleted.`,
@@ -160,7 +160,7 @@ export function MemoryPlayground({
       <div className="flex flex-col gap-4">
         <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[#FDE68A] bg-[#FFFBEB] px-3.5 py-1.5 text-[12px] font-medium text-[#B45309]">
           <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
-          Simulation — runs entirely in your browser, not the live API
+          Simulation: runs entirely in your browser, not the live API
         </div>
         <p className="max-w-[720px] text-[12.5px] leading-[1.7] text-faint">
           The live API authenticates every request with a private{" "}
@@ -171,7 +171,7 @@ export function MemoryPlayground({
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* ---------------- Add ---------------- */}
         <AnimatedSection className="flex flex-col rounded-xl border border-line bg-[#FCFCFB] p-5 md:p-6">
           <div className="flex items-center gap-2.5">
@@ -222,7 +222,7 @@ export function MemoryPlayground({
             className="mt-2 w-full accent-[#4F46E5]"
           />
           <p className="mt-1 font-mono text-[10.5px] text-faint">
-            weight = {importanceWeight(importance).toFixed(2)} (band 0.90–1.10)
+            weight = {importanceWeight(importance).toFixed(2)} (band 0.90 to 1.10)
           </p>
 
           <button

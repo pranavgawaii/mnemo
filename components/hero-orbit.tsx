@@ -4,7 +4,7 @@ import * as React from "react";
 
 /**
  * Decorative hero backdrop: slow-orbiting "memory" rings with drifting vector
- * nodes, echoing Mnemo's world (vectors, recall, decay). Purely ornamental —
+ * nodes, echoing Mnemo's world (vectors, recall, decay). Purely ornamental.
  * aria-hidden, pointer-events-none, and motion is disabled under
  * prefers-reduced-motion. Rings are hidden below `lg` so they never crowd the
  * mobile layout.
@@ -89,10 +89,10 @@ export function HeroOrbit() {
     >
       {/* Static stylesheet. `suppressHydrationWarning` keeps browser extensions
           (e.g. Dark Reader, which stamps a class onto <style> nodes) from
-          tripping a hydration mismatch — the CSS itself is a constant. */}
+          tripping a hydration mismatch. The CSS itself is a constant. */}
       <style suppressHydrationWarning>{ORBIT_CSS}</style>
 
-      {/* Top-right orbit system — nested dashed rings, slow counter-spin. */}
+      {/* Top-right orbit system: nested dashed rings, slow counter-spin. */}
       <div
         className="hxo-drift absolute right-[-150px] top-[96px] hidden h-[520px] w-[520px] lg:block"
         style={{ animationDelay: "0.4s" }}
@@ -128,7 +128,7 @@ export function HeroOrbit() {
         />
       </div>
 
-      {/* Mid-left orbit system — smaller, faster. */}
+      {/* Mid-left orbit system: smaller, faster. */}
       <div
         className="hxo-drift absolute left-[-150px] top-[170px] hidden h-[420px] w-[420px] lg:block"
         style={{ animationDelay: "1.6s" }}

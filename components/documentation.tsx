@@ -115,7 +115,7 @@ const MEMORY_FIELDS: Field[] = [
   { name: "id", type: "uuid", note: "Primary key" },
   { name: "namespace", type: "varchar(128)", note: "Retrieval bucket; default \"default\"" },
   { name: "content", type: "text", note: "The fact itself" },
-  { name: "importance", type: "integer", note: "1–5, default 3" },
+  { name: "importance", type: "integer", note: "1 to 5, default 3" },
   { name: "embedding", type: "vector(384)", note: "all-MiniLM-L6-v2, L2-normalised" },
   { name: "is_active", type: "boolean", note: "Soft-delete flag; default true" },
   { name: "created_at / updated_at", type: "timestamptz", note: "created_at drives decay" },
@@ -259,7 +259,7 @@ export function RetrievalSection() {
           <div>
             <Label>importance</Label>
             <p className="mt-1.5 text-[13px] leading-[1.6] text-ink">
-              A 1–5 rating mapped to a narrow 0.90–1.10 band.
+              A 1 to 5 rating mapped to a narrow 0.90 to 1.10 band.
             </p>
           </div>
         </div>
@@ -276,7 +276,7 @@ export function RetrievalSection() {
         <Cell>
           <Label>Index</Label>
           <p className="mt-1.5 text-[13px] leading-[1.65] text-muted">
-            HNSW over cosine distance — fast and approximate, not an exhaustive
+            HNSW over cosine distance: fast and approximate, not an exhaustive
             scan. Search over-fetches limit × 4 before re-ranking.
           </p>
         </Cell>
@@ -284,7 +284,7 @@ export function RetrievalSection() {
           <Label>Why the multiplier is small</Label>
           <p className="mt-1.5 text-[13px] leading-[1.65] text-muted">
             It spans under 2× on purpose, narrower than the spread of cosine
-            similarity — so decay reorders, never overrides.
+            similarity, so decay reorders, never overrides.
           </p>
         </Cell>
       </CellGrid>
@@ -339,7 +339,7 @@ export function DataModelSection() {
         <Cell>
           <Label>Soft delete</Label>
           <p className="mt-1.5 text-[13px] leading-[1.65] text-muted">
-            Rows are never removed — an inactive memory is hidden from lists and
+            Rows are never removed. An inactive memory is hidden from lists and
             search but stays fetchable by id.
           </p>
         </Cell>
@@ -468,7 +468,7 @@ export function TroubleshootingSection() {
       </div>
       {GITHUB_URL && (
         <p className="text-[13px] leading-[1.7] text-muted">
-          The source is the authority for anything not covered here —{" "}
+          The source is the authority for anything not covered here:{" "}
           <a
             href={GITHUB_URL}
             target="_blank"

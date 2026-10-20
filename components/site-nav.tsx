@@ -14,7 +14,7 @@ const brandClass =
   "flex items-center gap-2.5 text-ink hover:text-accent transition-colors";
 
 /**
- * The docs call to action — the bar's only boxed element, so it carries the
+ * The docs call to action: the bar's only boxed element, so it carries the
  * primary-action weight for the whole header.
  *
  * It is built to read as a crafted control with no pointer anywhere near it:
@@ -22,7 +22,7 @@ const brandClass =
  * edge and a two-layer shadow, plus a leading docs glyph so the pill says what
  * it does instead of being a coloured rectangle with a word in it.
  *
- * Hover stays inside the same palette — no accent wash. The pill lifts, its
+ * Hover stays inside the same palette, no accent wash. The pill lifts, its
  * shadow deepens and a short white sheen fades in across the top, which is
  * enough to feel alive without the button changing colour on the way in.
  * The sheen is a separate layer rather than a `background-color` change because
@@ -101,7 +101,7 @@ function NavItem({ link, onClick }: { link: NavLink; onClick?: () => void }) {
 
 /**
  * Minimal full-width bar. Fixed, solid, constant height. It has no scroll
- * listener at all — nothing about it changes while the page scrolls.
+ * listener at all: nothing about it changes while the page scrolls.
  *
  * Layout, left to right: the wordmark and two links, the centred logo with two
  * links beside it, then the docs call to action in the far corner.
@@ -119,7 +119,7 @@ export function SiteNav() {
             Mnemo
           </a>
 
-          {/* Centre: one tight run — links, the logo, then the remaining links */}
+          {/* Centre: one tight run: links, the logo, then the remaining links */}
           <div className="flex items-center gap-8">
             {NAV_LEFT.map((link) => (
               <NavItem key={link.href} link={link} />

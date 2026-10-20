@@ -8,14 +8,14 @@
  * Rather than keep a second copy of that distance here, the JS reads each
  * target's own `scroll-margin-top` (Tailwind's `scroll-mt-*`). The CSS stays the
  * single source of truth, so the JS-assisted scroll and the browser's native
- * fragment jump always agree — a constant in here would silently disagree the
+ * fragment jump always agree: a constant in here would silently disagree the
  * moment a component changed its `scroll-mt-*`.
  */
 
 /** Fallback when a target declares no `scroll-margin-top`. */
 export const NAV_OFFSET = 64;
 
-/** The fragment id in an href — handles `#features` and `/#features` alike. */
+/** The fragment id in an href: handles `#features` and `/#features` alike. */
 function fragmentId(href: string): string | null {
   const index = href.indexOf("#");
   if (index === -1) return null;
@@ -53,7 +53,7 @@ function offsetFor(element: Element): number {
  *
  * Deliberately computed and applied with `window.scrollTo` rather than
  * `scrollIntoView`: the landing page wraps its sections in a container with
- * `overflow: hidden`, which makes that container the nearest scroll container —
+ * `overflow: hidden`, which makes that container the nearest scroll container,
  * so `scrollIntoView` would try to scroll *it* (which never moves) instead of
  * the document, and the page would appear not to move at all.
  */
@@ -94,7 +94,7 @@ export function scrollToHash(href: string, smooth = true): boolean {
 }
 
 /**
- * True when `href` points at a hash on the page we are already on — i.e. it can
+ * True when `href` points at a hash on the page we are already on, i.e. it can
  * be handled as an in-page scroll instead of a navigation.
  */
 export function isSamePageHash(href: string): boolean {

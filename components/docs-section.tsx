@@ -3,7 +3,7 @@
  * then the section's own content.
  *
  * Every section carries its own top hairline, including the first one under a
- * chapter rule — a boundary you can see is what tells you where a section
+ * chapter rule: a boundary you can see is what tells you where a section
  * starts, and it is the only thing anchoring the heading after the contents
  * jump you down the page. `mt-10` puts the rule halfway between the two
  * sections (`pt-10` spaces it from the heading below), so the rule never sits
