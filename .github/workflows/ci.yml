@@ -7,7 +7,7 @@ on:
 
 jobs:
   backend:
-    name: Backend — logic + parity
+    name: Backend - logic + parity
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -21,9 +21,7 @@ jobs:
 
       # Only the pure-logic and source-parsing tests run here: they need
       # neither torch nor a database, so the job stays fast and hermetic.
-      # The DB-integration suite in tests/test_api.py exercises real pgvector
-      # and is expected to run where Postgres is reachable (docker compose,
-      # or locally with DATABASE_URL set).
+      # The full suite runs in backend-integration against a real pgvector.
       - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip
@@ -34,8 +32,54 @@ jobs:
           PYTHONPATH: .
         run: python -m pytest tests/test_core.py tests/test_frontend_parity.py -v
 
+  backend-integration:
+    name: Backend - pgvector integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: mnemo
+          POSTGRES_PASSWORD: mnemo
+          POSTGRES_DB: mnemo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U mnemo -d mnemo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache the embedding model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: huggingface-all-MiniLM-L6-v2
+
+      - name: Install API and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-api.txt
+
+      - name: Run the full suite
+        env:
+          DATABASE_URL: postgresql+psycopg://mnemo:mnemo@localhost:5432/mnemo
+          PYTHONPATH: .
+          HF_HUB_DISABLE_TELEMETRY: "1"
+        run: python -m pytest tests/ -v
+
   frontend:
-    name: Frontend — typecheck + build
+    name: Frontend - typecheck, build, browser
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -58,3 +102,11 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Install the Chromium test browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run browser smoke tests
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: pnpm test:e2e
