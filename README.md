@@ -51,6 +51,7 @@ mnemo/
 │   │   ├── models/           # SQLAlchemy models + Pydantic schemas
 │   │   ├── services/
 │   │   │   └── memory_service.py # pgvector queries + flag/resolve flow
+│   │   ├── cli.py            # export, import and namespace stats
 │   │   └── main.py           # app entrypoint + /health
 │   ├── alembic/              # migrations
 │   ├── benchmark/            # retrieval benchmark (dataset + runner)
@@ -147,10 +148,30 @@ All routes require an `X-API-Key` header.
 | `DELETE` | `/v1/memories/{id}` | Soft-delete (`is_active=False`; optional `?namespace=` scope) |
 | `GET` | `/v1/contradictions` | List flagged contradictions |
 | `POST` | `/v1/contradictions/resolve` | Resolve by naming the winner |
+| `GET` | `/v1/namespaces/{namespace}/export` | Snapshot memories and contradictions |
+| `GET` | `/v1/namespaces/{namespace}/stats` | Aggregate namespace counts |
 
 `GET /health` (liveness) and `GET /ready` (readiness: queries the database)
 are unauthenticated. Full request/response schemas are in
 `backend/app/models/schemas.py` and rendered at `/docs`.
+
+### Namespace administration
+
+The CLI writes a portable JSON snapshot, restores it into an empty namespace,
+and prints aggregate counts without going through HTTP. Exports include
+soft-deleted memories and the contradiction audit trail; vectors are omitted
+because the text is re-embedded on import.
+
+```bash
+cd backend
+PYTHONPATH=. python -m app.cli export --namespace default --file backup.json
+PYTHONPATH=. python -m app.cli import --file backup.json --namespace restored
+PYTHONPATH=. python -m app.cli stats --namespace default
+```
+
+Imports remap UUIDs by default, so a snapshot can be restored alongside the
+original namespace. Use `--preserve-ids` only when restoring into an empty
+database and the original IDs must survive.
 
 ---
 
@@ -229,23 +250,28 @@ PYTHONPATH=. pytest tests/ -v
 `backend/tests/test_frontend_parity.py` parses both `backend/app/core/` and
 `lib/mnemo.ts` and asserts the browser-side mirror of the thresholds, limits and
 negation markers still matches the backend. It needs no database and runs in CI
-alongside `test_core.py` (see `.github/workflows/ci.yml`, which also typechecks
-and builds the web app).
+alongside `test_core.py`.
+
+`.github/workflows/ci.yml` also runs the full suite against a `pgvector/pgvector`
+service, typechecks and builds the web app, and runs the Playwright smoke tests
+for the landing page, docs and playground.
 
 ---
 
 ## Frontend
 
-The repo root is a Next.js 15 (App Router) + Tailwind marketing site and an
-interactive documentation page. Both are **static at runtime**: the demos reuse
-the real ranking formula and contradiction logic ported into `lib/`, so no API
-key is ever exposed in the browser.
+The repo root is a Next.js 15 (App Router) + Tailwind marketing site, an
+interactive documentation page and a standalone playground. The landing sections
+and the docs guide body are MDX; interactive islands stay TypeScript. They are
+**static at runtime**: the demos reuse the real ranking formula and contradiction
+logic ported into `lib/`, so no API key is ever exposed in the browser.
 
 ```bash
 pnpm install
-pnpm dev        # http://localhost:3005  (docs at /docs)
+pnpm dev        # http://localhost:3005  (docs at /docs, playground at /playground)
 pnpm build      # production build
 pnpm typecheck  # tsc --noEmit
+pnpm test:e2e   # Playwright smoke tests
 ```
 
 See [`docs/frontend.md`](docs/frontend.md) for the component map. The "View on

@@ -152,6 +152,42 @@ const ENDPOINTS: Endpoint[] = [
     notes:
       "Returns 400 if the id is unknown, already resolved, or the winner is not one of the two memories in the pair.",
   },
+  {
+    method: "GET",
+    path: "/v1/namespaces/{namespace}/export",
+    summary: "Export a namespace",
+    description:
+      "Returns every memory and contradiction in a namespace, including soft-deleted rows. The snapshot is portable across deployments because vectors are omitted and rebuilt from the text on import.",
+    auth: true,
+    sends: [
+      { name: "namespace", type: "string", note: "Namespace to export (path parameter)", required: true },
+    ],
+    gets: [
+      { name: "version / exported_at", type: "integer / timestamp", note: "Snapshot format and creation time" },
+      { name: "memories", type: "array", note: "Ids, content, importance, active state and timestamps" },
+      { name: "contradictions", type: "array", note: "Both memory ids plus status, reason and resolution fields" },
+    ],
+    notes:
+      "Admin endpoint. Use the CLI to write the JSON to disk and restore it into an empty namespace.",
+  },
+  {
+    method: "GET",
+    path: "/v1/namespaces/{namespace}/stats",
+    summary: "Namespace statistics",
+    description:
+      "Aggregates memory and contradiction counts for one namespace without scanning the full rows in the browser.",
+    auth: true,
+    sends: [
+      { name: "namespace", type: "string", note: "Namespace to inspect (path parameter)", required: true },
+    ],
+    gets: [
+      { name: "total / active / inactive", type: "integer", note: "Memory counts, including soft-deleted rows" },
+      { name: "open / resolved", type: "integer", note: "Contradiction counts" },
+      { name: "average_importance", type: "number | null", note: "Mean importance across all memories" },
+      { name: "importance_counts", type: "array", note: "Count per importance value" },
+      { name: "oldest / newest", type: "timestamp | null", note: "Created-at bounds for the namespace" },
+    ],
+  },
 ];
 
 const METHOD_TONE: Record<string, string> = {
@@ -215,7 +251,7 @@ export function ApiExplorer() {
       id="api"
       index="06"
       title="REST API"
-      intro="Nine routes over a JSON interface. Everything under v1 requires an API key; the two probes do not. Pick a route to read exactly what it accepts and returns."
+      intro="Eleven routes over a JSON interface. Everything under v1 requires an API key; the two probes do not. Pick a route to read exactly what it accepts and returns."
     >
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
         <div
