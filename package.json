@@ -6,7 +6,8 @@
     "dev": "NEXT_DIST_DIR=.next-3005 next dev -p 3005",
     "build": "next build",
     "start": "next start -p 3005",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
@@ -22,6 +23,7 @@
     "tailwind-merge": "^2.6.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@types/mdx": "^2.0.14",
     "@types/node": "^20",
     "@types/react": "19.0.0",
