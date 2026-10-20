@@ -15,10 +15,9 @@ type, and scroll-reveal behaviour).
   architecture flow, the memory lifecycle and the REST explorer. The desktop
   rail stays pinned in one place; only the active section highlight moves as you
   scroll.
-- **`/playground`**: a standalone playground on the same shell as the rest of the
-  site: an opening **recall orbit** that ranks memories around a query you pick,
-  then the in-browser sandbox: add & search, the ranking calculator and the
-  contradiction checker.
+- **`/playground`**: a standalone workbench on the same shell as the rest of the
+  site: one live recall field, a query composer, a time slider, a ranking switch,
+  and a conflict queue. There is no tab rail and no prose walkthrough.
 
 All three pages are **static at runtime**: nothing calls the API from the browser
 (see "Interactive demos"). All technical claims use the real behaviour and
@@ -54,8 +53,8 @@ pull-quote and the closing CTA back on the background.
 
 | Section | Component | Anchor |
 |---|---|---|
-| Page title | `app/docs/page.tsx` | `#overview` |
-| Chapter headers (heavy rule + label + note) | `app/docs/page.tsx` | none |
+| Page title and guide content | `components/docs-guide.mdx` | `#overview` |
+| Chapter headers (heavy rule + label + note) | `components/docs-chapter.tsx` | none |
 | Sticky contents (`hook-sidebar`, one continuous rail) | `components/docs-toc.tsx`, `components/ui/hook-sidebar.tsx` | none |
 | **Getting started** · Local setup | `components/documentation.tsx` | `#quickstart` |
 | **Concepts** · How it's built (interactive diagram) | `components/architecture-explorer.tsx` | `#architecture` |
@@ -67,6 +66,11 @@ pull-quote and the closing CTA back on the background.
 | **Guides** · Evaluation / benchmark | `components/evaluation.tsx` | `#evaluation` |
 | **Guides** · Limitations / troubleshooting | `components/documentation.tsx` | `#limitations`, `#troubleshooting` |
 | **Interactive** · Playground / calculators / checker | `components/memory-playground.tsx`, `ranking-explorer.tsx`, `contradiction-explainer.tsx` | `#playground` … |
+
+The guide body lives in `components/docs-guide.mdx`, wrapped in one expression
+for the same reason as the landing sections. `app/docs/page.tsx` keeps the
+metadata, nav, progress bar, contents rail and footer, so the MDX file owns only
+the article content.
 
 The sections are grouped into five chapters: **Getting started**, **Concepts**,
 **Reference**, **Guides** and **Interactive**, each opened by a heavy rule, a
@@ -106,35 +110,33 @@ The shared section shell is `components/docs-section.tsx`; static product mocks
 
 | Section | Component | Anchor |
 |---|---|---|
-| Recall orbit: interactive ranking visual | `components/memory-orbit.tsx` | `#recall` |
-| Sandbox: add & search | `components/memory-playground.tsx` | `#sandbox`, `#playground` |
-| Sandbox: ranking calculator | `components/ranking-explorer.tsx` | `#ranking-calculator` |
-| Sandbox: contradiction checker | `components/contradiction-explainer.tsx` | `#contradiction-checker` |
+| One interactive workbench | `components/memory-workbench.tsx` | `#workbench` |
+| Field, conflict card, metrics and layout helpers | `components/workbench/` | none |
 
 The playground is built on the same shell as the rest of the site (`SiteNav`,
 the light `bg-background` canvas, `SiteFooter`), so it reads as part of the
-product rather than a separate app. `MemoryOrbit`
-places the query at the centre and the six best matches on three counter-rotating
-rings (nearest ring, most relevant); hover or tap a node and the readout
-underneath shows how the match was scored: `similarity × decay × importance`, the
-same formula the service runs. The rings freeze on hover so a node is easy to
-hit, and all motion is off under `prefers-reduced-motion`. The three sandbox
-sections are the same components the docs embed, re-numbered `01` to `03` via an
-optional `index` prop.
+product rather than a separate app. `MemoryWorkbench` is the whole page: a field
+places every active memory on three orbits, the query re-scores it live, the time
+slider ages the store, and the mode switch swaps raw similarity for the
+composite score. Storing a negating fact opens a conflict card; resolving it
+soft-deletes the loser without removing the row. The field, conflict card,
+metric bars and layout helpers live in `components/workbench/`; the page keeps
+the state and actions. All motion stops under `prefers-reduced-motion`.
 
 ## Interactive demos
 
 Three docs sections are interactive and are **explicitly labelled simulations**:
 
-- **Playground** (`#playground`): add a memory, search, see the ranking
+- **Memory playground** (`#playground`): add a memory, search, see the ranking
   breakdown, then introduce a contradictory fact and resolve it.
 - **Ranking calculator** (`#ranking-calculator`): a calculator over the real
   scoring formula in `backend/app/core/decay.py`.
 - **Contradiction checker** (`#contradiction-checker`): runs the ported
   two-stage heuristic from `backend/app/core/contradiction.py`.
 
-The same three tools also stand alone on `/playground`, alongside the recall
-orbit. They are one set of components, used in both places.
+The standalone `/playground` is a different surface: one workbench rather than
+the three docs demos. The docs demos reuse the same `lib/` scoring and
+contradiction logic, so the numbers agree even though the presentation differs.
 
 The real API authenticates every request with a private `X-API-Key`, which a
 public page must not embed, so the demos do not call the backend. They reuse the
@@ -153,20 +155,19 @@ pnpm install
 pnpm dev          # http://localhost:3005  (docs at /docs, playground at /playground)
 ```
 
-Production build:
+Production build and checks:
 
 ```bash
 pnpm build
 pnpm start        # http://localhost:3005
 pnpm typecheck    # tsc --noEmit
+pnpm test:e2e     # Playwright smoke tests
 ```
 
-Port `3005` is used so an existing dev server on `3000` is not disturbed.
-
-> Never run `pnpm build` while `pnpm dev` is running against the same directory:
-> both write `.next`, and racing them corrupts the webpack/HMR runtime
-> (`__webpack_modules__[moduleId] is not a function`). If that happens:
-> `rm -rf .next && pnpm dev`.
+Port `3005` is used so an existing dev server on `3000` is not disturbed. The dev
+script writes to `.next-3005`, while `next build` writes to `.next`, so the two
+can run alongside each other. Override the dev directory with `NEXT_DIST_DIR` if
+you need a different isolated build.
 
 ## Configuration (optional)
 
