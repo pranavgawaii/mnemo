@@ -25,6 +25,22 @@ export const metadata: Metadata = {
   title: "Developer guide | Mnemo",
   description:
     "How Mnemo works, how to run it, its retrieval and ranking, the data model, the REST API, and interactive tools.",
+  alternates: { canonical: "/docs" },
+  openGraph: {
+    type: "article",
+    url: "/docs",
+    title: "Developer guide | Mnemo",
+    description:
+      "How Mnemo works, how to run it, its retrieval and ranking, the data model, the REST API, and interactive tools.",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Mnemo developer guide" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Developer guide | Mnemo",
+    description:
+      "How Mnemo works, how to run it, its retrieval and ranking, the data model, the REST API, and interactive tools.",
+    images: ["/og.png"],
+  },
 };
 
 /**
@@ -73,7 +89,7 @@ export default function DocsPage() {
 
       <main id="main" className="relative z-10 w-full flex-1">
         <div className="mx-auto max-w-frame px-6 pb-20 pt-[88px]">
-          <div className="grid items-start gap-10 lg:grid-cols-[204px_minmax(0,1fr)] xl:gap-14">
+          <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[204px_minmax(0,1fr)] xl:gap-14">
             <DocsToc />
 
             <article className="min-w-0">
@@ -83,7 +99,7 @@ export default function DocsPage() {
                 </h1>
                 <p className="mt-3 max-w-[680px] text-[15px] leading-[1.7] text-muted">
                   Mnemo is a persistent-memory service for AI agents. Everything
-                  below is taken from the repository — how it works, how to run
+                  below is taken from the repository: how it works, how to run
                   it, the exact REST contracts, and the trade-offs behind it.
                 </p>
               </div>
@@ -91,7 +107,7 @@ export default function DocsPage() {
               <div className="mt-14">
                 <Chapter
                   label="Getting started"
-                  note="Run Mnemo locally — a one-command Docker stack, or a Python environment against your own Postgres."
+                  note="Run Mnemo locally: a one-command Docker stack, or a Python environment against your own Postgres."
                 >
                   <QuickstartSection />
                 </Chapter>
@@ -107,7 +123,7 @@ export default function DocsPage() {
 
                 <Chapter
                   label="Reference"
-                  note="The exact tables, routes and access model — the parts you look up rather than read."
+                  note="The exact tables, routes and access model: the parts you look up rather than read."
                 >
                   <DataModelSection />
                   <ApiExplorer />
@@ -128,7 +144,7 @@ export default function DocsPage() {
                   note={
                     <>
                       Browser-side simulations of the real logic. Nothing here
-                      touches the API — the same tools also stand alone on the{" "}
+                      touches the API. The same tools also stand alone on the{" "}
                       <a
                         href={PLAYGROUND_URL}
                         className="link-underline font-medium text-accent-ink"
