@@ -16,7 +16,7 @@ a soft-delete audit trail.
 ## Why Mnemo
 
 - **Recall that fades.** Results rank by `similarity × decay × importance`, not
-  raw vector distance, so fresher facts win ties — without ever overriding a
+  raw vector distance, so fresher facts win ties without ever overriding a
   clearly better semantic match.
 - **Contradiction-aware.** Adding *"Pranav no longer lives in Bengaluru"* when
   *"Pranav lives in Bengaluru"* already exists **flags** a contradiction for
@@ -25,7 +25,7 @@ a soft-delete audit trail.
   every change (see [Benchmark](#benchmark)).
 - **Local-first embeddings.** `all-MiniLM-L6-v2` (384-dim) via
   `sentence-transformers`. No embedding API key required.
-- **One store.** Postgres + pgvector only — no second vector database to run.
+- **One store.** Postgres + pgvector only, no second vector database to run.
 
 ---
 
@@ -121,7 +121,7 @@ curl -s localhost:8000/v1/memories \
   -H "X-API-Key: $KEY" -H 'Content-Type: application/json' \
   -d '{"content":"Pranav lives in Bengaluru","namespace":"default","importance":4}'
 
-# Contradict it — the response comes back with a flagged contradiction
+# Contradict it: the response comes back with a flagged contradiction
 curl -s localhost:8000/v1/memories \
   -H "X-API-Key: $KEY" -H 'Content-Type: application/json' \
   -d '{"content":"Pranav no longer lives in Bengaluru","namespace":"default"}'
@@ -148,7 +148,7 @@ All routes require an `X-API-Key` header.
 | `GET` | `/v1/contradictions` | List flagged contradictions |
 | `POST` | `/v1/contradictions/resolve` | Resolve by naming the winner |
 
-`GET /health` (liveness) and `GET /ready` (readiness — queries the database)
+`GET /health` (liveness) and `GET /ready` (readiness: queries the database)
 are unauthenticated. Full request/response schemas are in
 `backend/app/models/schemas.py` and rendered at `/docs`.
 
@@ -163,15 +163,15 @@ are unauthenticated. Full request/response schemas are in
 | `EMBEDDING_MODEL` | `all-MiniLM-L6-v2` | Change ⇒ also change `EMBEDDING_DIM` **and** the `Vector(...)` size in the migration |
 | `EMBEDDING_DIM` | `384` | Must match the model |
 | `DECAY_HALF_LIFE_DAYS` | `180` | Days for the decay factor to halve |
-| `DECAY_FLOOR` | `0.7` | Floor on the decay multiplier — high on purpose, see below |
+| `DECAY_FLOOR` | `0.7` | Floor on the decay multiplier, high on purpose; see below |
 | `CONTRADICTION_SIM_THRESHOLD` | `0.82` | Similarity gate before the negation check |
 
 ---
 
 ## Benchmark
 
-`backend/benchmark/` holds 60 seed memories from a personal-assistant memory — profile,
-habits, health, people, side projects, infrastructure — and 50 hand-labelled
+`backend/benchmark/` holds 60 seed memories from a personal-assistant memory (profile,
+habits, health, people, side projects, infrastructure) and 50 hand-labelled
 natural-language queries. Queries are paraphrases rather than substrings, so the
 benchmark measures semantic recall rather than keyword overlap. `created_at` is
 backdated per memory, and several facts are deliberately superseded by fresher
@@ -194,14 +194,14 @@ Current results (50 queries, 60 memories, `all-MiniLM-L6-v2`):
 | raw cosine similarity (baseline) | 78.0% | 94.0% | 0.864 |
 
 A query counts as correct at rank *k* if any of its gold memory ids appears in
-the top *k* — several questions have more than one defensible answer.
+the top *k*, since several questions have more than one defensible answer.
 
 **What the benchmark caught.** The original scoring used a 30-day half-life with
-a 0.05 floor and an importance band of 0.6–1.4. Together those spanned ~28×,
-while cosine similarity across the corpus spans under 3× — so the decay term
+a 0.05 floor and an importance band of 0.6 to 1.4. Together those spanned ~28×,
+while cosine similarity across the corpus spans under 3×, so the decay term
 didn't nudge the ranking, it *dictated* it, degenerating search into "newest
 first". That configuration scored **36% top-3**. Widening the half-life to 180
-days, raising the floor to 0.7, and narrowing importance to 0.9–1.1 brought it to
+days, raising the floor to 0.7, and narrowing importance to 0.9 to 1.1 brought it to
 94%. `backend/tests/test_core.py` now pins the invariant so it can't regress.
 
 **Honest caveat.** On this benchmark decay is worth about +2 points of top-1 over
@@ -217,7 +217,7 @@ headline number as an in-sample result.
 ```bash
 cd backend
 
-# Pure-logic unit tests (decay + contradiction) — no DB needed
+# Pure-logic unit tests (decay + contradiction), no DB needed
 PYTHONPATH=. pytest tests/test_core.py -v
 
 # Full suite. DB-integration tests exercise real pgvector cosine ops and are
@@ -228,7 +228,7 @@ PYTHONPATH=. pytest tests/ -v
 
 `backend/tests/test_frontend_parity.py` parses both `backend/app/core/` and
 `lib/mnemo.ts` and asserts the browser-side mirror of the thresholds, limits and
-negation markers still matches the backend — it needs no database and runs in CI
+negation markers still matches the backend. It needs no database and runs in CI
 alongside `test_core.py` (see `.github/workflows/ci.yml`, which also typechecks
 and builds the web app).
 
@@ -237,7 +237,7 @@ and builds the web app).
 ## Frontend
 
 The repo root is a Next.js 15 (App Router) + Tailwind marketing site and an
-interactive documentation page. Both are **static at runtime** — the demos reuse
+interactive documentation page. Both are **static at runtime**: the demos reuse
 the real ranking formula and contradiction logic ported into `lib/`, so no API
 key is ever exposed in the browser.
 
@@ -254,8 +254,15 @@ GitHub" CTAs default to this repository; set `NEXT_PUBLIC_GITHUB_URL` in
 
 ### Deploying the web app
 
-Import the **repo root** as the Vercel project — the Next.js app is at the root,
-and `.vercelignore` keeps `backend/` out of the upload. The API is deployed
+Import the **repo root** as the Vercel project. The Next.js app is at the root,
+and `.vercelignore` keeps `backend/` out of the upload. Set
+`NEXT_PUBLIC_SITE_URL` to the production origin (for example
+`https://mnemo.dev`) so canonical URLs, the sitemap and the Open Graph tags
+resolve to the real domain; without it the app falls back to the domain Vercel
+assigns the project. Vercel Web Analytics is already mounted in `app/layout.tsx`
+and starts reporting once the project is deployed.
+
+The API is deployed
 separately from `backend/` (Docker image or any Python host).
 
 ---
@@ -266,7 +273,7 @@ separately from `backend/` (Docker image or any Python host).
   similarity gate (0.82) establishes the two memories are about the same thing,
   then a negation-marker heuristic checks whether exactly one side carries a
   polarity flip ("no longer", "stopped", "former", …) while sharing subject
-  matter. No LLM call, so it's cheap and explainable — `backend/app/core/contradiction.py`
+  matter. No LLM call, so it's cheap and explainable; `backend/app/core/contradiction.py`
   has an `llm_check` slot to swap in a model verdict later without touching call
   sites, with the similarity gate still running first.
 - **Contradictions are flagged, never auto-resolved.** Resolution is an explicit
@@ -274,7 +281,7 @@ separately from `backend/` (Docker image or any Python host).
   **soft-deleted** (`is_active=False`) so the audit trail survives. Nothing is
   ever hard-deleted.
 - **Namespaces** are the tenant boundary. Every query filters by namespace.
-- **Single vector store.** pgvector only — no second vector database.
+- **Single vector store.** pgvector only, no second vector database.
 
 ---
 
