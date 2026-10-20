@@ -26,10 +26,12 @@ import {
   type SearchHit,
 } from "./mnemo";
 export interface PlaygroundMemory extends MemoryOut {
-  /** Age in days — fixed for seeded memories so rendering is deterministic. */
+  /** Age in days. Fixed for seeded memories so rendering is deterministic. */
   age_days: number;
   /** Coarse topic tags used only by the illustrative similarity. */
   tags: string[];
+  /** Two-or-three word caption for the field. Presentation only, never sent. */
+  label: string;
 }
 
 export interface PlaygroundContradiction {
@@ -51,7 +53,7 @@ export interface PlaygroundState {
 }
 
 // --------------------------------------------------------------------------- //
-// Topic inference — illustrative only, powers `illustrativeSimilarity`.
+// Topic inference: illustrative only, powers `illustrativeSimilarity`.
 // --------------------------------------------------------------------------- //
 const TOPIC_RULES: Record<string, string[]> = {
   location: [
@@ -135,7 +137,7 @@ function clamp(value: number, min: number, max: number): number {
 /**
  * ILLUSTRATIVE similarity, in `[0, 1]`. Blends surface lexical overlap with
  * shared topic tags. This is **not** the `all-MiniLM-L6-v2` embedding the live
- * API uses — it is a stand-in so the demo runs entirely in the browser.
+ * API uses: it is a stand-in so the demo runs entirely in the browser.
  */
 export function illustrativeSimilarity(
   query: string,
@@ -159,7 +161,8 @@ function seedMemory(
   content: string,
   importance: number,
   ageDays: number,
-  tags: string[]
+  tags: string[],
+  label: string
 ): PlaygroundMemory {
   return {
     id,
@@ -171,30 +174,42 @@ function seedMemory(
     updated_at: `seed:${ageDays}d`,
     age_days: ageDays,
     tags,
+    label,
   };
+}
+
+/** Short caption for a memory that was just typed into the composer. */
+function fieldLabel(content: string): string {
+  const trimmed = content.trim().replace(/[.!?]+$/, "");
+  if (trimmed.length <= 22) return trimmed;
+  const cut = trimmed.slice(0, 22);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${cut.slice(0, lastSpace > 12 ? lastSpace : 22).trimEnd()}…`;
 }
 
 export function initialPlaygroundState(): PlaygroundState {
   return {
     memories: [
-      seedMemory("m1", "Pranav lives in Bengaluru", 4, 260, ["location"]),
+      seedMemory("m1", "Pranav lives in Bengaluru", 4, 260, ["location"], "Bengaluru"),
       seedMemory(
         "m2",
         "Pranav is lactose intolerant and avoids milk-based desserts",
         4,
         380,
-        ["dairy", "allergy", "diet", "health"]
+        ["dairy", "allergy", "diet", "health"],
+        "Lactose intolerant"
       ),
       seedMemory(
         "m3",
         "Pranav is allergic to peanuts",
         5,
         400,
-        ["nuts", "allergy", "diet", "health"]
+        ["nuts", "allergy", "diet", "health"],
+        "Peanut allergy"
       ),
-      seedMemory("m4", "Pranav is learning Rust on weekends", 2, 45, ["coding"]),
-      seedMemory("m5", "Pranav runs 5 kilometres three mornings a week", 3, 110, ["exercise"]),
-      seedMemory("m6", "Pranav's favourite cuisine is Thai", 2, 290, ["diet"]),
+      seedMemory("m4", "Pranav is learning Rust on weekends", 2, 45, ["coding"], "Learning Rust"),
+      seedMemory("m5", "Pranav runs 5 kilometres three mornings a week", 3, 110, ["exercise"], "5 km runs"),
+      seedMemory("m6", "Pranav's favourite cuisine is Thai", 2, 290, ["diet"], "Thai food"),
     ],
     contradictions: [],
   };
@@ -214,7 +229,7 @@ export const EXAMPLE_MEMORIES = [
 ] as const;
 
 // --------------------------------------------------------------------------- //
-// Operations — mirror `backend/app/services/memory_service.py`
+// Operations: mirror `backend/app/services/memory_service.py`
 // --------------------------------------------------------------------------- //
 function makeId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -242,6 +257,7 @@ export function addMemory(
     updated_at: nowIso(),
     age_days: 0,
     tags: [...inferTopics(content)],
+    label: fieldLabel(content),
   };
 
   // Compare against the nearest active neighbours by similarity, exactly like
@@ -286,7 +302,7 @@ export function searchMemories(
   query: string,
   limit: number
 ): SearchHit[] {
-  // Over-fetch by raw similarity, then re-rank by relevance — the same shape as
+  // Over-fetch by raw similarity, then re-rank by relevance, the same shape as
   // `memory_service.search`.
   const scored = state.memories
     .filter((m) => m.is_active)

@@ -24,7 +24,7 @@
 
   html,
   body {
-    /* `clip` (not `hidden`) so it never becomes a scroll container — that is
+    /* `clip` (not `hidden`) so it never becomes a scroll container. That is
        what would break `position: sticky` for the docs sidebar. */
     overflow-x: clip;
   }
@@ -40,13 +40,13 @@
   }
 
   /* The footer brand line reads as the navbar wordmark: the mark sits beside
-     the name with no tile behind it — a white chip read as a sticker pasted
+     the name with no tile behind it: a white chip read as a sticker pasted
      onto the warm grey, and the mark's own rounded square is already a frame.
      Both are `currentColor`, so the indigo hover below warms them together.
 
      The footer's small type is set a touch larger than the vendored default.
      Every selector here is kept two classes deep because the component's own
-     <style> lands in the body, after this stylesheet — at equal specificity
+     <style> lands in the body, after this stylesheet. At equal specificity
      the vendored rules would win the tie. */
   .hwf-root .hwf-top {
     font-size: 13.5px;
@@ -125,7 +125,7 @@
     background-size: 22px 22px;
   }
 
-  /* Navbar links: the exact underline sweep the footer's "Back to top" uses —
+  /* Navbar links: the exact underline sweep the footer's "Back to top" uses:
      a hairline that runs out from the left in the link's own colour, which
      turns theme-indigo on hover. Width hugs the label, so it also works in
      the stacked mobile menu. */
@@ -207,7 +207,7 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Memory orbit — components/memory-orbit.tsx (the playground's recall visual)
+   Memory orbit: components/memory-orbit.tsx (the playground's recall visual)
    --------------------------------------------------------------------------- */
 @keyframes orbit-spin {
   to {
