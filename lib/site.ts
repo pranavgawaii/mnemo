@@ -9,8 +9,28 @@ export const GITHUB_URL =
 /** Dedicated technical documentation + interactive tools page. */
 export const DOCS_URL = "/docs";
 
-/** Standalone interactive playground — its own page, its own bar. */
+/** Standalone interactive playground: its own page, its own bar. */
 export const PLAYGROUND_URL = "/playground";
+
+/**
+ * Canonical origin for the deployed site. Read from an explicit
+ * `NEXT_PUBLIC_SITE_URL` when set, otherwise from the domain Vercel assigns the
+ * project, and finally from the local dev server. `metadataBase`, the sitemap,
+ * robots and the structured data all build on this, so no canonical URL ever
+ * points at a guessed domain.
+ */
+const VERCEL_HOST =
+  process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL ?? null;
+
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (VERCEL_HOST ? `https://${VERCEL_HOST}` : "http://localhost:3005");
+
+/** Contact address shown in the footer. */
+export const CONTACT_EMAIL = "mnemo@2026";
+
+/** One-line pitch, reused by metadata, structured data and the OG card. */
+export const SITE_TAGLINE = "Persistent memory API for AI agents";
 
 export type NavLink = { label: string; href: string; external?: boolean };
 
@@ -82,8 +102,9 @@ export const ANCHORS = {
   limitations: `${DOCS_URL}#limitations`,
   troubleshooting: `${DOCS_URL}#troubleshooting`,
   playground: PLAYGROUND_URL,
-  rankingCalculator: `${PLAYGROUND_URL}#ranking-calculator`,
-  contradictionChecker: `${PLAYGROUND_URL}#contradiction-checker`,
+  // The playground is one workbench now, so both tools live on the same page.
+  rankingCalculator: PLAYGROUND_URL,
+  contradictionChecker: PLAYGROUND_URL,
 } as const;
 
 export interface DocNavGroup {
