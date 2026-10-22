@@ -88,8 +88,25 @@ def _flag_contradictions(
         .limit(_CONTRADICTION_CANDIDATES)
     )
 
+    # Never flag the same pair twice (for example when a memory's content is
+    # updated and re-checked): keep the original audit entry.
+    existing_pairs = {
+        frozenset((new_id, existing_id))
+        for new_id, existing_id in db.execute(
+            select(Contradiction.new_memory_id, Contradiction.existing_memory_id).where(
+                Contradiction.namespace == namespace,
+                (Contradiction.new_memory_id == memory.id)
+                | (Contradiction.existing_memory_id == memory.id),
+            )
+        ).all()
+    }
+
     flagged: list[Contradiction] = []
     for existing, dist in db.execute(stmt).all():
+        pair = frozenset((memory.id, existing.id))
+        if pair in existing_pairs:
+            continue
+
         similarity = 1.0 - float(dist)
         verdict = check_contradiction(
             memory.content, existing.content, similarity, llm_check=llm_check
@@ -104,6 +121,7 @@ def _flag_contradictions(
                 status="open",
             )
             db.add(contradiction)
+            existing_pairs.add(pair)
             flagged.append(contradiction)
 
     if flagged:
@@ -190,6 +208,43 @@ def soft_delete_memory(
     if memory is None:
         return None
     memory.is_active = False
+    db.commit()
+    db.refresh(memory)
+    return memory
+
+
+def update_memory(
+    db: Session,
+    *,
+    memory_id: uuid.UUID,
+    namespace: str | None = None,
+    content: str | None = None,
+    importance: int | None = None,
+) -> Memory | None:
+    """Partially update a memory, re-embedding and re-checking content changes.
+
+    Existing contradictions stay in the audit trail until a human resolves
+    them; a re-check only adds flags for pairs that aren't already recorded.
+    """
+    memory = get_memory(db, memory_id=memory_id, namespace=namespace)
+    if memory is None:
+        return None
+
+    if importance is not None:
+        memory.importance = importance
+
+    if content is not None and content != memory.content:
+        memory.content = content
+        memory.embedding = embed(content)
+        if memory.is_active:
+            _flag_contradictions(
+                db,
+                memory=memory,
+                vector=memory.embedding,
+                namespace=memory.namespace,
+                llm_check=None,
+            )
+
     db.commit()
     db.refresh(memory)
     return memory

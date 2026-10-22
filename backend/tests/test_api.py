@@ -82,6 +82,90 @@ def test_add_and_get_memory(client, namespace):
 
 
 @requires_db
+def test_update_memory_changes_importance_and_content(client, namespace):
+    mem = client.post(
+        "/v1/memories",
+        json={
+            "content": "Pranav lives in Bengaluru",
+            "namespace": namespace,
+            "importance": 2,
+        },
+    ).json()["memory"]
+
+    updated = client.patch(f"/v1/memories/{mem['id']}", json={"importance": 5})
+    assert updated.status_code == 200
+    assert updated.json()["importance"] == 5
+    assert updated.json()["content"] == "Pranav lives in Bengaluru"
+    assert updated.json()["updated_at"] >= mem["updated_at"]
+
+    changed = client.patch(
+        f"/v1/memories/{mem['id']}",
+        json={"content": "Pranav lives in Pune"},
+    )
+    assert changed.status_code == 200
+    assert changed.json()["content"] == "Pranav lives in Pune"
+
+    # The new text was re-embedded, so search still finds the row.
+    hits = client.post(
+        "/v1/memories/search",
+        json={"query": "Where does Pranav live?", "namespace": namespace, "limit": 5},
+    ).json()["hits"]
+    assert any("Pune" in hit["memory"]["content"] for hit in hits)
+
+
+@requires_db
+def test_update_memory_requires_a_change(client, namespace):
+    mem = client.post(
+        "/v1/memories",
+        json={"content": "Pranav likes filter coffee", "namespace": namespace},
+    ).json()["memory"]
+
+    empty = client.patch(f"/v1/memories/{mem['id']}", json={})
+    assert empty.status_code == 422
+
+    blank = client.patch(f"/v1/memories/{mem['id']}", json={"content": ""})
+    assert blank.status_code == 422
+
+
+@requires_db
+def test_update_memory_honours_namespace_and_rechecks_contradictions(client, namespace):
+    client.post(
+        "/v1/memories",
+        json={"content": "Pranav lives in Bengaluru", "namespace": namespace},
+    )
+    mem = client.post(
+        "/v1/memories",
+        json={"content": "Pranav likes filter coffee", "namespace": namespace},
+    ).json()["memory"]
+
+    # A different namespace must not update the row.
+    wrong = client.patch(
+        f"/v1/memories/{mem['id']}?namespace={namespace}-other",
+        json={"importance": 5},
+    )
+    assert wrong.status_code == 404
+    assert client.get(f"/v1/memories/{mem['id']}").json()["importance"] == 3
+
+    changed = client.patch(
+        f"/v1/memories/{mem['id']}",
+        json={"content": "Pranav no longer lives in Bengaluru"},
+    )
+    assert changed.status_code == 200
+
+    listed = client.get(f"/v1/contradictions?namespace={namespace}")
+    assert listed.status_code == 200
+    assert listed.json()["total"] == 1
+
+    # Re-checking the same pair must not create a duplicate audit entry.
+    again = client.patch(
+        f"/v1/memories/{mem['id']}",
+        json={"content": "Pranav no longer lives in Bengaluru, India"},
+    )
+    assert again.status_code == 200
+    assert client.get(f"/v1/contradictions?namespace={namespace}").json()["total"] == 1
+
+
+@requires_db
 def test_search_ranks_by_relevance(client, namespace):
     client.post(
         "/v1/memories",

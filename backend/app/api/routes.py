@@ -25,6 +25,7 @@ from app.models.schemas import (
     MemoryExportItem,
     MemoryList,
     MemoryOut,
+    MemoryUpdate,
     NamespaceStats,
     ResolveRequest,
     SearchRequest,
@@ -142,6 +143,31 @@ def get_memory(
     """
     memory = memory_service.get_memory(
         db, memory_id=memory_id, namespace=namespace
+    )
+    if memory is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Memory not found.")
+    return MemoryOut.model_validate(memory)
+
+
+@router.patch("/memories/{memory_id}", response_model=MemoryOut)
+def update_memory(
+    payload: MemoryUpdate,
+    memory_id: uuid.UUID,
+    namespace: str | None = Query(default=None, min_length=1, max_length=128),
+    db: Session = Depends(get_db),
+) -> MemoryOut:
+    """Partially update a memory's content or importance.
+
+    Content changes are re-embedded and re-checked for contradictions; new
+    flags surface through ``GET /v1/contradictions``. Accepts the same optional
+    ``namespace`` scope as the fetch and delete routes.
+    """
+    memory = memory_service.update_memory(
+        db,
+        memory_id=memory_id,
+        namespace=namespace,
+        content=payload.content,
+        importance=payload.importance,
     )
     if memory is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Memory not found.")

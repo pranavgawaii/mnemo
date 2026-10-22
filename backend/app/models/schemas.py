@@ -9,7 +9,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 # --------------------------------------------------------------------------- #
@@ -35,6 +35,23 @@ class MemoryOut(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+
+
+class MemoryUpdate(BaseModel):
+    """Payload for partially updating a memory.
+
+    At least one field must be present. A content change is re-embedded and
+    re-checked for contradictions; an importance change only re-ranks it.
+    """
+
+    content: str | None = Field(default=None, min_length=1)
+    importance: int | None = Field(default=None, ge=1, le=5)
+
+    @model_validator(mode="after")
+    def require_a_change(self) -> "MemoryUpdate":
+        if self.content is None and self.importance is None:
+            raise ValueError("At least one of 'content' or 'importance' must be provided.")
+        return self
 
 
 class MemoryList(BaseModel):
