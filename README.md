@@ -292,8 +292,9 @@ and `.vercelignore` keeps `backend/` out of the upload. Set
 `NEXT_PUBLIC_SITE_URL` to the production origin (for example
 `https://mnemo.dev`) so canonical URLs, the sitemap and the Open Graph tags
 resolve to the real domain; without it the app falls back to the domain Vercel
-assigns the project. Vercel Web Analytics is already mounted in `app/layout.tsx`
-and starts reporting once the project is deployed.
+assigns the project. Vercel Web Analytics and Speed Insights are already mounted
+in `app/layout.tsx` and start reporting once the project is deployed and each
+product is enabled in the Vercel dashboard.
 
 The API is deployed
 separately from `backend/` (Docker image or any Python host).

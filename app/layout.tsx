@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { displayFont } from "./display-font";
 import { ScrollManager } from "../components/scroll-manager";
 import { SITE_TAGLINE, SITE_URL } from "../lib/site";
@@ -108,6 +109,7 @@ export default function RootLayout({
         <ScrollManager />
         {children}
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
