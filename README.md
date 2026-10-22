@@ -145,6 +145,7 @@ All routes require an `X-API-Key` header.
 | `POST` | `/v1/memories/search` | Semantic search, relevance-ranked |
 | `GET` | `/v1/memories` | Paginated list for a namespace |
 | `GET` | `/v1/memories/{id}` | Fetch one (optional `?namespace=` scope) |
+| `PATCH` | `/v1/memories/{id}` | Update `content` or `importance` in place; content is re-embedded and re-checked |
 | `DELETE` | `/v1/memories/{id}` | Soft-delete (`is_active=False`; optional `?namespace=` scope) |
 | `GET` | `/v1/contradictions` | List flagged contradictions |
 | `POST` | `/v1/contradictions/resolve` | Resolve by naming the winner |
@@ -152,8 +153,14 @@ All routes require an `X-API-Key` header.
 | `GET` | `/v1/namespaces/{namespace}/stats` | Aggregate namespace counts |
 
 `GET /health` (liveness) and `GET /ready` (readiness: queries the database)
-are unauthenticated. Full request/response schemas are in
-`backend/app/models/schemas.py` and rendered at `/docs`.
+are unauthenticated. The list routes (`/v1/memories` and `/v1/contradictions`)
+take `limit` and `offset` and echo them alongside `total`. Full request/response
+schemas are in `backend/app/models/schemas.py` and rendered at `/docs`.
+
+Updates are partial: send only `content`, only `importance`, or both. A content
+change re-embeds the text and re-runs contradiction detection, so new flags show
+up in `GET /v1/contradictions`; existing flags stay in the audit trail until
+resolved.
 
 ### Namespace administration
 

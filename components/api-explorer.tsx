@@ -7,7 +7,7 @@ import { useTabList } from "../lib/use-tabs";
 type Field = { name: string; type: string; note: string; required?: boolean };
 
 type Endpoint = {
-  method: "GET" | "POST" | "DELETE";
+  method: "GET" | "POST" | "PATCH" | "DELETE";
   path: string;
   summary: string;
   description: string;
@@ -107,6 +107,23 @@ const ENDPOINTS: Endpoint[] = [
     notes: "Unknown ids return 404 with “Memory not found.”",
   },
   {
+    method: "PATCH",
+    path: "/v1/memories/{id}",
+    summary: "Update one memory",
+    description:
+      "Partially updates content, importance, or both in place, so a correction does not break the audit trail. A content change is re-embedded and re-checked against its nearest active neighbours.",
+    auth: true,
+    sends: [
+      { name: "id", type: "uuid", note: "Memory id (path parameter)", required: true },
+      { name: "content", type: "string", note: "Replacement text; re-embedded and re-checked" },
+      { name: "importance", type: "integer", note: "1 to 5" },
+      { name: "namespace", type: "string", note: "Optional scope; a mismatch returns 404" },
+    ],
+    gets: [{ name: "memory", type: "object", note: "The updated row" }],
+    notes:
+      "At least one of content or importance is required; an empty body returns 422. New contradictions surface through the list route, and an existing pair is never flagged twice.",
+  },
+  {
     method: "DELETE",
     path: "/v1/memories/{id}",
     summary: "Soft-delete",
@@ -126,12 +143,16 @@ const ENDPOINTS: Endpoint[] = [
     sends: [
       { name: "namespace", type: "string", note: "Default “default”" },
       { name: "status", type: "string", note: "open | resolved. Default open" },
+      { name: "limit", type: "integer", note: "1 to 100. Default 20" },
+      { name: "offset", type: "integer", note: "Default 0" },
     ],
     gets: [
-      { name: "items", type: "array", note: "Each has id, similarity, reason, status, resolved_winner_id, resolved_at" },
+      { name: "items", type: "array", note: "Newest first; each has id, similarity, reason, status, resolved_winner_id, resolved_at" },
       { name: "total", type: "integer", note: "Count of matches" },
+      { name: "limit / offset", type: "integer", note: "Echoed back" },
     ],
-    notes: "There is no pagination. Every matching row for the namespace is returned.",
+    notes:
+      "Paginated like the memory list. Both sides of each pair are inlined as new_memory and existing_memory.",
   },
   {
     method: "POST",
@@ -194,6 +215,7 @@ const METHOD_TONE: Record<string, string> = {
   GET: "border-[#BBF7D0] bg-[#F0FDF4] text-[#15803D]",
   DELETE: "border-[#FECACA] bg-[#FEF2F2] text-[#B91C1C]",
   POST: "border-[#C7D2FE] bg-accent-soft text-accent-ink",
+  PATCH: "border-[#FDE68A] bg-[#FFFBEB] text-[#B45309]",
 };
 
 function MethodPill({ method }: { method: string }) {
@@ -251,7 +273,7 @@ export function ApiExplorer() {
       id="api"
       index="06"
       title="REST API"
-      intro="Eleven routes over a JSON interface. Everything under v1 requires an API key; the two probes do not. Pick a route to read exactly what it accepts and returns."
+      intro="Twelve routes over a JSON interface. Everything under v1 requires an API key; the two probes do not. Pick a route to read exactly what it accepts and returns."
     >
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
         <div
