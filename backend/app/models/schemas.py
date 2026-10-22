@@ -109,10 +109,12 @@ class ContradictionOut(BaseModel):
 
 
 class ContradictionList(BaseModel):
-    """List of contradictions."""
+    """Paginated list of contradictions."""
 
     items: list[ContradictionOut]
     total: int
+    limit: int
+    offset: int
 
 
 class ResolveRequest(BaseModel):

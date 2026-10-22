@@ -174,15 +174,23 @@ def delete_memory(
 def list_contradictions(
     namespace: str = Query(default="default"),
     status_filter: str | None = Query(default="open", alias="status"),
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ) -> ContradictionList:
-    """List flagged contradictions for a namespace (defaults to open ones)."""
+    """Paginated list of flagged contradictions (defaults to open ones)."""
     items, total = memory_service.list_contradictions(
-        db, namespace=namespace, status=status_filter
+        db,
+        namespace=namespace,
+        status=status_filter,
+        limit=limit,
+        offset=offset,
     )
     return ContradictionList(
         items=[ContradictionOut.model_validate(c) for c in items],
         total=total,
+        limit=limit,
+        offset=offset,
     )
 
 

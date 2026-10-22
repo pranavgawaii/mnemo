@@ -196,9 +196,14 @@ def soft_delete_memory(
 
 
 def list_contradictions(
-    db: Session, *, namespace: str, status: str | None = "open"
+    db: Session,
+    *,
+    namespace: str,
+    status: str | None = "open",
+    limit: int,
+    offset: int,
 ) -> tuple[list[Contradiction], int]:
-    """List contradictions for a namespace, optionally filtered by status."""
+    """Return a page of contradictions (newest first) and the total count."""
     conditions = [Contradiction.namespace == namespace]
     if status is not None:
         conditions.append(Contradiction.status == status)
@@ -210,6 +215,8 @@ def list_contradictions(
         select(Contradiction)
         .where(*conditions)
         .order_by(Contradiction.created_at.desc())
+        .limit(limit)
+        .offset(offset)
     ).scalars().all()
     return list(rows), int(total or 0)
 

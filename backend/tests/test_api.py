@@ -132,6 +132,37 @@ def test_contradiction_flagged_end_to_end(client, namespace):
 
 
 @requires_db
+def test_contradiction_list_paginates(client, namespace):
+    for content in (
+        "Pranav lives in Bengaluru",
+        "Pranav no longer lives in Bengaluru",
+        "Pranav works at Acme",
+        "Pranav no longer works at Acme",
+    ):
+        client.post("/v1/memories", json={"content": content, "namespace": namespace})
+
+    first = client.get(f"/v1/contradictions?namespace={namespace}&limit=1&offset=0")
+    assert first.status_code == 200
+    body = first.json()
+    assert body["total"] >= 2
+    assert body["limit"] == 1
+    assert body["offset"] == 0
+    assert len(body["items"]) == 1
+
+    second = client.get(f"/v1/contradictions?namespace={namespace}&limit=1&offset=1")
+    assert second.status_code == 200
+    assert second.json()["total"] == body["total"]
+    assert len(second.json()["items"]) == 1
+    assert second.json()["items"][0]["id"] != body["items"][0]["id"]
+
+    past_end = client.get(
+        f"/v1/contradictions?namespace={namespace}&limit=1&offset={body['total']}"
+    )
+    assert past_end.status_code == 200
+    assert past_end.json()["items"] == []
+
+
+@requires_db
 def test_resolve_soft_deletes_loser_and_drops_from_search(client, namespace):
     old = client.post(
         "/v1/memories",
