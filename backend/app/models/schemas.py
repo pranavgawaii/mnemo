@@ -8,8 +8,19 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    model_validator,
+)
+
+# A tag is a short identifier; strip whitespace so "work " == "work".
+Tag = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=64)]
 
 
 # --------------------------------------------------------------------------- #
@@ -18,21 +29,36 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 class MemoryCreate(BaseModel):
     """Payload for adding a memory."""
 
+    model_config = ConfigDict(populate_by_name=True)
+
     content: str = Field(..., min_length=1, description="The memory text.")
     namespace: str = Field(default="default", min_length=1, max_length=128)
     importance: int = Field(default=3, ge=1, le=5, description="1 (low) to 5 (high).")
+    tags: list[Tag] = Field(default_factory=list, max_length=10)
+    # JSON attribute is `meta` (SQLAlchemy reserves `metadata`); the API field
+    # is "metadata" via the alias.
+    meta: dict[str, Any] = Field(default_factory=dict, alias="metadata")
 
 
 class MemoryOut(BaseModel):
     """A memory as returned by the API."""
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: uuid.UUID
     namespace: str
     content: str
     importance: int
     is_active: bool
+    tags: list[str] = Field(default_factory=list)
+    # ORM attribute is `meta`; JSON field is `metadata`. AliasChoices makes ORM
+    # validation (from_attributes) resolve `meta` first — resolving `metadata`
+    # first would pick up SQLAlchemy's reserved MetaData collection instead.
+    meta: dict[str, Any] = Field(
+        default_factory=dict,
+        validation_alias=AliasChoices("meta", "metadata"),
+        serialization_alias="metadata",
+    )
     created_at: datetime
     updated_at: datetime
 
@@ -42,15 +68,22 @@ class MemoryUpdate(BaseModel):
 
     At least one field must be present. A content change is re-embedded and
     re-checked for contradictions; an importance change only re-ranks it.
+    Tags and metadata are replaced wholesale when provided.
     """
+
+    model_config = ConfigDict(populate_by_name=True)
 
     content: str | None = Field(default=None, min_length=1)
     importance: int | None = Field(default=None, ge=1, le=5)
+    tags: list[Tag] | None = Field(default=None, max_length=10)
+    meta: dict[str, Any] | None = Field(default=None, alias="metadata")
 
     @model_validator(mode="after")
     def require_a_change(self) -> "MemoryUpdate":
-        if self.content is None and self.importance is None:
-            raise ValueError("At least one of 'content' or 'importance' must be provided.")
+        if self.content is None and self.importance is None and self.tags is None and self.meta is None:
+            raise ValueError(
+                "At least one of 'content', 'importance', 'tags' or 'metadata' must be provided."
+            )
         return self
 
 
@@ -79,6 +112,8 @@ class SearchRequest(BaseModel):
     query: str = Field(..., min_length=1)
     namespace: str = Field(default="default", min_length=1, max_length=128)
     limit: int = Field(default=10, ge=1, le=100)
+    # When set, only memories carrying ANY of these tags are considered.
+    tags: list[Tag] = Field(default_factory=list, max_length=5)
 
 
 class SearchHit(BaseModel):
@@ -155,12 +190,18 @@ class MemoryExportItem(BaseModel):
     is re-embedded on import, which keeps a backup portable across models.
     """
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: uuid.UUID
     content: str
     importance: int
     is_active: bool
+    tags: list[str] = Field(default_factory=list)
+    meta: dict[str, Any] = Field(
+        default_factory=dict,
+        validation_alias=AliasChoices("meta", "metadata"),
+        serialization_alias="metadata",
+    )
     created_at: datetime
     updated_at: datetime
 

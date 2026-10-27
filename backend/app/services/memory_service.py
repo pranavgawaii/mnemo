@@ -10,7 +10,7 @@ import uuid
 from collections import Counter
 from datetime import datetime, timezone
 
-from sqlalchemy import func, select
+from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -39,6 +39,8 @@ def add_memory(
     content: str,
     namespace: str,
     importance: int,
+    tags: list[str] | None = None,
+    meta: dict[str, object] | None = None,
     llm_check: LlmCheck | None = None,
 ) -> tuple[Memory, list[Contradiction]]:
     """Embed and persist a memory, flagging any contradictions it introduces.
@@ -52,6 +54,8 @@ def add_memory(
         content=content,
         importance=importance,
         embedding=vector,
+        tags=tags or [],
+        meta=meta or {},
     )
     db.add(memory)
     db.flush()  # assign id / created_at without committing yet
@@ -129,8 +133,19 @@ def _flag_contradictions(
     return flagged
 
 
+def _tag_condition(condition: list[ColumnElement[bool]], tags: list[str] | None) -> None:
+    """Append a tags-overlap filter to ``condition`` when tags are given."""
+    if tags:
+        condition.append(Memory.tags.overlap(list(tags)))
+
+
 def search(
-    db: Session, *, query: str, namespace: str, limit: int
+    db: Session,
+    *,
+    query: str,
+    namespace: str,
+    limit: int,
+    tags: list[str] | None = None,
 ) -> list[tuple[Memory, float, float, float]]:
     """Semantic search, re-ranked by relevance (similarity * decay * importance).
 
@@ -140,11 +155,17 @@ def search(
     vector = embed(query)
     distance = Memory.embedding.cosine_distance(vector)
 
+    conditions: list[ColumnElement[bool]] = [
+        Memory.namespace == namespace,
+        Memory.is_active.is_(True),
+    ]
+    _tag_condition(conditions, tags)
+
     # Over-fetch by raw vector distance, then re-rank by relevance so decay and
     # importance can reorder the head of the list.
     stmt = (
         select(Memory, distance.label("distance"))
-        .where(Memory.namespace == namespace, Memory.is_active.is_(True))
+        .where(*conditions)
         .order_by(distance)
         .limit(limit * _SEARCH_OVERFETCH)
     )
@@ -161,12 +182,19 @@ def search(
 
 
 def list_memories(
-    db: Session, *, namespace: str, limit: int, offset: int, include_inactive: bool = False
+    db: Session,
+    *,
+    namespace: str,
+    limit: int,
+    offset: int,
+    include_inactive: bool = False,
+    tags: list[str] | None = None,
 ) -> tuple[list[Memory], int]:
     """Return a page of memories (newest first) and the total count."""
-    conditions = [Memory.namespace == namespace]
+    conditions: list[ColumnElement[bool]] = [Memory.namespace == namespace]
     if not include_inactive:
         conditions.append(Memory.is_active.is_(True))
+    _tag_condition(conditions, tags)
 
     total = db.scalar(
         select(func.count()).select_from(Memory).where(*conditions)
@@ -220,11 +248,14 @@ def update_memory(
     namespace: str | None = None,
     content: str | None = None,
     importance: int | None = None,
+    tags: list[str] | None = None,
+    meta: dict[str, object] | None = None,
 ) -> Memory | None:
     """Partially update a memory, re-embedding and re-checking content changes.
 
     Existing contradictions stay in the audit trail until a human resolves
     them; a re-check only adds flags for pairs that aren't already recorded.
+    Tags and metadata are replaced wholesale when provided.
     """
     memory = get_memory(db, memory_id=memory_id, namespace=namespace)
     if memory is None:
@@ -232,6 +263,10 @@ def update_memory(
 
     if importance is not None:
         memory.importance = importance
+    if tags is not None:
+        memory.tags = list(tags)
+    if meta is not None:
+        memory.meta = dict(meta)
 
     if content is not None and content != memory.content:
         memory.content = content
@@ -434,6 +469,8 @@ def import_namespace(
                     importance=mem_item.importance,
                     embedding=embed(mem_item.content),
                     is_active=mem_item.is_active,
+                    tags=list(mem_item.tags),
+                    meta=mem_item.meta,
                     created_at=mem_item.created_at,
                     updated_at=mem_item.updated_at,
                 )

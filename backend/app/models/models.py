@@ -16,8 +16,9 @@ from sqlalchemy import (
     String,
     Text,
     func,
+    text,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.config import settings
@@ -43,6 +44,15 @@ class Memory(Base):
         Vector(settings.embedding_dim), nullable=False
     )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    # Tags filter with the overlap operator; the ORM attribute must be `meta`
+    # because `metadata` is reserved by SQLAlchemy's declarative API — the
+    # column and the JSON API field are still named "metadata".
+    tags: Mapped[list[str]] = mapped_column(
+        ARRAY(String(64)), nullable=False, default=list, server_default=text("'{}'")
+    )
+    meta: Mapped[dict[str, object]] = mapped_column(
+        "metadata", JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -56,6 +66,8 @@ class Memory(Base):
     __table_args__ = (
         # Every query filters by namespace; index the common access path.
         Index("ix_memories_namespace_active", "namespace", "is_active"),
+        # Tags overlap (`&&`) filtering.
+        Index("ix_memories_tags", "tags", postgresql_using="gin"),
     )
 
 

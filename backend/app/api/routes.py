@@ -85,6 +85,8 @@ def add_memory(payload: MemoryCreate, db: Session = Depends(get_db)) -> MemoryCr
         content=payload.content,
         namespace=payload.namespace,
         importance=payload.importance,
+        tags=list(payload.tags),
+        meta=payload.meta,
     )
     return MemoryCreateResult(
         memory=MemoryOut.model_validate(memory),
@@ -96,7 +98,11 @@ def add_memory(payload: MemoryCreate, db: Session = Depends(get_db)) -> MemoryCr
 def search_memories(payload: SearchRequest, db: Session = Depends(get_db)) -> SearchResponse:
     """Semantic search, ranked by relevance (similarity * decay * importance)."""
     results = memory_service.search(
-        db, query=payload.query, namespace=payload.namespace, limit=payload.limit
+        db,
+        query=payload.query,
+        namespace=payload.namespace,
+        limit=payload.limit,
+        tags=list(payload.tags) or None,
     )
     hits = [
         SearchHit(
@@ -115,11 +121,13 @@ def list_memories(
     namespace: str = Query(default="default"),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    tags: str | None = Query(default=None, description="Comma-separated tag filter (ANY match)."),
     db: Session = Depends(get_db),
 ) -> MemoryList:
     """Paginated list of active memories for a namespace, newest first."""
+    tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else None
     items, total = memory_service.list_memories(
-        db, namespace=namespace, limit=limit, offset=offset
+        db, namespace=namespace, limit=limit, offset=offset, tags=tag_list
     )
     return MemoryList(
         items=[MemoryOut.model_validate(m) for m in items],
@@ -168,6 +176,8 @@ def update_memory(
         namespace=namespace,
         content=payload.content,
         importance=payload.importance,
+        tags=list(payload.tags) if payload.tags is not None else None,
+        meta=payload.meta,
     )
     if memory is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Memory not found.")
