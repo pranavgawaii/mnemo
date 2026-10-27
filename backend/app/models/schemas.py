@@ -12,6 +12,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import (
     AliasChoices,
+    AnyHttpUrl,
     BaseModel,
     ConfigDict,
     Field,
@@ -392,6 +393,41 @@ class AuditEventList(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+# --------------------------------------------------------------------------- #
+# Webhooks
+# --------------------------------------------------------------------------- #
+class WebhookCreate(BaseModel):
+    """Subscribe a URL to contradiction-flagged events for one namespace."""
+
+    namespace: str = Field(..., min_length=1, max_length=128)
+    url: AnyHttpUrl
+
+
+class WebhookOut(BaseModel):
+    """A webhook subscription. The signing ``secret`` is shown once at create."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    namespace: str
+    url: str
+    is_active: bool
+    created_at: datetime
+
+
+class WebhookCreated(WebhookOut):
+    """The one response containing the signing secret."""
+
+    secret: str
+
+
+class WebhookList(BaseModel):
+    """All webhook subscriptions (optionally filtered by namespace)."""
+
+    items: list[WebhookOut]
+    total: int
 
 
 class NamespaceStats(BaseModel):

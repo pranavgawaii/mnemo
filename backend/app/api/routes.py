@@ -45,8 +45,18 @@ from app.models.schemas import (
     SearchHit,
     SearchRequest,
     SearchResponse,
+    WebhookCreate,
+    WebhookCreated,
+    WebhookList,
+    WebhookOut,
 )
-from app.services import api_key_service, audit_service, memory_service, namespace_service
+from app.services import (
+    api_key_service,
+    audit_service,
+    memory_service,
+    namespace_service,
+    webhook_service,
+)
 from app.services.memory_service import _UNSET
 
 router = APIRouter(prefix="/v1", dependencies=[Depends(authenticate)])
@@ -535,3 +545,32 @@ def list_events(
         limit=limit,
         offset=offset,
     )
+
+
+# --------------------------------------------------------------------------- #
+# Webhooks (admin scope)
+# --------------------------------------------------------------------------- #
+@router.post("/webhooks", response_model=WebhookCreated, status_code=status.HTTP_201_CREATED, dependencies=_ADMIN)
+def create_webhook(payload: WebhookCreate, db: Session = Depends(get_db)) -> WebhookCreated:
+    """Subscribe a URL. The signing ``secret`` is shown exactly once."""
+    row = webhook_service.create_webhook(db, namespace=payload.namespace, url=str(payload.url))
+    out = WebhookOut.model_validate(row).model_dump()
+    return WebhookCreated(secret=row.secret, **out)
+
+
+@router.get("/webhooks", response_model=WebhookList, dependencies=_ADMIN)
+def list_webhooks(
+    namespace: str | None = Query(default=None, min_length=1, max_length=128),
+    db: Session = Depends(get_db),
+) -> WebhookList:
+    """All webhook subscriptions, optionally filtered by namespace."""
+    rows = webhook_service.list_webhooks(db, namespace=namespace)
+    return WebhookList(items=[WebhookOut.model_validate(w) for w in rows], total=len(rows))
+
+
+@router.delete("/webhooks/{webhook_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=_ADMIN)
+def deactivate_webhook(webhook_id: uuid.UUID, db: Session = Depends(get_db)) -> None:
+    """Deactivate a subscription; deliveries stop immediately."""
+    row = webhook_service.deactivate_webhook(db, webhook_id=webhook_id)
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Webhook not found.")

@@ -23,7 +23,7 @@ from app.core.diversity import mmr_select
 from app.core.embedding import cosine_similarity, embed
 from app.models.models import Contradiction, Memory
 from app.models.schemas import MemoryExport
-from app.services import audit_service, namespace_service
+from app.services import audit_service, namespace_service, webhook_service
 from app.services.namespace_service import ScoringConfig
 
 # How many nearest neighbours to inspect for contradictions when adding.
@@ -246,6 +246,10 @@ def _flag_contradictions(
             )
             existing_pairs.add(pair)
             flagged.append(contradiction)
+
+            webhook_service.notify_contradiction_flagged(
+                db, namespace=namespace, contradiction=contradiction
+            )
 
     if flagged:
         db.flush()

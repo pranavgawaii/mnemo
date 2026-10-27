@@ -217,6 +217,27 @@ class Job(Base):
     )
 
 
+class Webhook(Base):
+    """A subscriber endpoint notified when contradictions are flagged.
+
+    Delivery goes through the outbox: flagging a contradiction enqueues one
+    ``webhook.deliver`` job in the same transaction, and the worker POSTs the
+    payload with an HMAC signature. Failures retry with backoff.
+    """
+
+    __tablename__ = "webhooks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    namespace: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    url: Mapped[str] = mapped_column(String(512), nullable=False)
+    # HMAC-SHA256 key for the X-Mnemo-Signature header (hex digest of the body).
+    secret: Mapped[str] = mapped_column(String(64), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
 class Contradiction(Base):
     """A flagged (not resolved) contradiction between two memories.
 

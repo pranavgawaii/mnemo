@@ -63,6 +63,9 @@ class Settings(BaseSettings):
     job_worker_enabled: bool = True
     job_worker_interval_seconds: float = 1.0
 
+    # Webhook delivery.
+    webhook_timeout_seconds: float = 5.0
+
     # Logging
     log_json: bool = True
     log_level: str = "info"
