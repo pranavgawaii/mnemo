@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api.routes import router as api_router
 from app.core.logging_setup import configure_logging
+from app.core.metrics import registry
 from app.db.session import get_db
 
 configure_logging()
@@ -41,6 +42,7 @@ async def attach_request_id_and_log(
         response = await call_next(request)
     except Exception:
         duration_ms = (time.perf_counter() - start) * 1000
+        _observe_metrics(request, 500, duration_ms / 1000)
         _request_logger().error(
             "request",
             extra={
@@ -54,6 +56,7 @@ async def attach_request_id_and_log(
         raise
     response.headers["X-Request-ID"] = request_id
     duration_ms = (time.perf_counter() - start) * 1000
+    _observe_metrics(request, response.status_code, duration_ms / 1000)
     _request_logger().info(
         "request",
         extra={
@@ -67,8 +70,33 @@ async def attach_request_id_and_log(
     return response
 
 
+def _route_path(request: Request) -> str:
+    """Route template when the request matched a route, else the raw path."""
+    route = request.scope.get("route")
+    return getattr(route, "path", None) or request.url.path
+
+
+def _observe_metrics(request: Request, status_code: int, duration_s: float) -> None:
+    registry.counter("http_requests_total", "Total HTTP requests.").inc(
+        {
+            "method": request.method,
+            "path": _route_path(request),
+            "status": str(status_code),
+        }
+    )
+    registry.histogram(
+        "http_request_duration_seconds", "HTTP request latency in seconds."
+    ).observe({"method": request.method}, duration_s)
+
+
 def _request_logger() -> logging.Logger:
     return logging.getLogger("mnemo.request")
+
+
+@app.get("/metrics", tags=["meta"])
+def metrics() -> Response:
+    """Prometheus text-format metrics. Unauthenticated, like /health."""
+    return Response(content=registry.render(), media_type="text/plain; version=0.0.4")
 
 
 @app.get("/health", tags=["meta"])
