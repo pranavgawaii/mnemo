@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 import time
 import uuid
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,14 +20,32 @@ from app.core.config import settings
 from app.core.logging_setup import configure_logging
 from app.core.metrics import registry
 from app.db.session import get_db
+from app.services import job_worker
 
 configure_logging()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Start/stop the background job worker with the process."""
+    worker = job_worker.start_worker(
+        enabled=settings.job_worker_enabled,
+        interval_seconds=settings.job_worker_interval_seconds,
+    )
+    try:
+        yield
+    finally:
+        if worker is not None:
+            worker.stop()
+            worker.join(timeout=5)
+
 
 app = FastAPI(
     title="Mnemo",
     version="0.1.0",
     description="Semantic memory API for AI agents: pgvector search, decay "
     "scoring, and contradiction detection.",
+    lifespan=lifespan,
 )
 
 def _install_cors(application: FastAPI, origins: list[str]) -> None:

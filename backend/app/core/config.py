@@ -59,6 +59,10 @@ class Settings(BaseSettings):
     contradiction_llm_model: str = "gpt-4o-mini"
     contradiction_llm_timeout_seconds: float = 10.0
 
+    # Background job worker (outbox). Disable to run jobs from cron/CLI instead.
+    job_worker_enabled: bool = True
+    job_worker_interval_seconds: float = 1.0
+
     # Logging
     log_json: bool = True
     log_level: str = "info"

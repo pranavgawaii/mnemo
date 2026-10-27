@@ -14,6 +14,7 @@ Examples::
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -110,6 +111,27 @@ def _sweep_expired(args: argparse.Namespace) -> int:
     return 0
 
 
+def _jobs(args: argparse.Namespace) -> int:
+    from app.services import job_service
+
+    if args.jobs_command == "run":
+        db = SessionLocal()
+        try:
+            outcome = job_service.process_next(db)
+        finally:
+            db.close()
+        print(outcome or "nothing runnable")
+        return 0
+
+    db = SessionLocal()
+    try:
+        counts = job_service.stats(db)
+    finally:
+        db.close()
+    print(json.dumps(counts, indent=2, sort_keys=True))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="mnemo",
@@ -150,6 +172,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Soft-delete every memory whose expires_at has passed. Cron this.",
     )
     sweep_parser.set_defaults(handler=_sweep_expired)
+
+    jobs_parser = subparsers.add_parser(
+        "jobs", help="Inspect or run the background job outbox."
+    )
+    jobs_sub = jobs_parser.add_subparsers(dest="jobs_command", required=True)
+    jobs_sub.add_parser("run", help="Claim and process one runnable job.")
+    jobs_sub.add_parser("stats", help="Print job counts by status.")
+    jobs_parser.set_defaults(handler=_jobs, jobs_command="stats")
 
     return parser
 

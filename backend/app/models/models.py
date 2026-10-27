@@ -178,6 +178,45 @@ class AuditLog(Base):
     )
 
 
+class Job(Base):
+    """Outbox row for background work (webhook delivery, sweeps, ...).
+
+    Written in the same transaction as the triggering change, then claimed by
+    the worker with ``FOR UPDATE SKIP LOCKED`` so multiple workers never pick
+    the same job. Failures back off exponentially; a job that exhausts its
+    attempts stays in ``failed`` for inspection.
+    """
+
+    __tablename__ = "jobs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    kind: Mapped[str] = mapped_column(String(64), nullable=False)
+    payload: Mapped[dict[str, object]] = mapped_column(
+        JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
+    )
+    # pending -> running -> done | failed (exhausted) | pending (retry)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending")
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    max_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
+    run_after: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+    __table_args__ = (
+        Index("ix_jobs_claim", "status", "run_after"),
+    )
+
+
 class Contradiction(Base):
     """A flagged (not resolved) contradiction between two memories.
 
