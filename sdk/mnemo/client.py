@@ -1,9 +1,10 @@
 """Synchronous Mnemo client.
 
-Thin wrapper over httpx that adds the API-key header, maps failures to typed
-errors, and parses responses into the frozen dataclasses in ``mnemo.models``.
-Transport is injectable (any ``httpx.Client``-shaped object) so tests can run
-against ``httpx.MockTransport`` with no server.
+Thin wrapper over httpx that adds the API-key header, applies the retry policy
+(``mnemo._retry`` — GETs only), maps failures to typed errors, and parses
+responses into the frozen dataclasses in ``mnemo.models``. Transport is
+injectable (any ``httpx.Client``-shaped object) so tests run against
+``httpx.MockTransport`` with no server.
 """
 
 from __future__ import annotations
@@ -14,14 +15,8 @@ from typing import Any
 import httpx
 
 from ._parsing import parse_contradiction, parse_memory, parse_search_hit, raise_for_status
-from .errors import RateLimitError
-from .models import (
-    Contradiction,
-    ContradictionList,
-    Memory,
-    MemoryList,
-    SearchResponse,
-)
+from ._retry import attempts_allowed, delay_for, should_retry
+from .models import Contradiction, ContradictionList, Memory, MemoryList, SearchResponse
 
 
 class MnemoClient:
@@ -31,7 +26,8 @@ class MnemoClient:
 
         with MnemoClient(base_url="https://mnemo.internal", api_key="mnemo_...") as client:
             client.add_memory("Prefers dark mode", importance=2)
-            hits = client.search("theme preference")
+            for hit in client.search("theme preference").hits:
+                print(hit.memory.content)
     """
 
     def __init__(
@@ -61,7 +57,33 @@ class MnemoClient:
         self._client.close()
 
     # -- internals ------------------------------------------------------------
-    def _request(self, method: str, path: str, *, json_body: Any | None = None, params: dict[str, Any] | None = None) -> Any:
+    def _request(
+        self,
+        method: str,
+        path: str,
+        *,
+        json_body: Any | None = None,
+        params: dict[str, Any] | None = None,
+    ) -> Any:
+        from ._retry import sleep_sync
+
+        for attempt in range(1, attempts_allowed() + 1):
+            try:
+                return self._send(method, path, json_body=json_body, params=params)
+            except Exception as exc:
+                if attempt >= attempts_allowed() or not should_retry(method, exc):
+                    raise
+                sleep_sync(delay_for(attempt, exc))
+        raise AssertionError("unreachable")  # pragma: no cover
+
+    def _send(
+        self,
+        method: str,
+        path: str,
+        *,
+        json_body: Any | None = None,
+        params: dict[str, Any] | None = None,
+    ) -> Any:
         response = self._client.request(method, path, json=json_body, params=params)
         request_id = response.headers.get("X-Request-ID")
         if response.status_code >= 400 or not response.content:
@@ -71,9 +93,6 @@ class MnemoClient:
                 body = {"detail": response.text}
             raise_for_status(response.status_code, body, request_id)
         return response.json()
-
-    def _params(self, **kwargs: Any) -> dict[str, Any]:
-        return {key: value for key, value in kwargs.items() if value is not None}
 
     # -- memories ---------------------------------------------------------------
     def add_memory(
@@ -253,11 +272,3 @@ class MnemoClient:
             },
         )
         return parse_contradiction(data)
-
-    def retry_after(self, exc: RateLimitError, default: float = 1.0) -> float:
-        """Seconds to wait after a RateLimitError (uses Retry-After when present)."""
-        if exc.retry_after is not None:
-            return exc.retry_after
-        headers = getattr(getattr(self, "_client", None), "headers", None)
-        del headers
-        return default

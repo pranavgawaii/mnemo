@@ -11,6 +11,7 @@ memories with decay-aware ranking and contradiction detection.
             print(hit.memory.content, hit.relevance_score)
 """
 
+from .async_client import AsyncMnemoClient
 from .client import MnemoClient
 from .errors import (
     AuthenticationError,
@@ -34,6 +35,7 @@ from .models import (
 __version__ = "0.1.0"
 
 __all__ = [
+    "AsyncMnemoClient",
     "AuthenticationError",
     "ConflictError",
     "Contradiction",
