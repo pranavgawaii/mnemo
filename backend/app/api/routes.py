@@ -29,13 +29,17 @@ from app.models.schemas import (
     MemoryList,
     MemoryOut,
     MemoryUpdate,
+    NamespaceCreate,
+    NamespaceList,
+    NamespaceOut,
     NamespaceStats,
+    NamespaceUpdate,
     ResolveRequest,
     SearchHit,
     SearchRequest,
     SearchResponse,
 )
-from app.services import memory_service
+from app.services import memory_service, namespace_service
 
 router = APIRouter(prefix="/v1", dependencies=[Depends(require_api_key)])
 
@@ -75,6 +79,86 @@ def namespace_stats(
     """Return aggregate memory and contradiction counts for one namespace."""
     stats = memory_service.namespace_stats(db, namespace=namespace)
     return NamespaceStats.model_validate({"namespace": namespace, **stats})
+
+
+# --------------------------------------------------------------------------- #
+# Namespace configuration (CRUD)
+# --------------------------------------------------------------------------- #
+@router.post("/namespaces", response_model=NamespaceOut, status_code=status.HTTP_201_CREATED)
+def create_namespace(payload: NamespaceCreate, db: Session = Depends(get_db)) -> NamespaceOut:
+    """Register a namespace with optional scoring overrides."""
+    try:
+        row = namespace_service.create_namespace(
+            db,
+            name=payload.name,
+            decay_half_life_days=payload.decay_half_life_days,
+            decay_floor=payload.decay_floor,
+            contradiction_sim_threshold=payload.contradiction_sim_threshold,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    return NamespaceOut.model_validate(row).model_copy(update={"total_memories": 0})
+
+
+@router.get("/namespaces", response_model=NamespaceList)
+def list_namespaces(db: Session = Depends(get_db)) -> NamespaceList:
+    """All configured namespaces with their memory counts."""
+    rows = namespace_service.list_namespaces(db)
+    items = [
+        NamespaceOut.model_validate(row).model_copy(update={"total_memories": count})
+        for row, count in rows
+    ]
+    return NamespaceList(items=items, total=len(items))
+
+
+@router.get("/namespaces/{namespace}", response_model=NamespaceOut)
+def get_namespace(
+    namespace: str = Path(..., min_length=1, max_length=128),
+    db: Session = Depends(get_db),
+) -> NamespaceOut:
+    row = namespace_service.get_namespace(db, name=namespace)
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Namespace not found.")
+    count = memory_service.namespace_stats(db, namespace=namespace)["total_memories"]
+    return NamespaceOut.model_validate(row).model_copy(update={"total_memories": int(count or 0)})
+
+
+@router.patch("/namespaces/{namespace}", response_model=NamespaceOut)
+def update_namespace(
+    payload: NamespaceUpdate,
+    namespace: str = Path(..., min_length=1, max_length=128),
+    db: Session = Depends(get_db),
+) -> NamespaceOut:
+    """Update scoring overrides; explicit ``null`` resets a field to the global value."""
+    provided = payload.model_fields_set
+    row = namespace_service.update_namespace(
+        db,
+        name=namespace,
+        decay_half_life_days=payload.decay_half_life_days,
+        decay_floor=payload.decay_floor,
+        contradiction_sim_threshold=payload.contradiction_sim_threshold,
+        reset=provided,  # keys present-but-null mean "reset to global"
+    )
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Namespace not found.")
+    count = memory_service.namespace_stats(db, namespace=namespace)["total_memories"]
+    return NamespaceOut.model_validate(row).model_copy(update={"total_memories": int(count or 0)})
+
+
+@router.delete("/namespaces/{namespace}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_namespace(
+    namespace: str = Path(..., min_length=1, max_length=128),
+    db: Session = Depends(get_db),
+) -> None:
+    """Delete the namespace row. Refused (409) while memories still exist."""
+    outcome = namespace_service.delete_namespace(db, name=namespace)
+    if outcome is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Namespace not found.")
+    if outcome is False:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Namespace still contains memories; move or delete them first.",
+        )
 
 
 # --------------------------------------------------------------------------- #

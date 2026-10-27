@@ -81,6 +81,7 @@ def relevance_score(
     age_days: float,
     importance: int,
     half_life_days: float | None = None,
+    floor: float | None = None,
 ) -> float:
     """Combine cosine similarity, age decay, and importance into one score.
 
@@ -89,6 +90,7 @@ def relevance_score(
         age_days: Age of the memory in days.
         importance: Integer importance rating (1-5).
         half_life_days: Optional half-life override.
+        floor: Optional decay-floor override.
 
     Returns:
         The composite relevance score. Not clamped to ``[0, 1]`` — importance
@@ -96,6 +98,6 @@ def relevance_score(
     """
     return (
         similarity
-        * decay_factor(age_days, half_life_days=half_life_days)
+        * decay_factor(age_days, half_life_days=half_life_days, floor=floor)
         * importance_weight(importance)
     )

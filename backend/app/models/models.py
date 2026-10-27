@@ -71,6 +71,25 @@ class Memory(Base):
     )
 
 
+class NamespaceRow(Base):
+    """Optional per-namespace configuration row.
+
+    Namespaces are implicit (any string is a tenant key); a row here exists to
+    hold scoring overrides and administration metadata. Every override column
+    is NULL = use the global setting.
+    """
+
+    __tablename__ = "namespaces"
+
+    name: Mapped[str] = mapped_column(String(128), primary_key=True)
+    decay_half_life_days: Mapped[float | None] = mapped_column(Float, nullable=True)
+    decay_floor: Mapped[float | None] = mapped_column(Float, nullable=True)
+    contradiction_sim_threshold: Mapped[float | None] = mapped_column(Float, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
 class Contradiction(Base):
     """A flagged (not resolved) contradiction between two memories.
 

@@ -9,6 +9,7 @@ from __future__ import annotations
 import uuid
 from collections import Counter
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.exc import IntegrityError
@@ -19,6 +20,8 @@ from app.core.decay import relevance_score
 from app.core.embedding import embed
 from app.models.models import Contradiction, Memory
 from app.models.schemas import MemoryExport
+from app.services import namespace_service
+from app.services.namespace_service import ScoringConfig
 
 # How many nearest neighbours to inspect for contradictions when adding.
 _CONTRADICTION_CANDIDATES = 5
@@ -60,8 +63,14 @@ def add_memory(
     db.add(memory)
     db.flush()  # assign id / created_at without committing yet
 
+    scoring = namespace_service.resolve_scoring(db, namespace=namespace)
     contradictions = _flag_contradictions(
-        db, memory=memory, vector=vector, namespace=namespace, llm_check=llm_check
+        db,
+        memory=memory,
+        vector=vector,
+        namespace=namespace,
+        llm_check=llm_check,
+        scoring=scoring,
     )
 
     db.commit()
@@ -78,8 +87,11 @@ def _flag_contradictions(
     vector: list[float],
     namespace: str,
     llm_check: LlmCheck | None,
+    scoring: ScoringConfig | None = None,
 ) -> list[Contradiction]:
     """Compare a new memory against its nearest neighbours and flag conflicts."""
+    if scoring is None:
+        scoring = namespace_service.resolve_scoring(db, namespace=namespace)
     distance = Memory.embedding.cosine_distance(vector)
     stmt = (
         select(Memory, distance.label("distance"))
@@ -113,7 +125,11 @@ def _flag_contradictions(
 
         similarity = 1.0 - float(dist)
         verdict = check_contradiction(
-            memory.content, existing.content, similarity, llm_check=llm_check
+            memory.content,
+            existing.content,
+            similarity,
+            sim_threshold=scoring.sim_threshold,
+            llm_check=llm_check,
         )
         if verdict.is_contradiction:
             contradiction = Contradiction(
@@ -170,11 +186,18 @@ def search(
         .limit(limit * _SEARCH_OVERFETCH)
     )
 
+    scoring = namespace_service.resolve_scoring(db, namespace=namespace)
     scored: list[tuple[Memory, float, float, float]] = []
     for memory, dist in db.execute(stmt).all():
         similarity = 1.0 - float(dist)
         age = _age_days(memory.created_at)
-        rel = relevance_score(similarity, age, memory.importance)
+        rel = relevance_score(
+            similarity,
+            age,
+            memory.importance,
+            half_life_days=scoring.half_life_days,
+            floor=scoring.floor,
+        )
         scored.append((memory, similarity, rel, age))
 
     scored.sort(key=lambda row: row[2], reverse=True)
@@ -376,7 +399,7 @@ def export_namespace(
     return list(memories), list(contradictions)
 
 
-def namespace_stats(db: Session, *, namespace: str) -> dict[str, object]:
+def namespace_stats(db: Session, *, namespace: str) -> dict[str, Any]:
     """Aggregate memory and contradiction counts for one namespace."""
     memory_rows = db.execute(
         select(Memory.is_active, Memory.importance).where(

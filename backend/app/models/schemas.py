@@ -264,6 +264,43 @@ class ImportanceCount(BaseModel):
     count: int
 
 
+class NamespaceCreate(BaseModel):
+    """Create a namespace row with optional scoring overrides."""
+
+    name: str = Field(..., min_length=1, max_length=128, pattern=r"^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$")
+    decay_half_life_days: float | None = Field(default=None, gt=0)
+    decay_floor: float | None = Field(default=None, gt=0, le=1)
+    contradiction_sim_threshold: float | None = Field(default=None, gt=0, le=1)
+
+
+class NamespaceUpdate(BaseModel):
+    """Partial update. Explicit ``null`` resets an override to the global setting."""
+
+    decay_half_life_days: float | None = Field(default=None, gt=0)
+    decay_floor: float | None = Field(default=None, gt=0, le=1)
+    contradiction_sim_threshold: float | None = Field(default=None, gt=0, le=1)
+
+
+class NamespaceOut(BaseModel):
+    """A namespace row with its overrides and total memory count."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    name: str
+    decay_half_life_days: float | None
+    decay_floor: float | None
+    contradiction_sim_threshold: float | None
+    created_at: datetime
+    total_memories: int = 0
+
+
+class NamespaceList(BaseModel):
+    """All configured namespaces."""
+
+    items: list[NamespaceOut]
+    total: int
+
+
 class NamespaceStats(BaseModel):
     """Aggregate counts for one namespace."""
 
