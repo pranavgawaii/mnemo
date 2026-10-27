@@ -22,7 +22,8 @@ jobs:
       - name: Install API dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ruff==0.17.3 mypy==2.4.0 pydantic==2.13.4 pydantic-settings==2.14.2 sqlalchemy==2.0.51 fastapi==0.139.2 pgvector==0.5.0 alembic==1.18.5 types-httpx
+          # httpx ships its own inline types (no types-httpx package exists).
+          pip install ruff==0.17.3 mypy==2.4.0 pydantic==2.13.4 pydantic-settings==2.14.2 sqlalchemy==2.0.51 fastapi==0.139.2 pgvector==0.5.0 alembic==1.18.5
 
       - name: Ruff (backend + sdk)
         run: |
