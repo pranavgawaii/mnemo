@@ -1,0 +1,38 @@
+# Python packaging for the Mnemo API service.
+#
+# requirements-api.txt stays the operational source of truth (CI, Dockerfile,
+# quickstart). This file makes `pip install .` and `pip install -e .[dev]` work
+# so the service can be consumed as a normal Python package. The pins below
+# MUST stay identical to requirements-api.txt.
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mnemo-api"
+version = "0.1.0"
+description = "Semantic memory service for AI agents: pgvector search, decay scoring, contradiction detection."
+license = { text = "MIT" }
+requires-python = ">=3.12"
+
+dependencies = [
+    "fastapi==0.139.2",
+    "uvicorn[standard]==0.51.0",
+    "sqlalchemy==2.0.51",
+    "alembic==1.18.5",
+    "psycopg[binary]==3.3.4",
+    "pgvector==0.5.0",
+    "pydantic==2.13.4",
+    "pydantic-settings==2.14.2",
+    "sentence-transformers==3.3.1",
+    "numpy==2.5.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.1.1",
+    "httpx==0.28.1",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
