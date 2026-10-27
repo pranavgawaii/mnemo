@@ -3,6 +3,28 @@
 All notable changes to Mnemo. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versions follow [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- Repaired the Alembic migration chain: `0002` now points at the real base
+  revision id (`0001`), and the HNSW index migration drops the initial
+  schema's same-named index before rebuilding it. `alembic upgrade head`
+  completes from an empty database.
+- The outbox parks jobs whose kind has no registered handler as terminally
+  `failed` instead of retrying them forever.
+- Contradiction dedup detects conflicts via `RETURNING` rather than
+  `rowcount`, which psycopg3 reports as unknown for plain inserts.
+- Sweeps write one namespaced audit row per swept memory, and `sweep_expired`
+  (and the CLI `sweep-expired` command) accept a namespace scope.
+- `GET /v1/memories` and `GET /v1/contradictions` emit `next_cursor` on the
+  first page, so keyset pagination can be walked from the start.
+- Deleting a namespace that only exists implicitly (created by memory writes)
+  is refused with 409 instead of a misleading 404.
+- CI: the lint job no longer installs `types-httpx`, which does not exist on
+  PyPI (httpx ships its own inline types).
+- The API explorer on the site documents all twenty-six routes, and the
+  browser smoke tests match the current copy.
+
 ## [1.0.0] — 2026-10-27
 
 First complete release: the semantic memory service, its SDK, CLI, benchmark
