@@ -51,13 +51,33 @@ const ENDPOINTS: Endpoint[] = [
       { name: "content", type: "string", note: "The fact to store", required: true },
       { name: "namespace", type: "string", note: "Retrieval bucket, 1 to 128 chars. Default “default”" },
       { name: "importance", type: "integer", note: "1 to 5. Default 3" },
+      { name: "tags", type: "array", note: "Up to 10 short labels; filterable with ANY-match" },
+      { name: "metadata", type: "object", note: "Free-form JSON side data, returned on read" },
+      { name: "expires_at", type: "timestamp", note: "Optional TTL; expired rows drop out of reads" },
     ],
     gets: [
       { name: "memory", type: "object", note: "The stored row" },
       { name: "contradictions", type: "array", note: "Flags raised by this write; usually empty" },
+      { name: "deduplicated_of", type: "uuid | null", note: "Id of the near-identical existing memory when dedup hit" },
     ],
     notes:
-      "Returns 201 with the memory and any flags. A missing or wrong key returns 401 with “Missing or invalid API key.”",
+      "Returns 201 with the memory and any flags. A missing or wrong key returns 401 with “Missing or invalid API key.”; a duplicate within the dedup window returns 409.",
+  },
+  {
+    method: "POST",
+    path: "/v1/memories/bulk",
+    summary: "Store many memories",
+    description:
+      "Runs each item through the normal write path in one call. Items are independent: a bad item is reported and never rolls the others back, and flags raised by earlier items are visible to later ones.",
+    auth: true,
+    sends: [
+      { name: "items", type: "array", note: "1 to 100 memory objects, same shape as the single add", required: true },
+    ],
+    gets: [
+      { name: "created / errors", type: "integer", note: "Outcome tally" },
+      { name: "results", type: "array", note: "Per item: index, status, memory, contradictions or error" },
+    ],
+    notes: "Each item still re-embeds and re-checks its neighbours, so large batches are not free.",
   },
   {
     method: "POST",
@@ -70,6 +90,9 @@ const ENDPOINTS: Endpoint[] = [
       { name: "query", type: "string", note: "Natural-language question", required: true },
       { name: "namespace", type: "string", note: "Bucket to search. Default “default”" },
       { name: "limit", type: "integer", note: "1 to 100. Default 10" },
+      { name: "tags", type: "array", note: "Optional ANY-match tag filter" },
+      { name: "keyword_weight", type: "number", note: "0 to 1. Per-query keyword boost; 0 turns it off" },
+      { name: "diversity", type: "number", note: "0 to 1. 0 is pure relevance, higher spreads results (MMR)" },
     ],
     gets: [
       { name: "query / namespace", type: "string", note: "Echoed back" },
@@ -209,6 +232,176 @@ const ENDPOINTS: Endpoint[] = [
       { name: "oldest / newest", type: "timestamp | null", note: "Created-at bounds for the namespace" },
     ],
   },
+  {
+    method: "POST",
+    path: "/v1/namespaces",
+    summary: "Register a namespace",
+    description:
+      "Creates the namespace row that holds per-namespace scoring overrides. Namespaces also come to exist implicitly when a memory names one.",
+    auth: true,
+    sends: [
+      { name: "name", type: "string", note: "Letters, digits, dot, underscore, dash; 1 to 128 chars", required: true },
+      { name: "decay_half_life_days", type: "number", note: "Relevance decay half-life in days" },
+      { name: "decay_floor", type: "number", note: "0 to 1. Lower bound decay can push relevance to" },
+      { name: "contradiction_sim_threshold", type: "number", note: "0 to 1. Similarity above which a pair is flagged. Default 0.82" },
+    ],
+    gets: [{ name: "name / overrides / total_memories", type: "object", note: "The namespace row" }],
+    notes: "A duplicate name returns 409. Omitted overrides inherit the global settings.",
+  },
+  {
+    method: "GET",
+    path: "/v1/namespaces",
+    summary: "List namespaces",
+    description: "All registered namespaces with their memory counts.",
+    auth: true,
+    gets: [
+      { name: "items", type: "array", note: "Name, overrides, created_at and total_memories each" },
+      { name: "total", type: "integer", note: "Count of namespaces" },
+    ],
+  },
+  {
+    method: "GET",
+    path: "/v1/namespaces/{name}",
+    summary: "Fetch one namespace",
+    description: "The namespace row with its overrides and current memory count.",
+    auth: true,
+    sends: [{ name: "name", type: "string", note: "Namespace name (path parameter)", required: true }],
+    gets: [{ name: "name / overrides / total_memories", type: "object", note: "The namespace row" }],
+    notes: "Unknown names return 404.",
+  },
+  {
+    method: "PATCH",
+    path: "/v1/namespaces/{name}",
+    summary: "Update overrides",
+    description:
+      "Changes decay or flagging thresholds. Fields present but null reset to the global value; fields left out stay as they are.",
+    auth: true,
+    sends: [
+      { name: "name", type: "string", note: "Namespace name (path parameter)", required: true },
+      { name: "decay_half_life_days", type: "number | null", note: "Null resets to the global default" },
+      { name: "decay_floor", type: "number | null", note: "Null resets to the global default" },
+      { name: "contradiction_sim_threshold", type: "number | null", note: "Null resets to the global default" },
+    ],
+    gets: [{ name: "name / overrides / total_memories", type: "object", note: "The updated row" }],
+  },
+  {
+    method: "DELETE",
+    path: "/v1/namespaces/{name}",
+    summary: "Delete a namespace row",
+    description:
+      "Removes the namespace row and its overrides. Refused with 409 while memories still exist in it.",
+    auth: true,
+    sends: [{ name: "name", type: "string", note: "Namespace name (path parameter)", required: true }],
+    notes: "Returns 204 on success. The memories must be moved or soft-deleted first.",
+  },
+  {
+    method: "POST",
+    path: "/v1/keys",
+    summary: "Issue an API key",
+    description:
+      "Creates a key with a label and scope set. The plaintext key is returned exactly once and stored only as a SHA-256 hash.",
+    auth: true,
+    sends: [
+      { name: "label", type: "string", note: "What the key is for; 1 to 64 chars", required: true },
+      { name: "scopes", type: "array", note: "read | write | admin. Default read and write" },
+      { name: "rate_limit_per_minute", type: "integer", note: "Optional per-key override of the global budget" },
+    ],
+    gets: [
+      { name: "key", type: "string", note: "Plaintext, starts with mnemo_. Shown once, never again" },
+      { name: "id / label / key_prefix / scopes", type: "object", note: "The key row" },
+    ],
+    notes: "Requires the admin scope. A lost plaintext can only be fixed by rotating the key.",
+  },
+  {
+    method: "GET",
+    path: "/v1/keys",
+    summary: "List issued keys",
+    description: "Every key with its prefix and scopes. Secrets are never returned.",
+    auth: true,
+    gets: [
+      { name: "items", type: "array", note: "id, label, key_prefix, scopes, is_active and timestamps each" },
+      { name: "total", type: "integer", note: "Count of keys" },
+    ],
+    notes: "Requires the admin scope.",
+  },
+  {
+    method: "POST",
+    path: "/v1/keys/{id}/rotate",
+    summary: "Rotate a key",
+    description:
+      "Replaces the secret, keeping the label and scopes. Use this when a key may have leaked.",
+    auth: true,
+    sends: [{ name: "id", type: "uuid", note: "Key id (path parameter)", required: true }],
+    gets: [{ name: "key", type: "string", note: "The new plaintext. Shown once" }],
+    notes: "Requires the admin scope. The old secret stops working at once. Unknown ids return 404.",
+  },
+  {
+    method: "DELETE",
+    path: "/v1/keys/{id}",
+    summary: "Revoke a key",
+    description: "Deactivates the key. Auth with it starts failing immediately.",
+    auth: true,
+    sends: [{ name: "id", type: "uuid", note: "Key id (path parameter)", required: true }],
+    notes: "Returns 204. Requires the admin scope. Unknown ids return 404.",
+  },
+  {
+    method: "GET",
+    path: "/v1/events",
+    summary: "Audit trail",
+    description:
+      "Every mutation as it was written, in the same transaction as the change it describes. Newest first.",
+    auth: true,
+    sends: [
+      { name: "namespace", type: "string", note: "Optional filter" },
+      { name: "resource_type", type: "string", note: "memory | contradiction | api_key | namespace" },
+      { name: "action", type: "string", note: "E.g. memory.created, contradiction.flagged" },
+      { name: "limit", type: "integer", note: "1 to 200. Default 50" },
+      { name: "offset", type: "integer", note: "Default 0" },
+    ],
+    gets: [
+      { name: "items", type: "array", note: "action, namespace, resource_id, actor_key_id, details, created_at each" },
+      { name: "total / limit / offset", type: "integer", note: "Echoed back for paging" },
+    ],
+    notes: "Requires the admin scope.",
+  },
+  {
+    method: "POST",
+    path: "/v1/webhooks",
+    summary: "Subscribe to contradiction events",
+    description:
+      "Registers a URL for one namespace. When a contradiction is flagged there, Mnemo queues a signed POST and retries with backoff until the endpoint acknowledges.",
+    auth: true,
+    sends: [
+      { name: "namespace", type: "string", note: "Namespace to watch", required: true },
+      { name: "url", type: "string", note: "http or https endpoint to POST to", required: true },
+    ],
+    gets: [
+      { name: "secret", type: "string", note: "64 hex chars. Shown once; verify payloads with HMAC-SHA256" },
+      { name: "id / namespace / url / is_active", type: "object", note: "The subscription" },
+    ],
+    notes:
+      "Requires the admin scope. Deliveries carry an X-Mnemo-Signature header you can verify with the secret.",
+  },
+  {
+    method: "GET",
+    path: "/v1/webhooks",
+    summary: "List subscriptions",
+    description:
+      "All webhook subscriptions, optionally filtered by namespace. Secrets are never returned.",
+    auth: true,
+    sends: [{ name: "namespace", type: "string", note: "Optional filter" }],
+    gets: [{ name: "items / total", type: "array / integer", note: "Subscriptions without secrets" }],
+    notes: "Requires the admin scope.",
+  },
+  {
+    method: "DELETE",
+    path: "/v1/webhooks/{id}",
+    summary: "Unsubscribe",
+    description: "Deactivates a subscription; deliveries stop immediately.",
+    auth: true,
+    sends: [{ name: "id", type: "uuid", note: "Webhook id (path parameter)", required: true }],
+    notes: "Returns 204. Requires the admin scope. Unknown ids return 404.",
+  },
 ];
 
 const METHOD_TONE: Record<string, string> = {
@@ -273,7 +466,7 @@ export function ApiExplorer() {
       id="api"
       index="06"
       title="REST API"
-      intro="Twelve routes over a JSON interface. Everything under v1 requires an API key; the two probes do not. Pick a route to read exactly what it accepts and returns."
+      intro="Twenty-six routes over a JSON interface. Everything under v1 requires an API key; the two probes do not. Keys, events and webhooks additionally need the admin scope. Pick a route to read exactly what it accepts and returns."
     >
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
         <div

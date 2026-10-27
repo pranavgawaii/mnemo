@@ -20,7 +20,7 @@ test.describe("site smoke tests", () => {
     await expect(
       page.getByRole("heading", { name: "Developer guide" })
     ).toBeVisible();
-    await expect(page.getByText("Eleven routes over a JSON interface")).toBeVisible();
+    await expect(page.getByText("Twenty-six routes over a JSON interface")).toBeVisible();
 
     await page.goto("/playground");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Take");
