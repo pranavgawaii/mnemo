@@ -28,9 +28,9 @@ from app.models.schemas import (
     MemoryUpdate,
     NamespaceStats,
     ResolveRequest,
+    SearchHit,
     SearchRequest,
     SearchResponse,
-    SearchHit,
 )
 from app.services import memory_service
 
@@ -71,7 +71,7 @@ def namespace_stats(
 ) -> NamespaceStats:
     """Return aggregate memory and contradiction counts for one namespace."""
     stats = memory_service.namespace_stats(db, namespace=namespace)
-    return NamespaceStats(namespace=namespace, **stats)
+    return NamespaceStats.model_validate({"namespace": namespace, **stats})
 
 
 # --------------------------------------------------------------------------- #

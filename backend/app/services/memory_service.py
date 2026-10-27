@@ -423,40 +423,40 @@ def import_namespace(
     memory_ids_map: dict[uuid.UUID, uuid.UUID] = {}
 
     try:
-        for item in payload.memories:
-            new_id = item.id if preserve_ids else uuid.uuid4()
-            memory_ids_map[item.id] = new_id
+        for mem_item in payload.memories:
+            new_id = mem_item.id if preserve_ids else uuid.uuid4()
+            memory_ids_map[mem_item.id] = new_id
             db.add(
                 Memory(
                     id=new_id,
                     namespace=namespace,
-                    content=item.content,
-                    importance=item.importance,
-                    embedding=embed(item.content),
-                    is_active=item.is_active,
-                    created_at=item.created_at,
-                    updated_at=item.updated_at,
+                    content=mem_item.content,
+                    importance=mem_item.importance,
+                    embedding=embed(mem_item.content),
+                    is_active=mem_item.is_active,
+                    created_at=mem_item.created_at,
+                    updated_at=mem_item.updated_at,
                 )
             )
         db.flush()
 
-        for item in payload.contradictions:
+        for con_item in payload.contradictions:
             db.add(
                 Contradiction(
-                    id=item.id if preserve_ids else uuid.uuid4(),
+                    id=con_item.id if preserve_ids else uuid.uuid4(),
                     namespace=namespace,
-                    new_memory_id=memory_ids_map[item.new_memory_id],
-                    existing_memory_id=memory_ids_map[item.existing_memory_id],
-                    similarity=item.similarity,
-                    reason=item.reason,
-                    status=item.status,
+                    new_memory_id=memory_ids_map[con_item.new_memory_id],
+                    existing_memory_id=memory_ids_map[con_item.existing_memory_id],
+                    similarity=con_item.similarity,
+                    reason=con_item.reason,
+                    status=con_item.status,
                     resolved_winner_id=(
-                        memory_ids_map[item.resolved_winner_id]
-                        if item.resolved_winner_id is not None
+                        memory_ids_map[con_item.resolved_winner_id]
+                        if con_item.resolved_winner_id is not None
                         else None
                     ),
-                    created_at=item.created_at,
-                    resolved_at=item.resolved_at,
+                    created_at=con_item.created_at,
+                    resolved_at=con_item.resolved_at,
                 )
             )
 

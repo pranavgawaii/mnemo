@@ -90,9 +90,8 @@ def _import(args: argparse.Namespace) -> int:
 def _stats(args: argparse.Namespace) -> int:
     db = SessionLocal()
     try:
-        payload = NamespaceStats(
-            namespace=args.namespace,
-            **memory_service.namespace_stats(db, namespace=args.namespace),
+        payload = NamespaceStats.model_validate(
+            {"namespace": args.namespace, **memory_service.namespace_stats(db, namespace=args.namespace)}
         )
     finally:
         db.close()

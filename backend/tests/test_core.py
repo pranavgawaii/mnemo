@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import math
-
 import pytest
 
 from app.core.contradiction import ContradictionVerdict, check_contradiction
@@ -112,7 +110,7 @@ def test_same_polarity_not_contradiction():
 
 def test_negation_without_shared_subject_not_flagged():
     # Both similar and one negated, but no meaningful shared content words.
-    v = check_contradiction("not really", "totally really", similarity=0.9)
+    check_contradiction("not really", "totally really", similarity=0.9)
     # "really" is shared -> could flag; use clearly disjoint subjects instead:
     v2 = check_contradiction("never Berlin", "Tokyo always", similarity=0.9)
     assert v2.is_contradiction is False
