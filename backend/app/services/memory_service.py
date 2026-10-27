@@ -15,9 +15,11 @@ from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core import hybrid
+from app.core.config import settings
 from app.core.contradiction import LlmCheck, check_contradiction
 from app.core.decay import relevance_score
-from app.core.embedding import embed
+from app.core.embedding import cosine_similarity, embed
 from app.models.models import Contradiction, Memory
 from app.models.schemas import MemoryExport
 from app.services import audit_service, namespace_service
@@ -210,11 +212,13 @@ def search(
     namespace: str,
     limit: int,
     tags: list[str] | None = None,
+    keyword_weight: float | None = None,
 ) -> list[tuple[Memory, float, float, float]]:
     """Semantic search, re-ranked by relevance (similarity * decay * importance).
 
     Returns tuples of ``(memory, similarity, relevance_score, age_days)`` sorted
-    by ``relevance_score`` descending.
+    by ``relevance_score`` descending. ``keyword_weight`` (per-query override of
+    the global setting) adds a keyword-evidence boost on top; 0 disables it.
     """
     vector = embed(query)
     distance = Memory.embedding.cosine_distance(vector)
@@ -249,8 +253,73 @@ def search(
         )
         scored.append((memory, similarity, rel, age))
 
+    # Hybrid pass: keyword evidence boosts relevance (never replaces it).
+    scored = _with_keyword_boost(
+        db,
+        query=query,
+        vector=vector,
+        conditions=conditions,
+        scored=scored,
+        keyword_weight=keyword_weight,
+        scoring=scoring,
+    )
+
     scored.sort(key=lambda row: row[2], reverse=True)
     return scored[:limit]
+
+
+def _with_keyword_boost(
+    db: Session,
+    *,
+    query: str,
+    vector: list[float],
+    conditions: list[ColumnElement[bool]],
+    scored: list[tuple[Memory, float, float, float]],
+    keyword_weight: float | None,
+    scoring: ScoringConfig,
+) -> list[tuple[Memory, float, float, float]]:
+    """Fetch keyword-matched candidates and boost the scored list with them.
+
+    Keyword-only hits (good ts_rank, weak vector similarity) enter the
+    candidate pool with their similarity computed in Python, so the same
+    relevance formula governs every row.
+    """
+    if keyword_weight is not None and keyword_weight <= 0:
+        return scored
+    weight = settings.keyword_weight if keyword_weight is None else keyword_weight
+
+    from sqlalchemy.dialects.postgresql import TSVECTOR  # noqa: F401 - query typing
+
+    tsquery = func.websearch_to_tsquery("english", query)
+    ts_rank = func.ts_rank(Memory.tsv, tsquery).label("ts_rank")
+    kw_stmt = (
+        select(Memory, ts_rank)
+        .where(*conditions, Memory.tsv.op("@@")(tsquery))
+        .order_by(ts_rank.desc())
+        .limit(max(len(scored), 20))
+    )
+    kw_rows = db.execute(kw_stmt).all()
+    if not kw_rows:
+        return scored
+
+    in_vector = {memory.id for memory, *_ in scored}
+    merged = list(scored)
+    for memory, _kw_rank in kw_rows:
+        if memory.id in in_vector:
+            continue
+        similarity = cosine_similarity(vector, memory.embedding)
+        age = _age_days(memory.created_at)
+        rel = relevance_score(
+            similarity,
+            age,
+            memory.importance,
+            half_life_days=scoring.half_life_days,
+            floor=scoring.floor,
+        )
+        merged.append((memory, similarity, rel, age))
+
+    ranks = hybrid.normalize_ranks({m.id: float(r) for m, r in kw_rows})
+    return hybrid.apply_keyword_boost(merged, ranks, weight)
 
 
 def list_memories(

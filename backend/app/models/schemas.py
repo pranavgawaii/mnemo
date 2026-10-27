@@ -154,6 +154,8 @@ class SearchRequest(BaseModel):
     limit: int = Field(default=10, ge=1, le=100)
     # When set, only memories carrying ANY of these tags are considered.
     tags: list[Tag] = Field(default_factory=list, max_length=5)
+    # Per-query override of KEYWORD_WEIGHT (0 disables the keyword boost).
+    keyword_weight: float | None = Field(default=None, ge=0, le=1)
 
 
 class SearchHit(BaseModel):

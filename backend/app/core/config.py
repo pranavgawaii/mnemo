@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     # Contradiction detection
     contradiction_sim_threshold: float = 0.82
 
+    # Hybrid search: keyword evidence boosts relevance modestly; the vector
+    # path stays the source of truth (see app/core/hybrid.py).
+    keyword_weight: float = 0.25
+
     # Logging
     log_json: bool = True
     log_level: str = "info"
