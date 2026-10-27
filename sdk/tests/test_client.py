@@ -108,18 +108,16 @@ def test_error_mapping():
     for status, expected in cases:
         with make_client(
             route_handler({("GET", "/v1/memories"): (status, {"detail": "boom"})})
-        ) as client:
-            with pytest.raises(expected) as excinfo:
-                client.list_memories()
+        ) as client, pytest.raises(expected) as excinfo:
+            client.list_memories()
         assert "boom" in str(excinfo.value)
 
 
 def test_rate_limit_error_carries_status():
     with make_client(
         route_handler({("GET", "/v1/memories"): (429, {"detail": "slow down"})})
-    ) as client:
-        with pytest.raises(RateLimitError):
-            client.list_memories()
+    ) as client, pytest.raises(RateLimitError):
+        client.list_memories()
 
 
 def test_list_memories_sends_tag_and_cursor_params():

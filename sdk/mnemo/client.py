@@ -10,11 +10,16 @@ injectable (any ``httpx.Client``-shaped object) so tests run against
 from __future__ import annotations
 
 import uuid
-from typing import Any
+from typing import Any, Self
 
 import httpx
 
-from ._parsing import parse_contradiction, parse_memory, parse_search_hit, raise_for_status
+from ._parsing import (
+    parse_contradiction,
+    parse_memory,
+    parse_search_hit,
+    raise_for_status,
+)
 from ._retry import attempts_allowed, delay_for, should_retry
 from .models import Contradiction, ContradictionList, Memory, MemoryList, SearchResponse
 
@@ -47,7 +52,7 @@ class MnemoClient:
         )
 
     # -- lifecycle ------------------------------------------------------------
-    def __enter__(self) -> "MnemoClient":
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, *exc_info: object) -> None:

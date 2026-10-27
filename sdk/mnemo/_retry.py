@@ -27,9 +27,7 @@ def should_retry(method: str, exc: Exception) -> bool:
         return True
     if isinstance(exc, ServerError):
         return exc.status in _RETRYABLE_STATUS
-    if isinstance(exc, httpx.TransportError):
-        return True
-    return False
+    return bool(isinstance(exc, httpx.TransportError))
 
 
 def delay_for(attempt: int, exc: Exception) -> float:

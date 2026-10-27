@@ -36,7 +36,7 @@ def _uid(value: object) -> uuid.UUID:
     return uuid.UUID(str(value))
 
 
-def parse_memory(data: Any) -> "Memory":
+def parse_memory(data: Any) -> Memory:
     from .models import Memory
 
     return Memory(
@@ -53,7 +53,7 @@ def parse_memory(data: Any) -> "Memory":
     )
 
 
-def parse_contradiction(data: Any) -> "Contradiction":
+def parse_contradiction(data: Any) -> Contradiction:
     from .models import Contradiction
 
     return Contradiction(
@@ -70,7 +70,7 @@ def parse_contradiction(data: Any) -> "Contradiction":
     )
 
 
-def parse_search_hit(data: Any) -> "SearchHit":
+def parse_search_hit(data: Any) -> SearchHit:
     from .models import SearchHit
 
     memory_data = data.get("memory", data)

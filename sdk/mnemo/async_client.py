@@ -9,11 +9,16 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from typing import Any
+from typing import Any, Self
 
 import httpx
 
-from ._parsing import parse_contradiction, parse_memory, parse_search_hit, raise_for_status
+from ._parsing import (
+    parse_contradiction,
+    parse_memory,
+    parse_search_hit,
+    raise_for_status,
+)
 from ._retry import attempts_allowed, delay_for, should_retry
 from .models import Contradiction, ContradictionList, Memory, MemoryList, SearchResponse
 
@@ -44,7 +49,7 @@ class AsyncMnemoClient:
             base_url=self.base_url, headers=headers, timeout=timeout, transport=transport
         )
 
-    async def __aenter__(self) -> "AsyncMnemoClient":
+    async def __aenter__(self) -> Self:
         return self
 
     async def __aexit__(self, *exc_info: object) -> None:

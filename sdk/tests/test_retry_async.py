@@ -55,9 +55,8 @@ def test_post_never_retries():
         calls.append(1)
         return httpx.Response(503, json={"detail": "down"})
 
-    with make_client(handler) as client:
-        with pytest.raises(ServerError):
-            client.add_memory("whatever")
+    with make_client(handler) as client, pytest.raises(ServerError):
+        client.add_memory("whatever")
     assert len(calls) == 1
 
 
