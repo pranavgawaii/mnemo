@@ -1,0 +1,8 @@
+{
+  "comment": "Benchmark regression gate baselines. Quality metrics are minimums; latency_p95_ms is a ceiling. Re-pin with: PYTHONPATH=. python benchmark/gate.py --update",
+  "top1_accuracy_min": 0.7,
+  "topk_accuracy_min": 0.85,
+  "mrr_min": 0.8,
+  "ndcg_at_k_min": 0.8,
+  "latency_p95_ms_max": 500.0
+}
