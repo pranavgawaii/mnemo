@@ -20,6 +20,11 @@ depends_on = None
 
 
 def upgrade() -> None:
+    # The initial schema (0001) already built an hnsw index with the same name
+    # and pgvector's default parameters (m=16, ef_construction=64). Drop and
+    # rebuild it with the explicit parameters this migration pins, so both a
+    # fresh database and one migrated from 0001 end up in the same state.
+    op.execute("DROP INDEX IF EXISTS ix_memories_embedding_hnsw")
     op.create_index(
         "ix_memories_embedding_hnsw",
         "memories",
