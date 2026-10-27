@@ -86,6 +86,11 @@ async def harden_and_observe(request: Request, call_next) -> Response:
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("X-Frame-Options", "DENY")
     response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    state = getattr(request.state, "rate_limit", None)
+    if state is not None:
+        response.headers.setdefault("X-RateLimit-Limit", str(state.limit))
+        response.headers.setdefault("X-RateLimit-Remaining", str(state.remaining))
+        response.headers.setdefault("X-RateLimit-Reset", str(state.reset_epoch))
     duration_ms = (time.perf_counter() - start) * 1000
     _observe_metrics(request, response.status_code, duration_ms / 1000)
     _request_logger().info(

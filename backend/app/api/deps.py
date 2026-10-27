@@ -21,9 +21,30 @@ from fastapi import Depends, Header, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.rate_limit import consume as consume_rate_limit
 from app.db.session import get_db
 from app.services import api_key_service
 from app.services.api_key_service import AuthContext
+
+
+def _enforce_rate_limit(request: Request, db: Session, context: AuthContext) -> None:
+    """Consume one request from the key's per-minute budget when enabled.
+
+    Runs after authentication; the outcome is stashed on the request so the
+    response middleware can set the X-RateLimit-* headers.
+    """
+    if not settings.rate_limit_enabled:
+        return
+    limit = context.rate_limit_per_minute or settings.rate_limit_per_minute
+    identity = "bootstrap" if context.via_env else str(context.key_id)
+    state = consume_rate_limit(db, identity=identity, limit=limit)
+    request.state.rate_limit = state
+    if state.used > limit:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Rate limit exceeded for this API key.",
+            headers={"Retry-After": str(state.retry_after)},
+        )
 
 
 def authenticate(
@@ -59,6 +80,7 @@ def authenticate(
         context = resolved
 
     request.state.auth = context
+    _enforce_rate_limit(request, db, context)
     return context
 
 

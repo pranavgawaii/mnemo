@@ -30,6 +30,7 @@ class AuthContext:
     label: str
     scopes: frozenset[str]
     via_env: bool
+    rate_limit_per_minute: int | None = None  # None = use the global setting
 
     def has_scope(self, scope: str) -> bool:
         return scope in self.scopes
@@ -48,6 +49,7 @@ def create_api_key(
     *,
     label: str,
     scopes: list[str],
+    rate_limit_per_minute: int | None = None,
 ) -> tuple[ApiKey, str]:
     """Create a key row. Returns the row and the plaintext secret (shown once)."""
     unknown = [s for s in scopes if s not in VALID_SCOPES]
@@ -62,6 +64,7 @@ def create_api_key(
         key_hash=hash_key(plaintext),
         key_prefix=plaintext[:11],
         scopes=list(scopes),
+        rate_limit_per_minute=rate_limit_per_minute,
     )
     db.add(row)
     db.commit()
@@ -83,6 +86,7 @@ def verify(db: Session, *, presented: str) -> AuthContext | None:
         label=row.label,
         scopes=frozenset(row.scopes),
         via_env=False,
+        rate_limit_per_minute=row.rate_limit_per_minute,
     )
 
 

@@ -382,7 +382,12 @@ def resolve_contradiction(payload: ResolveRequest, db: Session = Depends(get_db)
 def create_api_key(payload: ApiKeyCreate, db: Session = Depends(get_db)) -> ApiKeyCreated:
     """Issue a new API key. The plaintext ``key`` is shown exactly once."""
     try:
-        row, plaintext = api_key_service.create_api_key(db, label=payload.label, scopes=list(payload.scopes))
+        row, plaintext = api_key_service.create_api_key(
+            db,
+            label=payload.label,
+            scopes=list(payload.scopes),
+            rate_limit_per_minute=payload.rate_limit_per_minute,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
     out = ApiKeyOut.model_validate(row).model_dump()

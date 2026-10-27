@@ -47,6 +47,11 @@ class Settings(BaseSettings):
     # Content-Length are not inspected.
     max_body_bytes: int = 1_048_576
 
+    # Rate limiting (per API key, fixed-minute window in Postgres). Off by
+    # default so existing deployments and CI don't get throttled on upgrade.
+    rate_limit_enabled: bool = False
+    rate_limit_per_minute: int = 120
+
 
 @lru_cache
 def get_settings() -> Settings:

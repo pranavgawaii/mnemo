@@ -115,6 +115,25 @@ class ApiKey(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Per-key override of the global rate limit (requests/minute); NULL = global.
+    rate_limit_per_minute: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
+class RateLimitCounter(Base):
+    """Fixed-window request counter per API key identity.
+
+    One row per (identity, minute-window). The authenticate dependency upserts
+    atomically and reads back the in-window count; going over the limit answers
+    429 with Retry-After. Postgres-only by design — no second datastore.
+    """
+
+    __tablename__ = "rate_limit_counters"
+
+    identity: Mapped[str] = mapped_column(String(64), primary_key=True)
+    window_start: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), primary_key=True
+    )
+    count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
 
 class Contradiction(Base):

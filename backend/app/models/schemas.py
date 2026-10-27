@@ -311,6 +311,8 @@ class ApiKeyCreate(BaseModel):
     scopes: list[Literal["read", "write", "admin"]] = Field(
         default=["read", "write"],
     )
+    # Per-key override of the global requests/minute budget.
+    rate_limit_per_minute: int | None = Field(default=None, ge=1, le=10_000)
 
 
 class ApiKeyOut(BaseModel):
@@ -325,6 +327,7 @@ class ApiKeyOut(BaseModel):
     is_active: bool
     created_at: datetime
     last_used_at: datetime | None
+    rate_limit_per_minute: int | None
 
 
 class ApiKeyCreated(ApiKeyOut):
