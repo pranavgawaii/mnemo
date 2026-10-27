@@ -31,7 +31,20 @@ from app.services import memory_service
 
 
 def _read_export(path: str) -> MemoryExport:
-    return MemoryExport.model_validate_json(Path(path).read_text(encoding="utf-8"))
+    source = Path(path)
+    if source.suffix.lower() in {".jsonl", ".ndjson"}:
+        from app.services.export_formats import from_jsonl
+
+        memories, contradictions = from_jsonl(source.read_text(encoding="utf-8"))
+        return MemoryExport(
+            namespace="",
+            exported_at=datetime.now(timezone.utc),
+            memories=memories,
+            contradictions=contradictions,
+        )
+    if source.suffix.lower() == ".csv":
+        raise ValueError("csv export is one-way; import needs a .json or .jsonl snapshot")
+    return MemoryExport.model_validate_json(source.read_text(encoding="utf-8"))
 
 
 def _write_export(path: str, payload: MemoryExport) -> None:
@@ -41,6 +54,7 @@ def _write_export(path: str, payload: MemoryExport) -> None:
 
 
 def _export(args: argparse.Namespace) -> int:
+    fmt = args.format
     db = SessionLocal()
     try:
         memories, contradictions = memory_service.export_namespace(
@@ -55,9 +69,36 @@ def _export(args: argparse.Namespace) -> int:
                 for contradiction in contradictions
             ],
         )
-        _write_export(args.file, payload)
     finally:
         db.close()
+
+    if fmt == "jsonl":
+        from app.services.export_formats import to_jsonl
+
+        Path(args.file).write_text(
+            to_jsonl(payload.memories, payload.contradictions), encoding="utf-8"
+        )
+    elif fmt == "csv":
+        from app.services.export_formats import (
+            contradictions_csv_text,
+            memories_csv_text,
+        )
+
+        stem = Path(args.file).with_suffix("")
+        memories_path = Path(f"{stem}.memories.csv")
+        contradictions_path = Path(f"{stem}.contradictions.csv")
+        memories_path.write_text(memories_csv_text(payload.memories), encoding="utf-8")
+        contradictions_path.write_text(
+            contradictions_csv_text(payload.contradictions), encoding="utf-8"
+        )
+        print(
+            f"Exported {len(payload.memories)} memories to {memories_path} and "
+            f"{len(payload.contradictions)} contradictions to {contradictions_path} "
+            f"(csv is one-way)."
+        )
+        return 0
+    else:
+        _write_export(args.file, payload)
 
     print(
         f"Exported {len(payload.memories)} memories and "
@@ -381,10 +422,16 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     export_parser = subparsers.add_parser(
-        "export", help="Write a namespace snapshot as JSON."
+        "export", help="Write a namespace snapshot as JSON, JSONL or CSV."
     )
     export_parser.add_argument("--namespace", default="default")
-    export_parser.add_argument("--file", required=True, help="Destination JSON file.")
+    export_parser.add_argument("--file", required=True, help="Destination file.")
+    export_parser.add_argument(
+        "--format",
+        choices=("json", "jsonl", "csv"),
+        default="json",
+        help="json round-trips via import; jsonl round-trips; csv is one-way.",
+    )
     export_parser.set_defaults(handler=_export)
 
     import_parser = subparsers.add_parser(
