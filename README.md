@@ -66,6 +66,7 @@ mnemo/
 ├── tsconfig.json
 ├── .env.example              # optional web env override
 ├── docs/frontend.md          # component map
+├── landing-kit/              # portable landing design system (docs + fonts + code)
 └── .github/workflows/ci.yml
 ```
 
@@ -284,6 +285,16 @@ pnpm test:e2e   # Playwright smoke tests
 See [`docs/frontend.md`](docs/frontend.md) for the component map. The "View on
 GitHub" CTAs default to this repository; set `NEXT_PUBLIC_GITHUB_URL` in
 `.env.local` only to point them elsewhere (see `.env.example`).
+
+### Reusable landing design kit
+
+[`landing-kit/`](landing-kit/) packages the landing page's fonts, palette, type
+scale, layout, motion and components as a portable kit: eleven numbered guides,
+drop-in Tailwind/CSS files, both font families, and a no-build visual preview.
+Open [`landing-kit/preview.html`](landing-kit/preview.html) to see the whole
+system in one page, then follow
+[`landing-kit/docs/10-porting-guide.md`](landing-kit/docs/10-porting-guide.md)
+to apply it to another project.
 
 ### Deploying the web app
 

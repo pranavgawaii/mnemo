@@ -1,0 +1,554 @@
+import { AnimatedSection } from "./animated-section";
+import {
+  Badge,
+  Body,
+  CardHeading,
+  Chip,
+  DisplayHeading,
+  Frame,
+  Kicker,
+  PrimaryButton,
+  SecondaryButton,
+  Section,
+  SectionHeading,
+  Serif,
+} from "./landing-primitives";
+import { SiteNav } from "./site-nav";
+
+/**
+ * Landing Kit — full page example.
+ *
+ * Rename to `.tsx` and copy alongside:
+ *   animated-section.tsx
+ *   landing-primitives.tsx   (from landing-primitives.tsx.example)
+ *   site-nav.tsx             (from site-nav.tsx.example)
+ *
+ * This is a neutral demonstration of the composition, not final copy.
+ */
+
+const stages = ["Capture", "Parse", "Index", "Rank", "Deliver", "Review"];
+
+function StageSet() {
+  return (
+    <div className="flex items-center gap-16 whitespace-nowrap px-8 md:gap-24 md:px-12">
+      {stages.map((stage, i) => (
+        <div
+          key={stage}
+          className={`shrink-0 text-[28px] tracking-tight ${
+            i === 3
+              ? "font-medium text-accent"
+              : i === 4
+                ? "font-medium text-[#16A34A]"
+                : "text-ink"
+          }`}
+        >
+          {stage}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProductWindow() {
+  return (
+    <div className="relative">
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -left-[70px] top-[70px] bottom-[150px] w-[360px] rounded-full bg-[#C7D2FE] opacity-50 blur-[90px] mix-blend-multiply" />
+        <div className="absolute left-1/2 top-[90px] bottom-[150px] w-[560px] -translate-x-1/2 rounded-full bg-[#E7D9FB] opacity-45 blur-[90px] mix-blend-multiply" />
+        <div className="absolute -right-[70px] top-[70px] bottom-[150px] w-[360px] rounded-full bg-[#BFE3F7] opacity-45 blur-[90px] mix-blend-multiply" />
+      </div>
+
+      <div className="flex w-full rounded-[24px] border border-white/60 bg-white/30 shadow-[0_28px_56px_-26px_rgba(40,25,70,0.18)] backdrop-blur-[40px] sm:py-2 sm:pr-2">
+        <div className="hidden w-[44px] shrink-0 flex-col items-center gap-3 py-2 sm:flex">
+          <span className="mb-1 block h-7 w-7 rounded-[8px] border border-ink/15" />
+          {[0, 1, 2, 3].map((i) => (
+            <span key={i} className={`block h-7 w-7 rounded-[8px] ${i === 1 ? "bg-white/70" : ""}`} />
+          ))}
+        </div>
+
+        <div className="relative flex flex-1 flex-col overflow-hidden rounded-[16px] border border-white/50 bg-white shadow-sm">
+          <div className="flex h-14 shrink-0 items-center border-b border-gray-100 px-4 sm:px-6">
+            <div className="flex min-w-0 items-center gap-2.5 text-[13px] font-medium text-muted">
+              <span className="shrink-0">Search</span>
+              <span className="shrink-0 text-[#D4D4D4]">›</span>
+              <span className="truncate font-semibold text-ink">What changed this quarter?</span>
+            </div>
+            <span className="ml-auto hidden shrink-0 rounded-[6px] border border-line bg-white px-3 py-1 text-[12px] font-medium text-muted shadow-sm sm:inline">
+              Live
+            </span>
+          </div>
+
+          <div className="grid min-h-[360px] grid-cols-1 lg:grid-cols-[220px_1fr]">
+            <div className="hidden flex-col gap-4 border-r border-line p-5 lg:flex">
+              <div>
+                <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-accent-ink">
+                  Query
+                </div>
+                <h3 className="text-[18px] font-bold leading-[1.2] text-ink">What changed this quarter?</h3>
+              </div>
+              <div className="border-t border-line" />
+              {[
+                ["Scope", "Q3"],
+                ["Sources", "12"],
+                ["Rank", "relevance"],
+                ["Confidence", "0.89"],
+              ].map(([k, v]) => (
+                <div key={k} className="flex items-center text-[11px]">
+                  <span className="w-[74px] shrink-0 text-faint">{k}</span>
+                  <span className="font-medium text-ink">{v}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-3 bg-[#FAFAFA] p-4">
+              {[
+                ["01", "Pricing moved to usage-based billing.", "0.91"],
+                ["02", "The onboarding flow was rebuilt in July.", "0.84"],
+                ["03", "Two enterprise accounts renewed early.", "0.78"],
+              ].map(([n, text, score]) => (
+                <div key={n} className="rounded-xl border border-line bg-white p-4 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10.5px] text-faint">{n}</span>
+                    <span className="rounded-full bg-accent-soft px-2 py-0.5 font-mono text-[10px] font-bold text-accent-ink">
+                      {score}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[12.5px] leading-[1.6] text-ink">{text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Hero() {
+  return (
+    <section id="top" className="relative w-full pb-14 pt-28 sm:pt-32 lg:pt-36">
+      <div className="relative z-10 mx-auto max-w-frame px-6">
+        <div className="mb-12 flex flex-col items-center justify-between gap-10 lg:flex-row">
+          <AnimatedSection delay={100} className="w-full flex-1 text-center lg:text-left">
+            <DisplayHeading>
+              Give your team a
+              <br className="hidden sm:block" />{" "}
+              <Serif>system</Serif> that lasts.
+            </DisplayHeading>
+          </AnimatedSection>
+
+          <div className="flex w-full shrink-0 flex-col items-center gap-7 lg:w-auto lg:items-end">
+            <AnimatedSection delay={200}>
+              <p className="mx-auto max-w-[400px] text-center text-[15px] leading-[1.65] text-muted sm:text-[16px] lg:mx-0 lg:text-right">
+                One sentence on what this is, who it is for, and what changes for
+                them. Keep it concrete.
+              </p>
+            </AnimatedSection>
+
+            <AnimatedSection delay={300} className="flex w-full flex-wrap items-center justify-center gap-3 lg:justify-end">
+              <SecondaryButton href="/docs">Explore the docs</SecondaryButton>
+              <PrimaryButton href="/sign-up" arrow>
+                Get started
+              </PrimaryButton>
+            </AnimatedSection>
+          </div>
+        </div>
+      </div>
+
+      <AnimatedSection delay={400} className="relative z-10 mx-auto mt-10 mb-20 w-full max-w-frame px-6 md:mb-40">
+        <div className="w-full shrink-0 md:origin-top-left md:scale-[1.15]">
+          <ProductWindow />
+        </div>
+      </AnimatedSection>
+
+      <AnimatedSection delay={460} className="relative z-10 mx-auto max-w-frame px-6">
+        <div className="flex flex-col items-center gap-3.5 lg:items-start">
+          <ul className="flex flex-wrap items-center justify-center gap-1.5 lg:justify-start">
+            <Chip>Fast by default</Chip>
+            <Chip>Self-hosted</Chip>
+            <Chip>One API</Chip>
+            <Chip>No lock-in</Chip>
+          </ul>
+          <span className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-faint">
+            Illustrative product view
+          </span>
+        </div>
+      </AnimatedSection>
+    </section>
+  );
+}
+
+function Marquee() {
+  return (
+    <section aria-label="The workflow" className="mt-14 border-t border-line bg-hairline pb-6 md:mt-20">
+      <div className="py-8">
+        <div className="mx-auto flex w-full max-w-frame flex-col items-center gap-8 overflow-hidden px-6 md:flex-row">
+          <div className="relative z-10 shrink-0 whitespace-nowrap rounded-[6px] border border-line bg-white/50 px-3 py-1.5 text-[12px] font-medium uppercase tracking-widest text-muted">
+            The workflow
+          </div>
+          <div className="relative min-w-0 w-full flex-1 overflow-hidden [-webkit-mask-image:linear-gradient(to_right,transparent,transparent_10px,black_60px,black_calc(100%_-_60px),transparent_calc(100%_-_10px),transparent)] [mask-image:linear-gradient(to_right,transparent,transparent_10px,black_60px,black_calc(100%_-_60px),transparent_calc(100%_-_10px),transparent)] md:[-webkit-mask-image:linear-gradient(to_right,transparent,transparent_28px,black_104px,black_calc(100%_-_104px),transparent_calc(100%_-_28px),transparent)] md:[mask-image:linear-gradient(to_right,transparent,transparent_28px,black_104px,black_calc(100%_-_104px),transparent_calc(100%_-_28px),transparent)]">
+            <div className="flex w-max animate-marquee">
+              <StageSet />
+              <div aria-hidden="true">
+                <StageSet />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p className="mt-6 px-6 text-center text-[13.5px] leading-relaxed text-muted text-balance">
+        Every write and every search moves through the same six steps.
+      </p>
+    </section>
+  );
+}
+
+const cards = [
+  {
+    kicker: "What it is",
+    title: "A short, specific claim",
+    body: "Two or three sentences that name the category, the mechanism and the boundary. Do not repeat the headline.",
+  },
+  {
+    kicker: "Why it matters",
+    title: "The problem in plain language",
+    body: "Explain the default approach and where it fails. Use one concrete number or mechanism, not three adjectives.",
+  },
+  {
+    kicker: "How to explore",
+    title: "The next action",
+    body: "Give the reader two ways in: read the docs, run the example, or open the live demo. Keep the links real.",
+  },
+];
+
+function Explainer() {
+  return (
+    <Section band>
+      <AnimatedSection className="max-w-[640px]">
+        <Kicker mono tone="accent">
+          Overview
+        </Kicker>
+        <h2 className="mt-5 text-[28px] font-medium leading-[1.15] tracking-[-0.02em] text-ink text-balance md:text-[34px]">
+          The one-sentence version of the product, with a turn.
+        </h2>
+      </AnimatedSection>
+
+      <div className="mt-14 grid gap-x-10 gap-y-10 md:grid-cols-3">
+        {cards.map((card, i) => (
+          <AnimatedSection key={card.kicker} delay={i * 90} className="flex flex-col border-t border-line pt-6">
+            <div className="flex items-baseline gap-3">
+              <span className="font-mono text-[11px] tabular-nums text-faint">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <Kicker mono tone="accent">
+                {card.kicker}
+              </Kicker>
+            </div>
+            <CardHeading className="mt-4">{card.title}</CardHeading>
+            <Body className="mt-3">{card.body}</Body>
+          </AnimatedSection>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+const steps = [
+  {
+    label: "Capture",
+    title: "Collect the signal, not the noise.",
+    body: "A short paragraph on the first step. Name the input, the transformation and what the system deliberately ignores.",
+    inOut: "raw input in → a normalised record out",
+  },
+  {
+    label: "Index",
+    title: "Make it findable by meaning.",
+    body: "A short paragraph on the mechanism. One technical detail that proves the claim; no more than one number.",
+    inOut: "a record in → a searchable signal out",
+    reverse: true,
+  },
+  {
+    label: "Rank",
+    title: "Decide what still matters.",
+    body: "A short paragraph on the ranking rule. Explain what wins ties and what can never override relevance.",
+    inOut: "candidates in → the best answer out",
+  },
+  {
+    label: "Review",
+    title: "Keep the human in the loop.",
+    body: "A short paragraph on the safeguard. Say what is flagged instead of silently resolved.",
+    inOut: "a conflict in → a review flag out",
+    reverse: true,
+  },
+];
+
+function StepVisual({ index }: { index: number }) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-line bg-white shadow-soft">
+      <div className="flex items-center gap-2 border-b border-line bg-[#FCFCFB] px-4 py-3">
+        <span className="h-2 w-2 rounded-full bg-accent" />
+        <span className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-faint">
+          Step {String(index + 1).padStart(2, "0")}
+        </span>
+      </div>
+      <div className="space-y-3 p-5">
+        {[0, 1, 2].map((row) => (
+          <div key={row} className="flex items-center gap-3 rounded-lg border border-line bg-[#FCFCFB] px-3 py-3">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent/60" />
+            <div className="min-w-0 flex-1">
+              <div className="h-1.5 w-3/4 rounded-full bg-ink/15" />
+              <div className="mt-2 h-1.5 w-1/2 rounded-full bg-ink/[0.08]" />
+            </div>
+            <span className="font-mono text-[10px] text-faint">0.{88 - row * 7}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HowItWorks() {
+  return (
+    <Section id="how-it-works">
+      <AnimatedSection className="mb-14 text-center">
+        <Kicker>How it works</Kicker>
+        <SectionHeading className="mt-6">
+          From a signal to an answer.
+          <br />
+          Nothing gets lost, nothing goes stale.
+        </SectionHeading>
+      </AnimatedSection>
+
+      <div className="flex flex-col gap-16 md:gap-20">
+        {steps.map((step, i) => (
+          <AnimatedSection
+            key={step.title}
+            className={`flex flex-col items-center gap-12 md:flex-row lg:gap-20 ${
+              step.reverse ? "md:flex-row-reverse" : ""
+            }`}
+          >
+            <div className="flex-1 md:px-10">
+              <Kicker mono tone="accent">
+                {step.label}
+              </Kicker>
+              <h3 className="mt-3 text-[26px] font-medium leading-[1.2] tracking-[-0.02em] text-ink text-balance md:text-[30px]">
+                {step.title}
+              </h3>
+              <Body size="md" className="mt-4">{step.body}</Body>
+              <p className="mt-5 border-t border-hairline pt-4 font-mono text-[11px] text-faint">
+                {step.inOut}
+              </p>
+            </div>
+            <div className="w-full max-w-[500px] flex-1">
+              <StepVisual index={i} />
+            </div>
+          </AnimatedSection>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+const other = [
+  "Nearest-neighbour search by raw similarity",
+  "Stale results outrank fresh ones",
+  "Conflicts overwrite silently",
+  "Hard deletes, no audit trail",
+];
+
+const ours = [
+  "Ranked by relevance, recency and weight",
+  "Fresh results win ties, with a bound",
+  "Conflicts flagged, never auto-resolved",
+  "Soft-delete keeps the audit trail",
+];
+
+function Differentiator() {
+  return (
+    <Section id="features" band>
+      <AnimatedSection className="mb-12 text-center">
+        <div className="mb-6 text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
+          The difference
+        </div>
+        <h2 className="mb-6 text-[34px] font-medium leading-[1.1] tracking-[-0.03em] text-ink text-balance md:text-[46px]">
+          Other tools remember everything.
+          <br />
+          YourProduct decides what still matters.
+        </h2>
+        <Body size="lg" className="mx-auto max-w-[580px]">
+          Dropping every record into a store is easy. The hard part is ranking,
+          expiring and refusing to silently overwrite, so history never becomes
+          the worst input.
+        </Body>
+      </AnimatedSection>
+
+      <div className="mx-auto flex max-w-[900px] flex-col gap-5 md:flex-row">
+        <AnimatedSection delay={100} className="flex-1 rounded-xl border border-line bg-[#FCFCFB] p-6 md:p-8">
+          <h3 className="mb-8 text-[18px] font-medium text-ink/70">Other tools</h3>
+          <ul className="flex flex-col gap-5">
+            {other.map((item) => (
+              <li key={item} className="flex items-start gap-3">
+                <span aria-hidden="true" className="mt-0.5 font-bold text-[#EF4444]">
+                  ✗
+                </span>
+                <span className="text-[15px] leading-[1.5] text-muted">{item}</span>
+              </li>
+            ))}
+          </ul>
+        </AnimatedSection>
+
+        <AnimatedSection delay={200} className="flex-1 rounded-xl border border-accent/50 bg-white p-6 shadow-soft md:p-8">
+          <h3 className="mb-8 flex items-center gap-2 text-[18px] font-medium text-ink">
+            YourProduct <Badge>Open source</Badge>
+          </h3>
+          <ul className="flex flex-col gap-5">
+            {ours.map((item) => (
+              <li key={item} className="flex items-start gap-3">
+                <span aria-hidden="true" className="mt-0.5 font-bold text-[#22C55E]">
+                  ✓
+                </span>
+                <span className="text-[15px] leading-[1.5] text-ink">{item}</span>
+              </li>
+            ))}
+          </ul>
+        </AnimatedSection>
+      </div>
+    </Section>
+  );
+}
+
+function Quote() {
+  return (
+    <section id="principle" className="w-full scroll-mt-16">
+      <AnimatedSection className="mx-auto flex max-w-[1000px] flex-col items-center px-6 pb-16 pt-12 text-center md:pb-20 md:pt-16">
+        <Kicker>Design principle</Kicker>
+        <p className="mt-6 max-w-[860px] text-[22px] font-medium leading-[1.45] tracking-[-0.01em] text-ink text-balance md:text-[30px]">
+          A system that forgets is a system you can trust. Rank by relevance,
+          not recency, and when two records disagree, flag the conflict instead
+          of quietly picking a winner.
+        </p>
+      </AnimatedSection>
+    </section>
+  );
+}
+
+function FinalCta() {
+  return (
+    <section className="relative w-full pb-20 pt-12 md:pb-24 md:pt-16">
+      <div className="mx-auto max-w-frame px-6">
+        <AnimatedSection>
+          <div className="flex flex-col items-center rounded-[24px] border border-line bg-white px-6 py-14 text-center sm:px-10 md:px-16 md:py-20">
+            <h2 className="max-w-[720px] text-[32px] font-medium leading-[1.1] tracking-[-0.03em] text-ink text-balance md:text-[44px]">
+              Give your team something to <Serif size="plain">remember</Serif>.
+            </h2>
+            <Body size="lg" className="mt-5 max-w-[560px]">
+              One self-contained system. No extra service to babysit. A ranking
+              rule you can read end to end.
+            </Body>
+
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+              <PrimaryButton href="/sign-up">Get started</PrimaryButton>
+              <SecondaryButton href="/docs">Read the docs</SecondaryButton>
+              <SecondaryButton href="/demo">Live demo</SecondaryButton>
+            </div>
+
+            <div className="mt-10 w-full max-w-[620px] border-t border-hairline pt-8 text-left">
+              <p className="text-center font-mono text-[10.5px] font-bold uppercase tracking-[0.14em] text-faint">
+                The simplest next step
+              </p>
+              <ol className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-stretch">
+                {["Clone the repo", "Run the example", "Call the API"].map((text, i) => (
+                  <li key={text} className="flex flex-1 items-stretch gap-3">
+                    <a
+                      href="/docs"
+                      className="flex flex-1 items-center gap-3 rounded-xl border border-line bg-[#FCFCFB] px-4 py-3 transition-colors hover:border-faint/40"
+                    >
+                      <span className="font-mono text-[11px] text-accent-ink">{i + 1}</span>
+                      <span className="font-mono text-[11.5px] text-ink">{text}</span>
+                    </a>
+                    {i < 2 && (
+                      <span aria-hidden="true" className="hidden self-center text-[#D4D4D4] sm:block">
+                        →
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </AnimatedSection>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="border-t border-line bg-[#E8E8E2]">
+      <div className="mx-auto max-w-frame px-6 py-12">
+        <div className="flex flex-col gap-10 md:flex-row md:justify-between">
+          <div>
+            <span className="text-[19px] font-semibold tracking-tight text-ink">YourProduct</span>
+            <p className="mt-3 max-w-[280px] text-[13.5px] leading-[1.7] text-muted">
+              One line that says what it is, who it is for, and why it is
+              different.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
+            {[
+              ["Product", ["How it works", "Features", "Pricing"]],
+              ["Developers", ["Docs", "API", "GitHub"]],
+              ["Contact", ["Email", "Community"]],
+            ].map(([title, links]) => (
+              <div key={title as string}>
+                <h3 className="text-[12px] font-bold uppercase tracking-[0.14em] text-ink">{title}</h3>
+                <ul className="mt-4 flex flex-col gap-3">
+                  {(links as string[]).map((link) => (
+                    <li key={link}>
+                      <a href="/docs" className="link-underline text-[13px] text-muted hover:text-accent">
+                        {link}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="mt-10 flex flex-col gap-3 border-t border-black/10 pt-6 text-[12px] text-muted sm:flex-row sm:justify-between">
+          <span>© {new Date().getFullYear()} YourProduct</span>
+          <a href="#top" className="link-underline w-fit">
+            Back to top
+          </a>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+export default function LandingPage() {
+  return (
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-background">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-ink focus:px-4 focus:py-2 focus:text-[13px] focus:text-white"
+      >
+        Skip to content
+      </a>
+
+      <SiteNav />
+
+      <main id="main" className="relative z-10 w-full flex-1">
+        <Hero />
+        <Marquee />
+        <Explainer />
+        <HowItWorks />
+        <Differentiator />
+        <Quote />
+        <FinalCta />
+      </main>
+
+      <Footer />
+    </div>
+  );
+}

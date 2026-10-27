@@ -1,0 +1,68 @@
+import type { Metadata, Viewport } from "next";
+import type { ReactNode } from "react";
+import localFont from "next/font/local";
+import { displayFont } from "./display-font";
+import "./globals.css";
+
+/**
+ * Landing Kit — root layout example.
+ *
+ * Rename to `app/layout.tsx` in the destination project. Keep both variables on
+ * <html>: `displayFont.className` sets Outfit as the default family, the two
+ * `variable`s expose the CSS custom properties used by Tailwind and inline
+ * styles.
+ */
+
+const redaction = localFont({
+  src: [
+    {
+      path: "../public/fonts/Redaction35-Regular.otf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/Redaction35-Italic.otf",
+      weight: "400",
+      style: "italic",
+    },
+  ],
+  variable: "--font-redaction",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "YourProduct",
+  description: "One line that says what this is.",
+};
+
+/** The canvas is light-only; declaring it stops mobile browsers inventing
+ *  a dark form-controls theme over the warm grey. */
+export const viewport: Viewport = {
+  colorScheme: "light",
+  themeColor: "#F7F7F5",
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return (
+    <html
+      lang="en"
+      className={`${displayFont.className} ${displayFont.variable} ${redaction.variable}`}
+      suppressHydrationWarning
+    >
+      <body
+        className="bg-background font-sans text-ink antialiased"
+        suppressHydrationWarning
+      >
+        <noscript>
+          {/* Without JS the scroll-reveal never fires, so keep content visible. */}
+          <style suppressHydrationWarning>{`[data-reveal="pending"]{opacity:1 !important}`}</style>
+        </noscript>
+        {children}
+      </body>
+    </html>
+  );
+}

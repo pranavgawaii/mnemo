@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   Landing Kit — Tailwind globals
+   The full stylesheet behind the Mnemo / Specboard editorial landing style.
+
+   Fonts are wired with next/font:
+     --font-outfit     Outfit (Google or self-hosted)
+     --font-redaction  Redaction 35 Regular + Italic (local)
+   See code/app/layout.tsx.example.
+   ========================================================================== */
+
+@layer base {
+  :root {
+    --background: #f7f7f5;
+    --foreground: #0a0a0f;
+
+    /* The site is light-only. Without this, native chrome (range thumbs,
+       scrollbars, autofill) follows the OS dark theme and clashes. */
+    color-scheme: light;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  html,
+  body {
+    /* `clip` (not `hidden`) so it never becomes a scroll container. That is
+       what would break `position: sticky` for a docs-style sidebar. */
+    overflow-x: clip;
+  }
+
+  ::selection {
+    background-color: rgba(79, 70, 229, 0.16);
+  }
+
+  :focus-visible {
+    outline: 2px solid #4f46e5;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer utilities {
+  .animate-fade-up {
+    animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-cascade {
+    opacity: 0;
+    animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-draw-line {
+    transform-origin: top;
+    animation: drawLine 5.4s linear forwards;
+  }
+
+  .animate-marquee {
+    animation: marquee 32s linear infinite;
+  }
+
+  .animate-marquee:hover {
+    animation-play-state: paused;
+  }
+
+  .grain {
+    background-image: radial-gradient(rgba(10, 10, 15, 0.035) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  /* Navbar links: a hairline that runs out from the left in the link's own
+     colour, which turns theme-indigo on hover. Width hugs the label, so it
+     also works in a stacked mobile menu. */
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0% 1px;
+    transition: color 0.2s ease,
+      background-size 0.35s cubic-bezier(0.2, 0.7, 0.1, 1);
+  }
+
+  .link-underline:hover,
+  .link-underline:focus-visible {
+    background-size: 100% 1px;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes drawLine {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0%);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-fade-up,
+  .animate-cascade,
+  .animate-marquee {
+    animation: none;
+    opacity: 1;
+  }
+
+  .animate-draw-line {
+    animation: none;
+  }
+
+  .link-underline {
+    transition: none;
+  }
+}

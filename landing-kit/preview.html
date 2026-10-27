@@ -1,0 +1,2591 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#F7F7F5" />
+    <title>Landing Kit — Editorial Developer-Tool</title>
+    <meta
+      name="description"
+      content="A standalone visual guide to the Mnemo / Specboard editorial landing design system: fonts, colour, type scale, layout and components."
+    />
+
+    <style>
+      /* ====================================================================
+         Fonts
+         ==================================================================== */
+      @font-face {
+        font-family: "Outfit";
+        src: url("./assets/fonts/Outfit-Variable.woff2") format("woff2");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: "Redaction 35";
+        src: url("./assets/fonts/Redaction35-Regular.otf") format("opentype");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+
+      @font-face {
+        font-family: "Redaction 35";
+        src: url("./assets/fonts/Redaction35-Italic.otf") format("opentype");
+        font-weight: 400;
+        font-style: italic;
+        font-display: swap;
+      }
+
+      /* ====================================================================
+         Tokens
+         ==================================================================== */
+      :root {
+        --background: #f7f7f5;
+        --surface: #ffffff;
+        --surface-2: #fcfcfb;
+
+        --ink: #0a0a0f;
+        --muted: #5e6472;
+        --faint: #69707e;
+
+        --line: #e5e5e5;
+        --hairline: #efefec;
+
+        --accent: #4f46e5;
+        --accent-soft: #eef0ff;
+        --accent-ink: #3730a3;
+
+        --btn: #18181b;
+        --btn-hover: #27272a;
+
+        --success: #22c55e;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+
+        --sans: "Outfit", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        --serif: "Redaction 35", Georgia, "Times New Roman", serif;
+        --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+        --frame: 1200px;
+        --gutter: 24px;
+
+        color-scheme: light;
+      }
+
+      /* ====================================================================
+         Base
+         ==================================================================== */
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--background);
+        color: var(--ink);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        overflow-x: clip;
+      }
+
+      section[id] {
+        scroll-margin-top: 80px;
+      }
+
+      ::selection {
+        background: rgba(79, 70, 229, 0.16);
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+        border-radius: 4px;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button {
+        font: inherit;
+        color: inherit;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      p {
+        margin: 0;
+      }
+
+      img,
+      svg {
+        display: block;
+      }
+
+      /* ====================================================================
+         Layout helpers
+         ==================================================================== */
+      .frame {
+        width: 100%;
+        max-width: var(--frame);
+        margin-inline: auto;
+        padding-inline: var(--gutter);
+      }
+
+      .section {
+        padding-block: 64px 80px;
+      }
+
+      .section-sm {
+        padding-block: 48px 64px;
+      }
+
+      .band {
+        background: var(--surface);
+        border-block: 1px solid var(--line);
+      }
+
+      .mono {
+        font-family: var(--mono);
+      }
+
+      .kicker {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        font-weight: 700;
+        line-height: 1.2;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent-ink);
+      }
+
+      .kicker-muted {
+        color: var(--muted);
+        font-family: var(--sans);
+        font-size: 11px;
+      }
+
+      .text-balance {
+        text-wrap: balance;
+      }
+
+      .link-underline {
+        background-image: linear-gradient(currentColor, currentColor);
+        background-repeat: no-repeat;
+        background-position: 0 100%;
+        background-size: 0% 1px;
+        transition: color 0.2s ease,
+          background-size 0.35s cubic-bezier(0.2, 0.7, 0.1, 1);
+      }
+
+      .link-underline:hover,
+      .link-underline:focus-visible {
+        background-size: 100% 1px;
+      }
+
+      /* ====================================================================
+         Preview chrome
+         ==================================================================== */
+      .preview-bar {
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 50;
+        height: 64px;
+        background: var(--background);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+      }
+
+      .preview-bar .frame {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 100%;
+        gap: 24px;
+      }
+
+      .preview-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 19px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+      }
+
+      .preview-brand .dot {
+        width: 22px;
+        height: 22px;
+        border: 1px solid rgba(10, 10, 15, 0.28);
+        border-radius: 6px;
+        position: relative;
+      }
+
+      .preview-brand .dot::before,
+      .preview-brand .dot::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        background: var(--ink);
+      }
+
+      .preview-brand .dot::before {
+        width: 6px;
+        height: 6px;
+        left: 8px;
+        top: 4px;
+      }
+
+      .preview-brand .dot::after {
+        width: 4px;
+        height: 4px;
+        left: 5px;
+        bottom: 5px;
+        opacity: 0.45;
+      }
+
+      .preview-links {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        font-size: 13.5px;
+        font-weight: 500;
+        color: var(--muted);
+      }
+
+      .preview-links a:hover {
+        color: var(--accent);
+      }
+
+      .preview-cta {
+        display: inline-flex;
+        align-items: center;
+        height: 36px;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #232331 0%, #0f0f18 55%, #0a0a0f 100%);
+        color: #fafafa;
+        font-size: 13.5px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        box-shadow: 0 1px 2px rgba(10, 10, 15, 0.2),
+          0 10px 24px -12px rgba(10, 10, 15, 0.8),
+          inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        outline: 1px solid rgba(255, 255, 255, 0.15);
+        outline-offset: -1px;
+        white-space: nowrap;
+      }
+
+      /* ====================================================================
+         Hero
+         ==================================================================== */
+      .hero {
+        padding-top: 128px;
+        padding-bottom: 56px;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+        gap: 56px;
+        align-items: end;
+      }
+
+      .hero h1 {
+        max-width: 820px;
+        font-size: clamp(40px, 5.2vw, 66px);
+        font-weight: 500;
+        line-height: 1.05;
+        letter-spacing: -0.035em;
+        color: var(--ink);
+      }
+
+      .serif {
+        font-family: var(--serif);
+        font-style: italic;
+        font-weight: 400;
+        letter-spacing: normal;
+        font-size: 112%;
+        line-height: inherit;
+      }
+
+      .serif-plain {
+        font-family: var(--serif);
+        font-style: italic;
+        font-weight: 400;
+        letter-spacing: normal;
+      }
+
+      .hero-side {
+        padding-bottom: 6px;
+      }
+
+      .hero-side p {
+        max-width: 400px;
+        margin-left: auto;
+        font-size: 16px;
+        line-height: 1.65;
+        color: var(--muted);
+        text-align: right;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 28px;
+      }
+
+      .hero-note {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 16px;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--faint);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.2;
+        cursor: pointer;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+          background-color 0.3s ease, box-shadow 0.3s ease;
+        white-space: nowrap;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .btn-primary {
+        background: #18181b;
+        color: #fafafa;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        outline: 1px solid rgba(255, 255, 255, 0.1);
+        outline-offset: -1px;
+      }
+
+      .btn-primary:hover {
+        background: #27272a;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.14);
+      }
+
+      .btn-secondary {
+        background: #fff;
+        color: var(--ink);
+        border: 1px solid var(--line);
+        box-shadow: 0 1px 2px rgba(10, 10, 15, 0.04),
+          0 8px 24px -12px rgba(10, 10, 15, 0.1);
+      }
+
+      .btn-secondary:hover {
+        background: #fafafa;
+        box-shadow: 0 2px 4px rgba(10, 10, 15, 0.05),
+          0 12px 28px -14px rgba(10, 10, 15, 0.16);
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 36px;
+        padding: 0;
+        list-style: none;
+      }
+
+      .chip {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        padding: 5px 10px;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+        letter-spacing: -0.005em;
+        color: rgba(10, 10, 15, 0.75);
+        box-shadow: 0 1px 1.5px rgba(10, 10, 15, 0.04);
+      }
+
+      /* ====================================================================
+         Hero window
+         ==================================================================== */
+      .window-wrap {
+        position: relative;
+        margin-top: 56px;
+      }
+
+      .glow {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      .glow span {
+        position: absolute;
+        top: 60px;
+        bottom: 80px;
+        width: 34%;
+        border-radius: 999px;
+        filter: blur(90px);
+        mix-blend-mode: multiply;
+        opacity: 0.5;
+      }
+
+      .glow span:nth-child(1) {
+        left: -60px;
+        background: #c7d2fe;
+      }
+
+      .glow span:nth-child(2) {
+        left: 33%;
+        width: 40%;
+        top: 80px;
+        background: #e7d9fb;
+        opacity: 0.45;
+      }
+
+      .glow span:nth-child(3) {
+        right: -60px;
+        background: #bfe3f7;
+        opacity: 0.45;
+      }
+
+      .window {
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 28px 56px -26px rgba(40, 25, 70, 0.18);
+        backdrop-filter: blur(40px);
+        padding: 8px;
+        display: flex;
+      }
+
+      .rail {
+        width: 44px;
+        flex: 0 0 44px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 0;
+      }
+
+      .rail i {
+        display: block;
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        border: 1px solid rgba(10, 10, 15, 0.1);
+      }
+
+      .rail i:first-child {
+        background: var(--ink);
+        border-color: var(--ink);
+        opacity: 0.88;
+      }
+
+      .rail i.active {
+        background: #fff;
+      }
+
+      .window-inner {
+        flex: 1;
+        min-width: 0;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(10, 10, 15, 0.04);
+        overflow: hidden;
+      }
+
+      .window-head {
+        display: flex;
+        align-items: center;
+        height: 56px;
+        padding: 0 24px;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--muted);
+      }
+
+      .window-head .sep {
+        color: #d4d4d4;
+        margin: 0 10px;
+      }
+
+      .window-head strong {
+        min-width: 0;
+        overflow: hidden;
+        color: var(--ink);
+        font-weight: 600;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .window-head .live {
+        margin-left: auto;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 4px 12px;
+        font-size: 12px;
+        color: var(--muted);
+        background: #fff;
+      }
+
+      .window-body {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr);
+        min-height: 380px;
+      }
+
+      .window-meta {
+        border-right: 1px solid var(--line);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .window-meta .label {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent-ink);
+      }
+
+      .window-meta h3 {
+        margin-top: 6px;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .meta-row {
+        display: flex;
+        font-size: 11px;
+      }
+
+      .meta-row span:first-child {
+        width: 76px;
+        color: var(--faint);
+        flex: 0 0 76px;
+      }
+
+      .meta-row span:last-child {
+        font-weight: 500;
+      }
+
+      .window-results {
+        background: #fafafa;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .result {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        padding: 16px;
+        box-shadow: 0 1px 2px rgba(10, 10, 15, 0.04);
+      }
+
+      .result-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .result-top .n {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        color: var(--faint);
+      }
+
+      .score {
+        border-radius: 999px;
+        background: var(--accent-soft);
+        padding: 2px 8px;
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--accent-ink);
+      }
+
+      .result p {
+        margin-top: 8px;
+        font-size: 12.5px;
+        line-height: 1.6;
+      }
+
+      /* ====================================================================
+         Section headings
+         ==================================================================== */
+      .section-head {
+        max-width: 720px;
+      }
+
+      .section-head.center {
+        margin-inline: auto;
+        text-align: center;
+      }
+
+      .section-head h2 {
+        margin-top: 20px;
+        font-size: clamp(32px, 4vw, 46px);
+        font-weight: 500;
+        line-height: 1.12;
+        letter-spacing: -0.03em;
+        color: var(--ink);
+      }
+
+      .section-head p {
+        margin-top: 20px;
+        max-width: 580px;
+        font-size: 16px;
+        line-height: 1.7;
+        color: var(--muted);
+      }
+
+      .section-head.center p {
+        margin-inline: auto;
+      }
+
+      .section-head h3 {
+        margin-top: 12px;
+        font-size: 28px;
+        font-weight: 500;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+      }
+
+      /* ====================================================================
+         Spec cards / fonts
+         ==================================================================== */
+      .spec-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 48px;
+      }
+
+      .spec {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--surface);
+        padding: 32px;
+        min-width: 0;
+      }
+
+      .spec-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--hairline);
+      }
+
+      .spec-name {
+        font-size: 18px;
+        font-weight: 500;
+      }
+
+      .spec-role {
+        margin-top: 4px;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--faint);
+      }
+
+      .spec-tag {
+        border-radius: 999px;
+        background: var(--accent-soft);
+        padding: 4px 9px;
+        font-family: var(--mono);
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent-ink);
+        white-space: nowrap;
+      }
+
+      .spec-aa {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+        margin-top: 24px;
+      }
+
+      .spec-aa .big {
+        font-size: 88px;
+        font-weight: 500;
+        line-height: 0.9;
+        letter-spacing: -0.04em;
+      }
+
+      .spec-aa .big-serif {
+        font-family: var(--serif);
+        font-style: italic;
+        font-weight: 400;
+        font-size: 96px;
+        line-height: 0.9;
+        letter-spacing: normal;
+      }
+
+      .spec-aa .small {
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+
+      .spec-alpha {
+        margin-top: 22px;
+        font-size: 18px;
+        line-height: 1.6;
+        letter-spacing: 0.01em;
+        word-break: break-word;
+        color: var(--ink);
+      }
+
+      .spec-alpha.serif-alpha {
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 20px;
+        line-height: 1.5;
+        letter-spacing: 0;
+      }
+
+      .weights {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        margin-top: 20px;
+        padding-top: 18px;
+        border-top: 1px solid var(--hairline);
+      }
+
+      .weight {
+        font-size: 15px;
+      }
+
+      .weight small {
+        display: block;
+        margin-top: 3px;
+        font-family: var(--mono);
+        font-size: 9.5px;
+        letter-spacing: 0.1em;
+        color: var(--faint);
+      }
+
+      .spec code {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .spec-note {
+        margin-top: 20px;
+        padding-top: 18px;
+        border-top: 1px solid var(--hairline);
+        font-size: 12.5px;
+        line-height: 1.65;
+        color: var(--muted);
+      }
+
+      /* ====================================================================
+         Palette
+         ==================================================================== */
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 40px;
+      }
+
+      .swatch {
+        display: block;
+        width: 100%;
+        text-align: left;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        padding: 0;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .swatch:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px -16px rgba(10, 10, 15, 0.2);
+      }
+
+      .swatch-color {
+        display: block;
+        height: 92px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .swatch-meta {
+        display: block;
+        padding: 12px 14px 14px;
+      }
+
+      .swatch-name,
+      .swatch-hex,
+      .swatch-role {
+        display: block;
+      }
+
+      .swatch-name {
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .swatch-hex {
+        margin-top: 2px;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--faint);
+      }
+
+      .swatch-role {
+        margin-top: 6px;
+        font-size: 11.5px;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 24px;
+        z-index: 80;
+        transform: translate(-50%, 12px);
+        border-radius: 999px;
+        background: var(--ink);
+        color: #fafafa;
+        padding: 9px 16px;
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.04em;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      /* ====================================================================
+         Type scale
+         ==================================================================== */
+      .type-table {
+        margin-top: 44px;
+        border-top: 1px solid var(--line);
+      }
+
+      .type-row {
+        display: grid;
+        grid-template-columns: 210px minmax(0, 1fr);
+        gap: 32px;
+        align-items: baseline;
+        padding: 22px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .type-meta {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        line-height: 1.7;
+        letter-spacing: 0.04em;
+        color: var(--faint);
+      }
+
+      .type-meta strong {
+        display: block;
+        margin-bottom: 3px;
+        color: var(--ink);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .sample-display {
+        font-size: clamp(40px, 5vw, 66px);
+        font-weight: 500;
+        line-height: 1.05;
+        letter-spacing: -0.035em;
+      }
+
+      .sample-h2 {
+        font-size: clamp(30px, 3.4vw, 46px);
+        font-weight: 500;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+      }
+
+      .sample-h3 {
+        font-size: clamp(24px, 2.6vw, 30px);
+        font-weight: 500;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+      }
+
+      .sample-card {
+        font-size: 19px;
+        font-weight: 500;
+        line-height: 1.3;
+        letter-spacing: -0.01em;
+      }
+
+      .sample-body {
+        max-width: 640px;
+        font-size: 16px;
+        line-height: 1.7;
+        color: var(--muted);
+      }
+
+      .sample-ui {
+        font-size: 13.5px;
+        font-weight: 500;
+        line-height: 1.4;
+      }
+
+      .sample-kicker {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent-ink);
+      }
+
+      .sample-mono {
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+
+      /* ====================================================================
+         Components
+         ==================================================================== */
+      .component-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        margin-top: 44px;
+      }
+
+      .demo {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--surface);
+        padding: 28px;
+      }
+
+      .demo-label {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 22px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--hairline);
+      }
+
+      .demo-label h3 {
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      .demo-label span {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--faint);
+      }
+
+      /* Nav mock */
+      .nav-mock {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 20px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--background);
+        padding: 0 20px;
+        height: 64px;
+      }
+
+      .nav-mock .wordmark {
+        font-size: 19px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .nav-mock .run {
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        font-size: 13.5px;
+        font-weight: 500;
+        color: var(--muted);
+      }
+
+      .nav-mock .run a:hover {
+        color: var(--accent);
+      }
+
+      .nav-mark {
+        width: 24px;
+        height: 24px;
+        border: 1px solid rgba(10, 10, 15, 0.3);
+        border-radius: 7px;
+        position: relative;
+      }
+
+      .nav-mark::before {
+        content: "";
+        position: absolute;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--ink);
+        left: 8px;
+        top: 4px;
+      }
+
+      .nav-mock .right {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      /* Trio */
+      .trio {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 32px;
+      }
+
+      .trio-card {
+        border-top: 1px solid var(--line);
+        padding-top: 22px;
+      }
+
+      .trio-top {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+      }
+
+      .trio-num {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--faint);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .trio-kicker {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent-ink);
+      }
+
+      .trio-card h4 {
+        margin-top: 16px;
+        font-size: 19px;
+        font-weight: 500;
+        line-height: 1.3;
+        letter-spacing: -0.01em;
+      }
+
+      .trio-card p {
+        margin-top: 10px;
+        font-size: 13.5px;
+        line-height: 1.7;
+        color: var(--muted);
+      }
+
+      /* Comparison */
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
+
+      .compare-card {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--surface-2);
+        padding: 26px;
+      }
+
+      .compare-card.win {
+        border-color: rgba(79, 70, 229, 0.5);
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(10, 10, 15, 0.04),
+          0 8px 24px -12px rgba(10, 10, 15, 0.1);
+      }
+
+      .compare-card h4 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 22px;
+        font-size: 18px;
+        font-weight: 500;
+      }
+
+      .compare-card:not(.win) h4 {
+        color: rgba(10, 10, 15, 0.7);
+      }
+
+      .compare-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .compare-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 14.5px;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+
+      .compare-card.win .compare-list li {
+        color: var(--ink);
+      }
+
+      .mark-x,
+      .mark-check {
+        flex: 0 0 auto;
+        margin-top: 1px;
+        font-weight: 700;
+      }
+
+      .mark-x {
+        color: var(--danger);
+      }
+
+      .mark-check {
+        color: var(--success);
+      }
+
+      .badge {
+        display: inline-block;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        padding: 2px 8px;
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent-ink);
+      }
+
+      /* Quote */
+      .quote {
+        max-width: 900px;
+        margin-inline: auto;
+        text-align: center;
+        padding: 16px 0 8px;
+      }
+
+      .quote p {
+        margin-top: 20px;
+        font-size: clamp(22px, 2.6vw, 30px);
+        font-weight: 500;
+        line-height: 1.45;
+        letter-spacing: -0.01em;
+        color: var(--ink);
+      }
+
+      /* CTA */
+      .cta-panel {
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: #fff;
+        padding: 56px 40px;
+        text-align: center;
+      }
+
+      .cta-panel h3 {
+        max-width: 720px;
+        margin-inline: auto;
+        font-size: clamp(30px, 4vw, 44px);
+        font-weight: 500;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+      }
+
+      .cta-panel > p {
+        max-width: 560px;
+        margin: 18px auto 0;
+        font-size: 15px;
+        line-height: 1.7;
+        color: var(--muted);
+      }
+
+      .cta-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 32px;
+      }
+
+      .next-steps {
+        max-width: 620px;
+        margin: 36px auto 0;
+        padding-top: 28px;
+        border-top: 1px solid var(--hairline);
+        text-align: left;
+      }
+
+      .next-steps .label {
+        text-align: center;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--faint);
+      }
+
+      .next-steps ol {
+        display: flex;
+        gap: 12px;
+        margin: 18px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .next-steps li {
+        display: flex;
+        flex: 1;
+        align-items: stretch;
+        gap: 12px;
+      }
+
+      .next-step {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--surface-2);
+        padding: 12px 16px;
+      }
+
+      .next-step .n {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--accent-ink);
+      }
+
+      .next-step .t {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        color: var(--ink);
+        white-space: nowrap;
+      }
+
+      .next-arrow {
+        align-self: center;
+        color: #d4d4d4;
+      }
+
+      /* Marquee */
+      .marquee-band {
+        border-block: 1px solid var(--line);
+        background: var(--hairline);
+        padding: 32px 0 24px;
+        overflow: hidden;
+      }
+
+      .marquee-row {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        max-width: var(--frame);
+        margin-inline: auto;
+        padding-inline: var(--gutter);
+      }
+
+      .marquee-pill {
+        flex: 0 0 auto;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.5);
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+
+      .marquee-mask {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        -webkit-mask-image: linear-gradient(
+          to right,
+          transparent,
+          transparent 10px,
+          #000 60px,
+          #000 calc(100% - 60px),
+          transparent calc(100% - 10px),
+          transparent
+        );
+        mask-image: linear-gradient(
+          to right,
+          transparent,
+          transparent 10px,
+          #000 60px,
+          #000 calc(100% - 60px),
+          transparent calc(100% - 10px),
+          transparent
+        );
+      }
+
+      .marquee-track {
+        display: flex;
+        width: max-content;
+        animation: marquee 32s linear infinite;
+      }
+
+      .marquee-track:hover {
+        animation-play-state: paused;
+      }
+
+      .marquee-set {
+        display: flex;
+        align-items: center;
+        gap: 64px;
+        padding: 0 32px;
+        white-space: nowrap;
+      }
+
+      .marquee-set span {
+        font-size: 28px;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+      }
+
+      .marquee-set span.accent {
+        color: var(--accent);
+        font-weight: 500;
+      }
+
+      .marquee-set span.success {
+        color: #16a34a;
+        font-weight: 500;
+      }
+
+      .marquee-caption {
+        margin-top: 20px;
+        padding-inline: 24px;
+        text-align: center;
+        font-size: 13.5px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+
+      @keyframes marquee {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-50%);
+        }
+      }
+
+      /* Motion */
+      .motion-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+        margin-top: 32px;
+      }
+
+      .motion-card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--surface-2);
+        padding: 24px;
+        opacity: 0;
+        transform: translateY(14px);
+      }
+
+      .motion-card.is-visible {
+        animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      .motion-card h4 {
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      .motion-card p {
+        margin-top: 8px;
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+
+      .motion-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px;
+        margin-top: 24px;
+      }
+
+      .motion-note {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        letter-spacing: 0.04em;
+        color: var(--faint);
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(14px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Footer */
+      .footer {
+        border-top: 1px solid var(--line);
+        background: #e8e8e2;
+        padding: 48px 0 32px;
+      }
+
+      .footer-top {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 32px;
+      }
+
+      .footer-brand {
+        font-size: 19px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .footer-brand + p {
+        margin-top: 10px;
+        max-width: 300px;
+        font-size: 13.5px;
+        line-height: 1.7;
+        color: var(--muted);
+      }
+
+      .footer-cols {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 56px;
+      }
+
+      .footer-col h4 {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .footer-col ul {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 14px 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .footer-bottom {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .footer-bottom a:hover {
+        color: var(--accent);
+      }
+
+      /* Utilities */
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .divider {
+        border: 0;
+        border-top: 1px solid var(--line);
+        margin: 0;
+      }
+
+      /* ====================================================================
+         Responsive
+         ==================================================================== */
+      @media (max-width: 980px) {
+        .hero-grid {
+          grid-template-columns: 1fr;
+          gap: 32px;
+        }
+
+        .hero-side p {
+          margin-left: 0;
+          text-align: left;
+        }
+
+        .hero-actions,
+        .hero-note {
+          justify-content: flex-start;
+        }
+
+        .hero {
+          padding-top: 112px;
+        }
+
+        .spec-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .swatches {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .trio {
+          grid-template-columns: 1fr;
+          gap: 28px;
+        }
+
+        .compare {
+          grid-template-columns: 1fr;
+        }
+
+        .motion-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .nav-mock {
+          grid-template-columns: 1fr auto;
+        }
+
+        .nav-mock .run {
+          display: none;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .preview-links {
+          display: none;
+        }
+
+        .rail {
+          display: none;
+        }
+
+        .section {
+          padding-block: 48px 64px;
+        }
+
+        .window-body {
+          grid-template-columns: 1fr;
+        }
+
+        .window-meta {
+          display: none;
+        }
+
+        .type-row {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+
+        .next-steps ol {
+          flex-direction: column;
+        }
+
+        .next-arrow {
+          display: none;
+        }
+
+        .cta-panel {
+          padding: 40px 22px;
+        }
+
+        .footer-cols {
+          gap: 32px;
+        }
+
+        .marquee-row {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .marquee-mask {
+          width: 100%;
+        }
+
+        .swatches {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        .marquee-track,
+        .motion-card.is-visible {
+          animation: none;
+        }
+
+        .motion-card {
+          opacity: 1;
+          transform: none;
+        }
+
+        .btn,
+        .swatch,
+        .link-underline {
+          transition: none;
+        }
+
+        .btn:hover,
+        .swatch:hover {
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript>
+      <style>
+        [data-reveal] {
+          opacity: 1 !important;
+          transform: none !important;
+        }
+      </style>
+    </noscript>
+
+    <a class="sr-only" href="#main">Skip to content</a>
+
+    <!-- ==================================================================
+         Preview chrome
+         ================================================================== -->
+    <header class="preview-bar">
+      <div class="frame">
+        <a href="#top" class="preview-brand" aria-label="Landing Kit home">
+          <span class="dot" aria-hidden="true"></span>
+          Landing Kit
+        </a>
+        <nav class="preview-links" aria-label="Preview sections">
+          <a href="#fonts">Fonts</a>
+          <a href="#colour">Colour</a>
+          <a href="#type">Type</a>
+          <a href="#components">Components</a>
+          <a href="#motion">Motion</a>
+        </nav>
+        <a href="./docs/01-design-language.md" class="preview-cta">Read the docs</a>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- ================================================================
+           Hero
+           ================================================================ -->
+      <section id="top" class="hero">
+        <div class="frame">
+          <div class="hero-grid">
+            <div>
+              <span class="kicker">Mnemo / Specboard · design system</span>
+              <h1 style="margin-top: 20px">
+                Editorial type for
+                <span class="serif">developer</span> tools.
+              </h1>
+            </div>
+            <div class="hero-side">
+              <p>
+                Warm paper. One geometric sans. One italic serif word. A single
+                indigo accent and a 1px rule doing the structural work. This is
+                the whole language.
+              </p>
+              <div class="hero-actions">
+                <a href="#components" class="btn btn-secondary">See components</a>
+                <a href="#fonts" class="btn btn-primary">Start with the fonts →</a>
+              </div>
+              <div class="hero-note">
+                <span>Outfit</span>
+                <span>·</span>
+                <span>Redaction 35</span>
+                <span>·</span>
+                <span>#F7F7F5</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="window-wrap" aria-hidden="true">
+            <div class="glow"><span></span><span></span><span></span></div>
+            <div class="window">
+              <div class="rail">
+                <i></i><i class="active"></i><i></i><i></i><i></i>
+              </div>
+              <div class="window-inner">
+                <div class="window-head">
+                  <span>Search</span>
+                  <span class="sep">›</span>
+                  <strong>What changed this quarter?</strong>
+                  <span class="live">Live</span>
+                </div>
+                <div class="window-body">
+                  <div class="window-meta">
+                    <div>
+                      <div class="label">Query</div>
+                      <h3>What changed this quarter?</h3>
+                    </div>
+                    <div class="meta-row"><span>Scope</span><span>Q3</span></div>
+                    <div class="meta-row"><span>Sources</span><span>12</span></div>
+                    <div class="meta-row"><span>Rank</span><span>relevance</span></div>
+                    <div class="meta-row"><span>Confidence</span><span>0.89</span></div>
+                  </div>
+                  <div class="window-results">
+                    <div class="result">
+                      <div class="result-top">
+                        <span class="n">01</span><span class="score">0.91</span>
+                      </div>
+                      <p>Pricing moved to usage-based billing.</p>
+                    </div>
+                    <div class="result">
+                      <div class="result-top">
+                        <span class="n">02</span><span class="score">0.84</span>
+                      </div>
+                      <p>The onboarding flow was rebuilt in July.</p>
+                    </div>
+                    <div class="result">
+                      <div class="result-top">
+                        <span class="n">03</span><span class="score">0.78</span>
+                      </div>
+                      <p>Two enterprise accounts renewed early.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ul class="chips" aria-label="Stack">
+            <li class="chip">Postgres + pgvector</li>
+            <li class="chip">384-d local embeddings</li>
+            <li class="chip">No managed vector DB</li>
+            <li class="chip">One API</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           Fonts
+           ================================================================ -->
+      <section id="fonts" class="section band">
+        <div class="frame">
+          <div class="section-head">
+            <span class="kicker">01 · Fonts</span>
+            <h2>Two families. Two jobs.</h2>
+            <p>
+              Outfit carries the structure. Redaction 35 Italic carries one word
+              at a time. The contrast is the personality; use the serif rarely.
+            </p>
+          </div>
+
+          <div class="spec-grid">
+            <article class="spec">
+              <div class="spec-top">
+                <div>
+                  <div class="spec-name">Outfit</div>
+                  <div class="spec-role">Structural sans · Google Fonts</div>
+                </div>
+                <span class="spec-tag">--font-outfit</span>
+              </div>
+              <div class="spec-aa">
+                <div class="big">Aa</div>
+                <div class="small">
+                  Nav · headings · body<br />
+                  Buttons · labels · chips
+                </div>
+              </div>
+              <div class="spec-alpha">
+                ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />
+                abcdefghijklmnopqrstuvwxyz<br />
+                0123456789 &amp; ? ! → ×
+              </div>
+              <div class="weights">
+                <div class="weight" style="font-weight: 400">Regular <small>400</small></div>
+                <div class="weight" style="font-weight: 500">Medium <small>500</small></div>
+                <div class="weight" style="font-weight: 600">Semibold <small>600</small></div>
+                <div class="weight" style="font-weight: 700">Bold <small>700 · labels</small></div>
+              </div>
+              <p class="spec-note">
+                Headings stay at <code>500</code>. The scale does the shouting;
+                bold display type makes the page feel like a template.
+              </p>
+            </article>
+
+            <article class="spec">
+              <div class="spec-top">
+                <div>
+                  <div class="spec-name">Redaction 35</div>
+                  <div class="spec-role">Editorial serif · MCKL Type</div>
+                </div>
+                <span class="spec-tag">--font-redaction</span>
+              </div>
+              <div class="spec-aa">
+                <div class="big-serif">Aa</div>
+                <div class="small">
+                  Italic accent only<br />
+                  One word per heading
+                </div>
+              </div>
+              <div class="spec-alpha serif-alpha">
+                ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />
+                abcdefghijklmnopqrstuvwxyz<br />
+                0123456789 &amp; ? ! → ×
+              </div>
+              <div class="weights">
+                <div class="weight" style="font-family: var(--serif); font-style: italic; font-size: 19px">
+                  Memory that lasts.
+                </div>
+              </div>
+              <p class="spec-note">
+                Set the serif at <code>112%</code>, weight <code>400</code>,
+                tracking <code>normal</code>. Never bold it, never set a
+                sentence in it.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           Colour
+           ================================================================ -->
+      <section id="colour" class="section">
+        <div class="frame">
+          <div class="section-head">
+            <span class="kicker">02 · Colour</span>
+            <h2>One canvas, one ink, one accent.</h2>
+            <p>
+              Everything else is a tint or a semantic signal. The accent should
+              cover about 5% of the page; if a screenshot looks purple, you have
+              gone too far.
+            </p>
+          </div>
+
+          <div class="swatches" id="swatches">
+            <button class="swatch" data-hex="#F7F7F5" type="button">
+              <span class="swatch-color" style="background: #f7f7f5"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">Background</span>
+                <span class="swatch-hex">#F7F7F5</span>
+                <span class="swatch-role">Warm paper canvas</span>
+              </span>
+            </button>
+
+            <button class="swatch" data-hex="#0A0A0F" type="button">
+              <span class="swatch-color" style="background: #0a0a0f"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">Ink</span>
+                <span class="swatch-hex">#0A0A0F</span>
+                <span class="swatch-role">Text, wordmark, dark button</span>
+              </span>
+            </button>
+
+            <button class="swatch" data-hex="#5E6472" type="button">
+              <span class="swatch-color" style="background: #5e6472"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">Muted</span>
+                <span class="swatch-hex">#5E6472</span>
+                <span class="swatch-role">Secondary body copy</span>
+              </span>
+            </button>
+
+            <button class="swatch" data-hex="#69707E" type="button">
+              <span class="swatch-color" style="background: #69707e"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">Faint</span>
+                <span class="swatch-hex">#69707E</span>
+                <span class="swatch-role">Metadata, small mono</span>
+              </span>
+            </button>
+
+            <button class="swatch" data-hex="#E5E5E5" type="button">
+              <span class="swatch-color" style="background: #e5e5e5"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">Line</span>
+                <span class="swatch-hex">#E5E5E5</span>
+                <span class="swatch-role">1px borders and rules</span>
+              </span>
+            </button>
+
+            <button class="swatch" data-hex="#EFEFEC" type="button">
+              <span class="swatch-color" style="background: #efefec"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">Hairline</span>
+                <span class="swatch-hex">#EFEFEC</span>
+                <span class="swatch-role">Quiet internal divider</span>
+              </span>
+            </button>
+
+            <button class="swatch" data-hex="#4F46E5" type="button">
+              <span class="swatch-color" style="background: #4f46e5"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">Accent</span>
+                <span class="swatch-hex">#4F46E5</span>
+                <span class="swatch-role">Links · kickers · focus</span>
+              </span>
+            </button>
+
+            <button class="swatch" data-hex="#EEF0FF" type="button">
+              <span class="swatch-color" style="background: #eef0ff"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">Accent soft</span>
+                <span class="swatch-hex">#EEF0FF</span>
+                <span class="swatch-role">Badges, tinted surfaces</span>
+              </span>
+            </button>
+
+            <button class="swatch" data-hex="#3730A3" type="button">
+              <span class="swatch-color" style="background: #3730a3"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">Accent ink</span>
+                <span class="swatch-hex">#3730A3</span>
+                <span class="swatch-role">Kickers and inline links</span>
+              </span>
+            </button>
+
+            <button class="swatch" data-hex="#18181B" type="button">
+              <span class="swatch-color" style="background: #18181b"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">Button</span>
+                <span class="swatch-hex">#18181B</span>
+                <span class="swatch-role">Primary action base</span>
+              </span>
+            </button>
+
+            <button class="swatch" data-hex="#FCFCFB" type="button">
+              <span class="swatch-color" style="background: #fcfcfb"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">Card</span>
+                <span class="swatch-hex">#FCFCFB</span>
+                <span class="swatch-role">Warm white card tint</span>
+              </span>
+            </button>
+
+            <button class="swatch" data-hex="#22C55E" type="button">
+              <span class="swatch-color" style="background: #22c55e"></span>
+              <span class="swatch-meta">
+                <span class="swatch-name">Success</span>
+                <span class="swatch-hex">#22C55E</span>
+                <span class="swatch-role">Dots and fills; text #15803D</span>
+              </span>
+            </button>
+          </div>
+
+          <p class="motion-note" style="margin-top: 20px">
+            Click a swatch to copy its hex. Contrast ratios and semantic rules:
+            see <a class="link-underline" href="./docs/03-colors.md" style="color: var(--accent-ink)">docs/03-colors.md</a>.
+          </p>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           Type scale
+           ================================================================ -->
+      <section id="type" class="section band">
+        <div class="frame">
+          <div class="section-head">
+            <span class="kicker">03 · Typography</span>
+            <h2>Loud headlines, quiet copy.</h2>
+            <p>
+              A large display range, a narrow body range, and negative tracking
+              that increases with size. Weight stays at 500.
+            </p>
+          </div>
+
+          <div class="type-table">
+            <div class="type-row">
+              <div class="type-meta">
+                <strong>Display</strong>
+                60–66px · 1.05<br />
+                -0.035em · 500
+              </div>
+              <div class="sample-display">
+                Give your team a <span class="serif">system</span> that lasts.
+              </div>
+            </div>
+
+            <div class="type-row">
+              <div class="type-meta">
+                <strong>Band heading</strong>
+                46px · 1.10<br />
+                -0.030em · 500
+              </div>
+              <div class="sample-h2">
+                Other tools remember everything.<br />
+                Yours decides what still matters.
+              </div>
+            </div>
+
+            <div class="type-row">
+              <div class="type-meta">
+                <strong>Section heading</strong>
+                30–40px · 1.20<br />
+                -0.020em · 500
+              </div>
+              <div class="sample-h3">
+                From a signal to an answer. Nothing gets lost.
+              </div>
+            </div>
+
+            <div class="type-row">
+              <div class="type-meta">
+                <strong>Card title</strong>
+                19px · 1.30<br />
+                -0.010em · 500
+              </div>
+              <div class="sample-card">A short, specific claim</div>
+            </div>
+
+            <div class="type-row">
+              <div class="type-meta">
+                <strong>Body</strong>
+                16px · 1.70<br />
+                0 · 400
+              </div>
+              <div class="sample-body">
+                Body copy stays small and calm. The whitespace around it is what
+                makes the page feel generous; the headline is what makes it
+                feel confident.
+              </div>
+            </div>
+
+            <div class="type-row">
+              <div class="type-meta">
+                <strong>UI</strong>
+                13.5px · 1.40<br />
+                0 · 500
+              </div>
+              <div class="sample-ui">Read docs → &nbsp; · &nbsp; Get started</div>
+            </div>
+
+            <div class="type-row">
+              <div class="type-meta">
+                <strong>Kicker</strong>
+                10.5–11px · 1.20<br />
+                0.16em · 700 · uppercase
+              </div>
+              <div class="sample-kicker">The recall path</div>
+            </div>
+
+            <div class="type-row">
+              <div class="type-meta">
+                <strong>Mono data</strong>
+                11–12px · 1.60<br />
+                0 · 400
+              </div>
+              <div class="sample-mono">
+                a sentence in → an embedded, addressable memory out
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           Components
+           ================================================================ -->
+      <section id="components" class="section">
+        <div class="frame">
+          <div class="section-head">
+            <span class="kicker">04 · Components</span>
+            <h2>The page is a set of chapters.</h2>
+            <p>
+              Different shapes, one frame. Hairlines instead of boxes; one
+              accent border for the winning comparison card; one white panel for
+              the close.
+            </p>
+          </div>
+
+          <div class="component-stack">
+            <!-- Nav -->
+            <div class="demo">
+              <div class="demo-label">
+                <h3>Navigation</h3>
+                <span>fixed · 64px · solid paper</span>
+              </div>
+              <div class="nav-mock">
+                <div class="wordmark">YourProduct</div>
+                <div class="run">
+                  <a class="link-underline" href="#">How it works</a>
+                  <a class="link-underline" href="#">Features</a>
+                  <span class="nav-mark" aria-hidden="true"></span>
+                  <a class="link-underline" href="#">Pricing</a>
+                  <a class="link-underline" href="#">GitHub</a>
+                </div>
+                <div class="right">
+                  <a href="#" class="preview-cta">Read docs</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="demo">
+              <div class="demo-label">
+                <h3>Buttons and chips</h3>
+                <span>8px radius · one primary per view</span>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+                <a href="#" class="btn btn-primary">Primary action →</a>
+                <a href="#" class="btn btn-secondary">Secondary</a>
+                <a href="#" class="link-underline" style="font-size: 13.5px; font-weight: 500; color: var(--muted)">Text link</a>
+              </div>
+              <ul class="chips" style="margin-top: 24px">
+                <li class="chip">Postgres + pgvector</li>
+                <li class="chip">384-d embeddings</li>
+                <li class="chip">No lock-in</li>
+              </ul>
+            </div>
+
+            <!-- Trio -->
+            <div class="demo">
+              <div class="demo-label">
+                <h3>Three numbered columns</h3>
+                <span>white band · top rules · one idea each</span>
+              </div>
+              <div class="trio">
+                <article class="trio-card">
+                  <div class="trio-top">
+                    <span class="trio-num">01</span>
+                    <span class="trio-kicker">What it is</span>
+                  </div>
+                  <h4>A memory service for agents</h4>
+                  <p>
+                    A short paragraph that names the category, the mechanism and
+                    the boundary. No repeated headline.
+                  </p>
+                </article>
+                <article class="trio-card">
+                  <div class="trio-top">
+                    <span class="trio-num">02</span>
+                    <span class="trio-kicker">Why it matters</span>
+                  </div>
+                  <h4>Context windows forget</h4>
+                  <p>
+                    The default approach fails in a specific way. Name it, then
+                    name the mechanism that fixes it.
+                  </p>
+                </article>
+                <article class="trio-card">
+                  <div class="trio-top">
+                    <span class="trio-num">03</span>
+                    <span class="trio-kicker">How to explore</span>
+                  </div>
+                  <h4>Read, run, or poke it</h4>
+                  <p>
+                    Two or three real ways in: read the docs, run the example, or
+                    open the live demo.
+                  </p>
+                </article>
+              </div>
+            </div>
+
+            <!-- Comparison -->
+            <div class="demo">
+              <div class="demo-label">
+                <h3>Comparison</h3>
+                <span>parallel rows · winner gets one accent border</span>
+              </div>
+              <div class="compare">
+                <article class="compare-card">
+                  <h4>Other tools</h4>
+                  <ul class="compare-list">
+                    <li><span class="mark-x" aria-hidden="true">✗</span> Search by raw similarity</li>
+                    <li><span class="mark-x" aria-hidden="true">✗</span> Stale results outrank fresh ones</li>
+                    <li><span class="mark-x" aria-hidden="true">✗</span> Conflicts overwrite silently</li>
+                    <li><span class="mark-x" aria-hidden="true">✗</span> Hard deletes, no audit trail</li>
+                  </ul>
+                </article>
+                <article class="compare-card win">
+                  <h4>YourProduct <span class="badge">Open source</span></h4>
+                  <ul class="compare-list">
+                    <li><span class="mark-check" aria-hidden="true">✓</span> Ranked by relevance and recency</li>
+                    <li><span class="mark-check" aria-hidden="true">✓</span> Fresh results win ties, with a bound</li>
+                    <li><span class="mark-check" aria-hidden="true">✓</span> Conflicts flagged, never auto-resolved</li>
+                    <li><span class="mark-check" aria-hidden="true">✓</span> Soft-delete keeps the audit trail</li>
+                  </ul>
+                </article>
+              </div>
+            </div>
+
+            <!-- Quote -->
+            <div class="demo">
+              <div class="demo-label">
+                <h3>Pull quote</h3>
+                <span>centred · 30px · sans · no attribution</span>
+              </div>
+              <div class="quote">
+                <span class="kicker" style="color: var(--muted); font-family: var(--sans); font-size: 11px">Design principle</span>
+                <p>
+                  A system that forgets is a system you can trust. Rank by
+                  relevance, not recency, and when two records disagree, flag the
+                  conflict instead of quietly picking a winner.
+                </p>
+              </div>
+            </div>
+
+            <!-- CTA -->
+            <div class="demo" style="padding: 0; border: 0; background: transparent">
+              <div class="cta-panel">
+                <h3>Give your team something to <span class="serif-plain">remember</span>.</h3>
+                <p>
+                  One self-contained system. No extra service to babysit. A
+                  ranking rule you can read end to end.
+                </p>
+                <div class="cta-actions">
+                  <a href="#" class="btn btn-primary">Get started</a>
+                  <a href="#" class="btn btn-secondary">Read the docs</a>
+                  <a href="#" class="btn btn-secondary">Live demo</a>
+                </div>
+                <div class="next-steps">
+                  <div class="label">The simplest next step</div>
+                  <ol>
+                    <li>
+                      <a href="#" class="next-step"><span class="n">1</span><span class="t">Clone the repo</span></a>
+                      <span class="next-arrow" aria-hidden="true">→</span>
+                    </li>
+                    <li>
+                      <a href="#" class="next-step"><span class="n">2</span><span class="t">Run the example</span></a>
+                      <span class="next-arrow" aria-hidden="true">→</span>
+                    </li>
+                    <li>
+                      <a href="#" class="next-step"><span class="n">3</span><span class="t">Call the API</span></a>
+                    </li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           Marquee
+           ================================================================ -->
+      <section class="marquee-band" aria-label="The workflow">
+        <div class="marquee-row">
+          <div class="marquee-pill">The workflow</div>
+          <div class="marquee-mask">
+            <div class="marquee-track">
+              <div class="marquee-set">
+                <span>Capture</span>
+                <span>Parse</span>
+                <span>Index</span>
+                <span class="accent">Rank</span>
+                <span class="success">Deliver</span>
+                <span>Review</span>
+              </div>
+              <div class="marquee-set" aria-hidden="true">
+                <span>Capture</span>
+                <span>Parse</span>
+                <span>Index</span>
+                <span class="accent">Rank</span>
+                <span class="success">Deliver</span>
+                <span>Review</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="marquee-caption">
+          Every write and every search moves through the same six steps.
+        </p>
+      </section>
+
+      <!-- ================================================================
+           Motion
+           ================================================================ -->
+      <section id="motion" class="section">
+        <div class="frame">
+          <div class="section-head">
+            <span class="kicker">05 · Motion</span>
+            <h2>Reveal once. Then settle.</h2>
+            <p>
+              A 14px fade-up over 0.7s with a strong ease-out. It fires at 12%
+              visibility, once. Buttons lift 1px; the marquee drifts and pauses
+              on hover. Everything stops under reduced motion.
+            </p>
+          </div>
+
+          <div class="motion-grid">
+            <div class="motion-card" data-reveal>
+              <h4>14px</h4>
+              <p>The reveal distance. A settle, not a slide.</p>
+            </div>
+            <div class="motion-card" data-reveal>
+              <h4>0.7s</h4>
+              <p>A slow ease-out that makes the page feel expensive.</p>
+            </div>
+            <div class="motion-card" data-reveal>
+              <h4>Once</h4>
+              <p>The observer unobserves after the first entry.</p>
+            </div>
+          </div>
+
+          <div class="motion-actions">
+            <button class="btn btn-secondary" id="replay" type="button">Replay the reveal</button>
+            <span class="motion-note">cubic-bezier(0.16, 1, 0.3, 1) · threshold 0.12</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================================
+           Footer
+           ================================================================ -->
+      <footer class="footer">
+        <div class="frame">
+          <div class="footer-top">
+            <div>
+              <div class="footer-brand">Landing Kit</div>
+              <p>
+                Extracted from Mnemo. The system is portable; replace the name,
+                the copy and the product mock.
+              </p>
+            </div>
+            <div class="footer-cols">
+              <div class="footer-col">
+                <h4>Docs</h4>
+                <ul>
+                  <li><a class="link-underline" href="./docs/01-design-language.md">Design language</a></li>
+                  <li><a class="link-underline" href="./docs/02-fonts.md">Fonts</a></li>
+                  <li><a class="link-underline" href="./docs/03-colors.md">Colour</a></li>
+                </ul>
+              </div>
+              <div class="footer-col">
+                <h4>Build</h4>
+                <ul>
+                  <li><a class="link-underline" href="./docs/09-page-recipe.md">Page recipe</a></li>
+                  <li><a class="link-underline" href="./docs/10-porting-guide.md">Porting guide</a></li>
+                  <li><a class="link-underline" href="./CHEATSHEET.md">Cheat sheet</a></li>
+                </ul>
+              </div>
+              <div class="footer-col">
+                <h4>Source</h4>
+                <ul>
+                  <li><a class="link-underline" href="../app/globals.css">globals.css</a></li>
+                  <li><a class="link-underline" href="../tailwind.config.ts">tailwind.config.ts</a></li>
+                  <li><a class="link-underline" href="./README.md">README</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="footer-bottom">
+            <span>Mnemo / Specboard editorial developer-tool aesthetic · 2026</span>
+            <a class="link-underline" href="#top">Back to top</a>
+          </div>
+        </div>
+      </footer>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">Copied</div>
+
+    <script>
+      /* ---------------------------------------------------------------
+         Swatch copy
+         --------------------------------------------------------------- */
+      (function () {
+        const toast = document.getElementById("toast");
+        let timer;
+
+        function showToast(text) {
+          if (!toast) return;
+          toast.textContent = text;
+          toast.classList.add("show");
+          clearTimeout(timer);
+          timer = setTimeout(function () {
+            toast.classList.remove("show");
+          }, 1400);
+        }
+
+        document.querySelectorAll(".swatch[data-hex]").forEach(function (button) {
+          button.addEventListener("click", function () {
+            const hex = button.getAttribute("data-hex");
+            if (!hex) return;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(hex).then(
+                function () {
+                  showToast("Copied " + hex);
+                },
+                function () {
+                  showToast(hex);
+                }
+              );
+            } else {
+              showToast(hex);
+            }
+          });
+        });
+      })();
+
+      /* ---------------------------------------------------------------
+         Reveal
+         --------------------------------------------------------------- */
+      (function () {
+        const cards = Array.from(document.querySelectorAll("[data-reveal]"));
+        const reduce =
+          window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        if (reduce) {
+          cards.forEach(function (card) {
+            card.classList.add("is-visible");
+          });
+        } else if ("IntersectionObserver" in window) {
+          const observer = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add("is-visible");
+                  observer.unobserve(entry.target);
+                }
+              });
+            },
+            { threshold: 0.12 }
+          );
+
+          cards.forEach(function (card) {
+            observer.observe(card);
+          });
+        } else {
+          cards.forEach(function (card) {
+            card.classList.add("is-visible");
+          });
+        }
+
+        const replay = document.getElementById("replay");
+        if (replay) {
+          replay.addEventListener("click", function () {
+            if (reduce) {
+              showToastOnce("Reduced motion is on");
+              return;
+            }
+
+            cards.forEach(function (card, index) {
+              card.classList.remove("is-visible");
+              card.style.animationDelay = index * 90 + "ms";
+            });
+
+            // Force a reflow so the animation can restart.
+            void cards[0].offsetWidth;
+
+            requestAnimationFrame(function () {
+              cards.forEach(function (card) {
+                card.classList.add("is-visible");
+              });
+            });
+          });
+        }
+
+        function showToastOnce(text) {
+          const toast = document.getElementById("toast");
+          if (!toast) return;
+          toast.textContent = text;
+          toast.classList.add("show");
+          setTimeout(function () {
+            toast.classList.remove("show");
+          }, 1400);
+        }
+      })();
+    </script>
+  </body>
+</html>

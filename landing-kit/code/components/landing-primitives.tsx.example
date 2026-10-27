@@ -1,0 +1,266 @@
+import React from "react";
+
+/**
+ * Landing Kit — primitives.
+ *
+ * Small, dependency-free building blocks for the editorial landing system.
+ * Rename this file to `.tsx` in the destination project, then compose sections
+ * from these primitives and the recipes in docs/06-components.md.
+ *
+ * These are intentionally plain. Add variants only when a second real use case
+ * appears; the original system is a handful of class strings, not a component
+ * library.
+ */
+
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+/* -------------------------------------------------------------------------- */
+/* Layout                                                                      */
+/* -------------------------------------------------------------------------- */
+
+export function Frame({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cx("mx-auto w-full max-w-frame px-6", className)}>
+      {children}
+    </div>
+  );
+}
+
+export function Section({
+  id,
+  children,
+  band = false,
+  className,
+}: {
+  id?: string;
+  children: React.ReactNode;
+  /** White full-bleed band, separated by hairlines. */
+  band?: boolean;
+  className?: string;
+}) {
+  return (
+    <section
+      id={id}
+      className={cx(
+        "w-full scroll-mt-16",
+        band && "border-y border-line bg-white",
+        className
+      )}
+    >
+      <Frame className="pb-16 pt-12 md:pb-20 md:pt-16">{children}</Frame>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Type                                                                        */
+/* -------------------------------------------------------------------------- */
+
+export function Kicker({
+  children,
+  tone = "muted",
+  mono = false,
+  className,
+}: {
+  children: React.ReactNode;
+  tone?: "muted" | "accent";
+  mono?: boolean;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cx(
+        mono
+          ? "font-mono text-[10.5px] font-bold uppercase tracking-[0.16em]"
+          : "text-[11px] font-bold uppercase tracking-[0.16em]",
+        tone === "accent" ? "text-accent-ink" : "text-muted",
+        className
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+export function DisplayHeading({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <h1
+      className={cx(
+        "text-[40px] font-medium leading-[1.05] tracking-[-0.035em] text-ink sm:text-[52px] lg:text-[60px] xl:text-[66px]",
+        className
+      )}
+    >
+      {children}
+    </h1>
+  );
+}
+
+export function SectionHeading({
+  children,
+  className,
+  id,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  id?: string;
+}) {
+  return (
+    <h2
+      id={id}
+      className={cx(
+        "text-[32px] font-medium leading-[1.2] text-ink text-balance md:text-[40px]",
+        className
+      )}
+    >
+      {children}
+    </h2>
+  );
+}
+
+export function CardHeading({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <h3
+      className={cx(
+        "text-[19px] font-medium leading-snug tracking-[-0.01em] text-ink",
+        className
+      )}
+    >
+      {children}
+    </h3>
+  );
+}
+
+export function Body({
+  children,
+  className,
+  size = "sm",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  /** `sm` 13.5px · `md` 14.5px · `lg` 15–16px */
+  size?: "sm" | "md" | "lg";
+}) {
+  const sizes = {
+    sm: "text-[13.5px] leading-[1.7]",
+    md: "text-[14.5px] leading-[1.75]",
+    lg: "text-[15px] leading-[1.7] md:text-[16px]",
+  } as const;
+
+  return <p className={cx(sizes[size], "text-muted", className)}>{children}</p>;
+}
+
+/** One italic serif word, inside a sans heading. */
+export function Serif({
+  children,
+  size = "display",
+}: {
+  children: React.ReactNode;
+  /** `display` adds the 112% optical bump; `plain` keeps the current size. */
+  size?: "display" | "plain";
+}) {
+  return (
+    <span
+      className={cx(
+        "italic font-normal tracking-normal",
+        size === "display" && "text-[112%]"
+      )}
+      style={{ fontFamily: "var(--font-redaction), Georgia, serif" }}
+    >
+      {children}
+    </span>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Controls                                                                    */
+/* -------------------------------------------------------------------------- */
+
+type ButtonProps = React.AnchorHTMLAttributes<HTMLAnchorElement> & {
+  arrow?: boolean;
+};
+
+export function PrimaryButton({
+  children,
+  className,
+  arrow = false,
+  ...props
+}: ButtonProps) {
+  return (
+    <a
+      className={cx(
+        "inline-flex items-center justify-center gap-2 rounded-lg bg-[#18181B] px-5 py-2.5",
+        "text-[14px] font-medium text-[#FAFAFA]",
+        "shadow-[0_4px_14px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.1)]",
+        "ring-1 ring-inset ring-white/10",
+        "transition-all hover:-translate-y-px hover:bg-[#27272A] hover:shadow-md",
+        "motion-reduce:transition-none motion-reduce:hover:translate-y-0",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      {arrow && (
+        <span aria-hidden="true" className="text-[15px] leading-none">
+          →
+        </span>
+      )}
+    </a>
+  );
+}
+
+export function SecondaryButton({
+  children,
+  className,
+  ...props
+}: ButtonProps) {
+  return (
+    <a
+      className={cx(
+        "inline-flex items-center justify-center gap-2 rounded-lg border border-line bg-white px-5 py-2.5",
+        "text-[14px] font-medium text-ink shadow-soft",
+        "transition-all hover:-translate-y-px hover:bg-black/[0.03]",
+        "motion-reduce:transition-none motion-reduce:hover:translate-y-0",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </a>
+  );
+}
+
+export function Chip({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="rounded-[6px] border border-line bg-white px-2.5 py-[5px] text-[12px] font-medium leading-none tracking-[-0.005em] text-ink/75 shadow-[0_1px_1.5px_rgba(10,10,15,0.04)]">
+      {children}
+    </li>
+  );
+}
+
+export function Badge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-ink">
+      {children}
+    </span>
+  );
+}
