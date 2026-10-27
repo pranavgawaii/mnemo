@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     # Contradiction detection
     contradiction_sim_threshold: float = 0.82
 
+    # Logging
+    log_json: bool = True
+    log_level: str = "info"
+
 
 @lru_cache
 def get_settings() -> Settings:
