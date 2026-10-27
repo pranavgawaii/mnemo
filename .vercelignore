@@ -4,6 +4,8 @@
 # Paths are anchored to the repo root: an unanchored `docs/` also matches
 # `app/docs/`, which would remove the /docs route from the deployment.
 /backend/
+/sdk/
+/landing-kit/
 /.venv/
 __pycache__/
 *.pyc
