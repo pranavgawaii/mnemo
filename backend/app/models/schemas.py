@@ -103,6 +103,31 @@ class MemoryCreateResult(BaseModel):
     contradictions: list["ContradictionOut"] = Field(default_factory=list)
 
 
+class BulkMemoryRequest(BaseModel):
+    """Payload for adding many memories in one call."""
+
+    items: list[MemoryCreate] = Field(..., min_length=1, max_length=100)
+
+
+class BulkMemoryResultItem(BaseModel):
+    """Per-item outcome of a bulk add. Items are independent: one failing item
+    never rolls back the others."""
+
+    index: int
+    status: str  # "created" or "error"
+    memory: MemoryOut | None = None
+    contradictions: list["ContradictionOut"] = Field(default_factory=list)
+    error: str | None = None
+
+
+class BulkMemoryResult(BaseModel):
+    """Aggregate result of a bulk add."""
+
+    created: int
+    errors: int
+    results: list[BulkMemoryResultItem]
+
+
 # --------------------------------------------------------------------------- #
 # Search
 # --------------------------------------------------------------------------- #
@@ -256,3 +281,4 @@ class NamespaceStats(BaseModel):
 
 # Rebuild forward reference (MemoryCreateResult -> ContradictionOut).
 MemoryCreateResult.model_rebuild()
+BulkMemoryResultItem.model_rebuild()

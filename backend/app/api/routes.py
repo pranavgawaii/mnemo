@@ -16,6 +16,9 @@ from sqlalchemy.orm import Session
 from app.api.deps import require_api_key
 from app.db.session import get_db
 from app.models.schemas import (
+    BulkMemoryRequest,
+    BulkMemoryResult,
+    BulkMemoryResultItem,
     ContradictionExportItem,
     ContradictionList,
     ContradictionOut,
@@ -92,6 +95,43 @@ def add_memory(payload: MemoryCreate, db: Session = Depends(get_db)) -> MemoryCr
         memory=MemoryOut.model_validate(memory),
         contradictions=[ContradictionOut.model_validate(c) for c in contradictions],
     )
+
+
+@router.post("/memories/bulk", response_model=BulkMemoryResult)
+def add_memories_bulk(payload: BulkMemoryRequest, db: Session = Depends(get_db)) -> BulkMemoryResult:
+    """Add many memories in one call, each through the normal write path.
+
+    Items are processed independently: a failure (bad content, embed error)
+    marks that item as ``error`` and never rolls back the others. Contradiction
+    flags created by earlier items in the same batch are visible to later ones.
+    """
+    results: list[BulkMemoryResultItem] = []
+    created = 0
+    errors = 0
+    for index, item in enumerate(payload.items):
+        try:
+            memory, contradictions = memory_service.add_memory(
+                db,
+                content=item.content,
+                namespace=item.namespace,
+                importance=item.importance,
+                tags=list(item.tags),
+                meta=item.meta,
+            )
+        except (ValueError, RuntimeError) as exc:
+            errors += 1
+            results.append(BulkMemoryResultItem(index=index, status="error", error=str(exc)))
+            continue
+        created += 1
+        results.append(
+            BulkMemoryResultItem(
+                index=index,
+                status="created",
+                memory=MemoryOut.model_validate(memory),
+                contradictions=[ContradictionOut.model_validate(c) for c in contradictions],
+            )
+        )
+    return BulkMemoryResult(created=created, errors=errors, results=results)
 
 
 @router.post("/memories/search", response_model=SearchResponse)
