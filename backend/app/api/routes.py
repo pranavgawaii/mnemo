@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.orm import Session
 
+from app.api import pagination
 from app.api.deps import authenticate, require_scope
 from app.db.session import get_db
 from app.models.schemas import (
@@ -256,10 +257,28 @@ def list_memories(
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     tags: str | None = Query(default=None, description="Comma-separated tag filter (ANY match)."),
+    cursor: str | None = Query(default=None, description="Opaque cursor from a previous page."),
     db: Session = Depends(get_db),
 ) -> MemoryList:
     """Paginated list of active memories for a namespace, newest first."""
     tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else None
+    if cursor is not None:
+        try:
+            items, next_cursor = pagination.list_memories_page(
+                db, namespace=namespace, limit=limit, cursor=cursor, tags=tag_list
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+        _, total = memory_service.list_memories(
+            db, namespace=namespace, limit=1, offset=0, tags=tag_list
+        )
+        return MemoryList(
+            items=[MemoryOut.model_validate(m) for m in items],
+            total=total,
+            limit=limit,
+            offset=0,
+            next_cursor=next_cursor,
+        )
     items, total = memory_service.list_memories(
         db, namespace=namespace, limit=limit, offset=offset, tags=tag_list
     )
@@ -351,9 +370,27 @@ def list_contradictions(
     status_filter: str | None = Query(default="open", alias="status"),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    cursor: str | None = Query(default=None, description="Opaque cursor from a previous page."),
     db: Session = Depends(get_db),
 ) -> ContradictionList:
     """Paginated list of flagged contradictions (defaults to open ones)."""
+    if cursor is not None:
+        try:
+            items, next_cursor = pagination.list_contradictions_page(
+                db, namespace=namespace, limit=limit, cursor=cursor, status=status_filter
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+        _, total = memory_service.list_contradictions(
+            db, namespace=namespace, status=status_filter, limit=1, offset=0
+        )
+        return ContradictionList(
+            items=[ContradictionOut.model_validate(c) for c in items],
+            total=total,
+            limit=limit,
+            offset=0,
+            next_cursor=next_cursor,
+        )
     items, total = memory_service.list_contradictions(
         db,
         namespace=namespace,

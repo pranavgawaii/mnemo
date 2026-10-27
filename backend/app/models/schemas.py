@@ -107,6 +107,8 @@ class MemoryList(BaseModel):
     total: int
     limit: int
     offset: int
+    # Set only with cursor pagination: pass it back as ?cursor= for the next page.
+    next_cursor: str | None = None
 
 
 class MemoryCreateResult(BaseModel):
@@ -205,6 +207,7 @@ class ContradictionList(BaseModel):
     total: int
     limit: int
     offset: int
+    next_cursor: str | None = None
 
 
 class ResolveRequest(BaseModel):
