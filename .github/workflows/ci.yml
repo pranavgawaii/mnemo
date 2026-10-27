@@ -71,6 +71,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-api.txt
 
+      # Every push migrates a real pgvector database, so a broken Alembic
+      # revision fails CI instead of a production deploy.
+      - name: Run migrations
+        run: alembic upgrade head
+
       - name: Run the full suite
         env:
           DATABASE_URL: postgresql+psycopg://mnemo:mnemo@localhost:5432/mnemo

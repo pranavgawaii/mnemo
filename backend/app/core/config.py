@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     # path stays the source of truth (see app/core/hybrid.py).
     keyword_weight: float = 0.25
 
+    # ANN (HNSW) query-time recall knob. The index itself is created by
+    # migration 0009 with m=16, ef_construction=64. Higher ef_search = better
+    # recall, slower scan. Guarded: only sent to Postgres when it accepts it.
+    ann_ef_search: int = 100
+
     # Logging
     log_json: bool = True
     log_level: str = "info"

@@ -230,6 +230,10 @@ def search(
     ]
     _tag_condition(conditions, tags)
 
+    # Ask the HNSW index for higher recall; ignored (harmlessly) when the
+    # extension or the GUC is unavailable.
+    _tune_ann(db)
+
     # Over-fetch by raw vector distance, then re-rank by relevance so decay and
     # importance can reorder the head of the list.
     stmt = (
@@ -266,6 +270,17 @@ def search(
 
     scored.sort(key=lambda row: row[2], reverse=True)
     return scored[:limit]
+
+
+def _tune_ann(db: Session) -> None:
+    """Apply ann_ef_search to this transaction; silently ignore unsupported GUCs."""
+    from sqlalchemy import text as sql_text
+
+    try:
+        db.execute(sql_text("SET LOCAL hnsw.ef_search = :ef"), {"ef": settings.ann_ef_search})
+    except Exception:
+        db.rollback()
+        db.execute(sql_text("SELECT 1"))  # reopen the transaction cleanly
 
 
 def _with_keyword_boost(
