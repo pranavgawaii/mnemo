@@ -53,6 +53,8 @@ class Memory(Base):
     meta: Mapped[dict[str, object]] = mapped_column(
         "metadata", JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
     )
+    # Optional TTL. On expiry the memory is soft-deleted by the sweep.
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

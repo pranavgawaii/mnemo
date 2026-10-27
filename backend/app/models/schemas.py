@@ -38,6 +38,9 @@ class MemoryCreate(BaseModel):
     # JSON attribute is `meta` (SQLAlchemy reserves `metadata`); the API field
     # is "metadata" via the alias.
     meta: dict[str, Any] = Field(default_factory=dict, alias="metadata")
+    expires_at: datetime | None = Field(
+        default=None, description="Optional TTL; the sweep soft-deletes expired memories."
+    )
 
 
 class MemoryOut(BaseModel):
@@ -59,6 +62,7 @@ class MemoryOut(BaseModel):
         validation_alias=AliasChoices("meta", "metadata"),
         serialization_alias="metadata",
     )
+    expires_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -77,12 +81,21 @@ class MemoryUpdate(BaseModel):
     importance: int | None = Field(default=None, ge=1, le=5)
     tags: list[Tag] | None = Field(default=None, max_length=10)
     meta: dict[str, Any] | None = Field(default=None, alias="metadata")
+    expires_at: datetime | None = Field(default=None)
 
     @model_validator(mode="after")
     def require_a_change(self) -> "MemoryUpdate":
-        if self.content is None and self.importance is None and self.tags is None and self.meta is None:
+        if (
+            self.content is None
+            and self.importance is None
+            and self.tags is None
+            and self.meta is None
+            and self.expires_at is None
+            and "expires_at" not in self.model_fields_set
+        ):
             raise ValueError(
-                "At least one of 'content', 'importance', 'tags' or 'metadata' must be provided."
+                "At least one of 'content', 'importance', 'tags', 'metadata' or "
+                "'expires_at' must be provided."
             )
         return self
 
@@ -227,6 +240,7 @@ class MemoryExportItem(BaseModel):
         validation_alias=AliasChoices("meta", "metadata"),
         serialization_alias="metadata",
     )
+    expires_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 

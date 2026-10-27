@@ -100,6 +100,16 @@ def _stats(args: argparse.Namespace) -> int:
     return 0
 
 
+def _sweep_expired(args: argparse.Namespace) -> int:
+    db = SessionLocal()
+    try:
+        expired = memory_service.sweep_expired(db)
+    finally:
+        db.close()
+    print(f"Soft-deleted {expired} expired memories.")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="mnemo",
@@ -134,6 +144,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     stats_parser.add_argument("--namespace", default="default")
     stats_parser.set_defaults(handler=_stats)
+
+    sweep_parser = subparsers.add_parser(
+        "sweep-expired",
+        help="Soft-delete every memory whose expires_at has passed. Cron this.",
+    )
+    sweep_parser.set_defaults(handler=_sweep_expired)
 
     return parser
 

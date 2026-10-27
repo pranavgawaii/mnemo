@@ -28,6 +28,21 @@ _CONTRADICTION_CANDIDATES = 5
 # How many nearest neighbours to pull before re-ranking by relevance in search.
 _SEARCH_OVERFETCH = 4
 
+# Sentinel distinguishing "expires_at not provided" from "reset to no expiry".
+_UNSET: object = object()
+
+
+def _utc(value: datetime) -> datetime:
+    """Coerce a possibly-naive datetime to UTC."""
+    return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+
+
+def _not_expired() -> ColumnElement[bool]:
+    """Live filter: drop rows whose TTL passed before the sweep ran."""
+    from sqlalchemy import or_
+
+    return or_(Memory.expires_at.is_(None), Memory.expires_at > datetime.now(timezone.utc))
+
 
 def _age_days(created_at: datetime) -> float:
     """Age of a memory in days, from an aware ``created_at`` to now (UTC)."""
@@ -44,6 +59,7 @@ def add_memory(
     importance: int,
     tags: list[str] | None = None,
     meta: dict[str, object] | None = None,
+    expires_at: datetime | None = None,
     llm_check: LlmCheck | None = None,
 ) -> tuple[Memory, list[Contradiction]]:
     """Embed and persist a memory, flagging any contradictions it introduces.
@@ -59,6 +75,7 @@ def add_memory(
         embedding=vector,
         tags=tags or [],
         meta=meta or {},
+        expires_at=_utc(expires_at) if expires_at else None,
     )
     db.add(memory)
     db.flush()  # assign id / created_at without committing yet
@@ -174,6 +191,7 @@ def search(
     conditions: list[ColumnElement[bool]] = [
         Memory.namespace == namespace,
         Memory.is_active.is_(True),
+        _not_expired(),
     ]
     _tag_condition(conditions, tags)
 
@@ -217,6 +235,7 @@ def list_memories(
     conditions: list[ColumnElement[bool]] = [Memory.namespace == namespace]
     if not include_inactive:
         conditions.append(Memory.is_active.is_(True))
+        conditions.append(_not_expired())
     _tag_condition(conditions, tags)
 
     total = db.scalar(
@@ -273,6 +292,7 @@ def update_memory(
     importance: int | None = None,
     tags: list[str] | None = None,
     meta: dict[str, object] | None = None,
+    expires_at: datetime | None | object = _UNSET,
 ) -> Memory | None:
     """Partially update a memory, re-embedding and re-checking content changes.
 
@@ -290,6 +310,8 @@ def update_memory(
         memory.tags = list(tags)
     if meta is not None:
         memory.meta = dict(meta)
+    if expires_at is not _UNSET:
+        memory.expires_at = _utc(expires_at) if expires_at else None  # type: ignore[arg-type]
 
     if content is not None and content != memory.content:
         memory.content = content
@@ -332,6 +354,32 @@ def list_contradictions(
         .offset(offset)
     ).scalars().all()
     return list(rows), int(total or 0)
+
+
+def sweep_expired(db: Session, *, now: datetime | None = None) -> int:
+    """Soft-delete every active memory whose TTL has passed. Returns the count.
+
+    Expiry is lazy everywhere else (search/list filter live), so this sweep only
+    exists for bookkeeping: metrics, exports and admin views stay accurate even
+    without a live query. Run it from the CLI on a cron, or as a background job.
+    """
+    moment = _utc(now) if now else datetime.now(timezone.utc)
+    rows = (
+        db.execute(
+            select(Memory).where(
+                Memory.is_active.is_(True),
+                Memory.expires_at.is_not(None),
+                Memory.expires_at <= moment,
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for memory in rows:
+        memory.is_active = False
+    if rows:
+        db.commit()
+    return len(rows)
 
 
 def resolve_contradiction(
@@ -494,6 +542,7 @@ def import_namespace(
                     is_active=mem_item.is_active,
                     tags=list(mem_item.tags),
                     meta=mem_item.meta,
+                    expires_at=mem_item.expires_at,
                     created_at=mem_item.created_at,
                     updated_at=mem_item.updated_at,
                 )

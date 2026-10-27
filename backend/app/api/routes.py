@@ -44,6 +44,7 @@ from app.models.schemas import (
     SearchResponse,
 )
 from app.services import api_key_service, memory_service, namespace_service
+from app.services.memory_service import _UNSET
 
 router = APIRouter(prefix="/v1", dependencies=[Depends(authenticate)])
 
@@ -182,6 +183,7 @@ def add_memory(payload: MemoryCreate, db: Session = Depends(get_db)) -> MemoryCr
         importance=payload.importance,
         tags=list(payload.tags),
         meta=payload.meta,
+        expires_at=payload.expires_at,
     )
     return MemoryCreateResult(
         memory=MemoryOut.model_validate(memory),
@@ -310,6 +312,11 @@ def update_memory(
         importance=payload.importance,
         tags=list(payload.tags) if payload.tags is not None else None,
         meta=payload.meta,
+        expires_at=(
+            payload.expires_at
+            if "expires_at" in payload.model_fields_set
+            else _UNSET
+        ),
     )
     if memory is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Memory not found.")
