@@ -7,10 +7,14 @@ import time
 import uuid
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.api.routes import router as api_router
+from app.core.config import settings
 from app.core.logging_setup import configure_logging
 from app.core.metrics import registry
 from app.db.session import get_db
@@ -24,18 +28,42 @@ app = FastAPI(
     "scoring, and contradiction detection.",
 )
 
+def _install_cors(application: FastAPI, origins: list[str]) -> None:
+    """Add CORS only when an allowlist is configured.
+
+    With no origins the API is same-origin only, which is the safe default.
+    Split out so tests can exercise the middleware on a fresh app instance.
+    """
+    if origins:
+        application.add_middleware(
+            CORSMiddleware,
+            allow_origins=origins,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+
+
+_install_cors(app, settings.cors_allow_origins)
+app.add_middleware(GZipMiddleware, minimum_size=1024)
+
 app.include_router(api_router)
 
 
 @app.middleware("http")
-async def attach_request_id_and_log(
-    request: Request, call_next
-) -> Response:
-    """Give every request an id and log the outcome as one structured line.
+async def harden_and_observe(request: Request, call_next) -> Response:
+    """Request-id + metrics + logging + body cap + security headers.
 
-    Honours an incoming ``X-Request-ID`` (correlates across service hops) and
-    always echoes the id back in the response header.
+    One middleware keeps ordering explicit: reject oversized bodies before the
+    route runs, decorate every response with the hardening headers, then
+    observe and log the outcome.
     """
+    content_length = request.headers.get("content-length")
+    if content_length and content_length.isdigit() and int(content_length) > settings.max_body_bytes:
+        return JSONResponse(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            content={"detail": "Request body too large."},
+        )
+
     request_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex
     start = time.perf_counter()
     try:
@@ -55,6 +83,9 @@ async def attach_request_id_and_log(
         )
         raise
     response.headers["X-Request-ID"] = request_id
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     duration_ms = (time.perf_counter() - start) * 1000
     _observe_metrics(request, response.status_code, duration_ms / 1000)
     _request_logger().info(

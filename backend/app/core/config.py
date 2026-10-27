@@ -40,6 +40,13 @@ class Settings(BaseSettings):
     log_json: bool = True
     log_level: str = "info"
 
+    # Hardening
+    # CORS allowlist as a JSON array, e.g. CORS_ALLOW_ORIGINS='["https://mnemo.dev"]'.
+    cors_allow_origins: list[str] = []
+    # Reject request bodies larger than this (413). Streaming bodies without a
+    # Content-Length are not inspected.
+    max_body_bytes: int = 1_048_576
+
 
 @lru_cache
 def get_settings() -> Settings:
