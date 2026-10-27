@@ -293,6 +293,9 @@ def list_memories(
 ) -> MemoryList:
     """Paginated list of active memories for a namespace, newest first."""
     tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else None
+    _, total = memory_service.list_memories(
+        db, namespace=namespace, limit=1, offset=0, tags=tag_list
+    )
     if cursor is not None:
         try:
             items, next_cursor = pagination.list_memories_page(
@@ -300,8 +303,18 @@ def list_memories(
             )
         except ValueError as exc:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
-        _, total = memory_service.list_memories(
-            db, namespace=namespace, limit=1, offset=0, tags=tag_list
+        return MemoryList(
+            items=[MemoryOut.model_validate(m) for m in items],
+            total=total,
+            limit=limit,
+            offset=0,
+            next_cursor=next_cursor,
+        )
+    if offset == 0:
+        # First keyset page: fetch limit+1 rows so the response can carry a
+        # cursor when more remain, letting clients walk by cursor from here on.
+        items, next_cursor = pagination.list_memories_page(
+            db, namespace=namespace, limit=limit, tags=tag_list
         )
         return MemoryList(
             items=[MemoryOut.model_validate(m) for m in items],
@@ -310,7 +323,7 @@ def list_memories(
             offset=0,
             next_cursor=next_cursor,
         )
-    items, total = memory_service.list_memories(
+    items, _ = memory_service.list_memories(
         db, namespace=namespace, limit=limit, offset=offset, tags=tag_list
     )
     return MemoryList(
@@ -413,6 +426,9 @@ def list_contradictions(
     db: Session = Depends(get_db),
 ) -> ContradictionList:
     """Paginated list of flagged contradictions (defaults to open ones)."""
+    _, total = memory_service.list_contradictions(
+        db, namespace=namespace, status=status_filter, limit=1, offset=0
+    )
     if cursor is not None:
         try:
             items, next_cursor = pagination.list_contradictions_page(
@@ -420,8 +436,18 @@ def list_contradictions(
             )
         except ValueError as exc:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
-        _, total = memory_service.list_contradictions(
-            db, namespace=namespace, status=status_filter, limit=1, offset=0
+        return ContradictionList(
+            items=[ContradictionOut.model_validate(c) for c in items],
+            total=total,
+            limit=limit,
+            offset=0,
+            next_cursor=next_cursor,
+        )
+    if offset == 0:
+        # First keyset page: fetch limit+1 rows so the response can carry a
+        # cursor when more remain.
+        items, next_cursor = pagination.list_contradictions_page(
+            db, namespace=namespace, limit=limit, status=status_filter
         )
         return ContradictionList(
             items=[ContradictionOut.model_validate(c) for c in items],
@@ -430,7 +456,7 @@ def list_contradictions(
             offset=0,
             next_cursor=next_cursor,
         )
-    items, total = memory_service.list_contradictions(
+    items, _ = memory_service.list_contradictions(
         db,
         namespace=namespace,
         status=status_filter,
