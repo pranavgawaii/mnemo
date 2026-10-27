@@ -79,8 +79,19 @@ def test_delivery_posts_signed_body(client, monkeypatch):
         "/v1/webhooks",
         json={"namespace": "wh-test-ns", "url": "https://hooks.example/mnemo"},
     )
+    # A contradicting pair is what enqueues the delivery job.
+    client.post("/v1/memories", json={"content": "Riya lives in Pune", "namespace": "wh-test-ns"})
+    client.post(
+        "/v1/memories",
+        json={"content": "Riya no longer lives in Pune", "namespace": "wh-test-ns"},
+    )
+
     with SessionLocal() as db:
-        webhook = db.execute(select(Webhook)).scalars().one()
+        webhook = (
+            db.execute(select(Webhook).where(Webhook.namespace == "wh-test-ns"))
+            .scalars()
+            .one()
+        )
         secret, url = webhook.secret, webhook.url
 
     sent: dict = {}
@@ -102,7 +113,15 @@ def test_delivery_posts_signed_body(client, monkeypatch):
     monkeypatch.setattr(httpx, "post", fake_post)
 
     with SessionLocal() as db:
-        job = db.execute(select(Job).where(Job.kind == "webhook.deliver")).scalars().one()
+        job = (
+            db.execute(
+                select(Job)
+                .where(Job.kind == "webhook.deliver")
+                .where(Job.payload["body"]["namespace"].as_string() == "wh-test-ns")
+            )
+            .scalars()
+            .one()
+        )
         webhook_service.deliver_job(job.payload)
 
     assert sent["url"] == url
@@ -123,6 +142,12 @@ def test_delivery_failure_raises_for_retry(client, monkeypatch):
         "/v1/webhooks",
         json={"namespace": "wh-fail-ns", "url": "https://hooks.example/mnemo"},
     )
+    # A contradicting pair is what enqueues the delivery job.
+    client.post("/v1/memories", json={"content": "Riya lives in Pune", "namespace": "wh-fail-ns"})
+    client.post(
+        "/v1/memories",
+        json={"content": "Riya no longer lives in Pune", "namespace": "wh-fail-ns"},
+    )
 
     def fake_post(url_: str, **kwargs: object) -> object:
         class _Resp:
@@ -136,7 +161,15 @@ def test_delivery_failure_raises_for_retry(client, monkeypatch):
     monkeypatch.setattr(httpx, "post", fake_post)
 
     with SessionLocal() as db:
-        job = db.execute(select(Job).where(Job.kind == "webhook.deliver")).scalars().one()
+        job = (
+            db.execute(
+                select(Job)
+                .where(Job.kind == "webhook.deliver")
+                .where(Job.payload["body"]["namespace"].as_string() == "wh-fail-ns")
+            )
+            .scalars()
+            .one()
+        )
         try:
             webhook_service.deliver_job(job.payload)
             raised = False
@@ -165,5 +198,13 @@ def test_deactivate_stops_notifications(client, namespace):
     from app.models.models import Job
 
     with SessionLocal() as db:
-        jobs = db.execute(select(Job).where(Job.kind == "webhook.deliver")).scalars().all()
+        jobs = (
+            db.execute(
+                select(Job)
+                .where(Job.kind == "webhook.deliver")
+                .where(Job.payload["body"]["namespace"].as_string() == namespace)
+            )
+            .scalars()
+            .all()
+        )
     assert list(jobs) == [], "inactive webhooks must not receive deliveries"

@@ -124,7 +124,23 @@ def test_memory_metadata_uses_json_alias():
 # --------------------------------------------------------------------------- #
 from tests.conftest import requires_db  # noqa: E402
 
-MEMORY_KEYS = sorted(EXPECTED_FIELDS["MemoryOut"])
+# The JSON a client actually receives: field names plus serialization aliases.
+# (MemoryOut.meta serializes as "metadata"; the hermetic half of this file pins
+# the model field name itself, the alias assertion pins the wire name.)
+MEMORY_KEYS = sorted(
+    {
+        "id",
+        "namespace",
+        "content",
+        "importance",
+        "is_active",
+        "tags",
+        "metadata",
+        "expires_at",
+        "created_at",
+        "updated_at",
+    }
+)
 
 
 @requires_db

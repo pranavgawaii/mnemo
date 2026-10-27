@@ -46,9 +46,12 @@ def test_threshold_override_changes_flagging(client, namespace):
     assert first.status_code == 201
     assert second.json()["contradictions"] == [], "0.99 gate should suppress the flag"
 
-    # Reset the override to the global threshold; a fresh pair then flags.
+    # Reset the override to the global threshold; a fresh pair then flags. The
+    # suppressed second memory is removed first so the probe has exactly one
+    # contradicting neighbour.
     reset = client.patch(f"/v1/namespaces/{namespace}", json={"contradiction_sim_threshold": None})
     assert reset.json()["contradiction_sim_threshold"] is None
+    client.delete(f"/v1/memories/{second.json()['memory']['id']}?namespace={namespace}")
     third = client.post(
         "/v1/memories", json={"content": "Riya does not live in Pune", "namespace": namespace}
     )
