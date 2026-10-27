@@ -44,8 +44,9 @@ def test_racing_pair_inserts_land_once(client, namespace):
         )
     assert initial == 1
 
-    # Now hammer the same pair from WORKERS threads concurrently. First one
-    # inserts; the rest must come back as None (no-op), never raise.
+    # Now hammer the same pair from WORKERS threads concurrently. The pair is
+    # already present (the write path flagged it), so every racer must come
+    # back as None (no-op), never raise — and never add a second row.
     barrier = threading.Barrier(WORKERS)
     outcomes: list[str] = []
     lock = threading.Lock()
@@ -75,8 +76,10 @@ def test_racing_pair_inserts_land_once(client, namespace):
     for thread in threads:
         thread.join()
 
-    assert outcomes.count("noop") == WORKERS - 1, outcomes
-    assert outcomes.count("inserted") in (0, 1), outcomes  # the seeded row exists
+    # At most one racer can win, and it wins only if the pair vanished between
+    # the sanity check and the race (nobody deletes it, so: zero winners).
+    assert outcomes.count("inserted") in (0, 1), outcomes
+    assert outcomes.count("noop") == WORKERS - outcomes.count("inserted"), outcomes
 
     with SessionLocal() as db:
         rows = db.execute(

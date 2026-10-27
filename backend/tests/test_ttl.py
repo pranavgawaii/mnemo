@@ -51,7 +51,7 @@ def test_sweep_soft_deletes_expired(client, namespace):
     from app.services import memory_service
 
     with SessionLocal() as db:
-        expired = memory_service.sweep_expired(db)
+        expired = memory_service.sweep_expired(db, namespace=namespace)
     assert expired == 1
 
     listed = client.get(f"/v1/memories?namespace={namespace}").json()

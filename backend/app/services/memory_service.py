@@ -167,17 +167,15 @@ def _insert_contradiction(
         .on_conflict_do_nothing(
             index_elements=[Contradiction.new_memory_id, Contradiction.existing_memory_id]
         )
+        .returning(Contradiction.id)
     )
-    # CursorResult.rowcount: 1 when inserted, 0 when the conflict hit.
-    rowcount = getattr(result, "rowcount", 0) or 0
-    if rowcount == 0:
+    # RETURNING yields the id when a row was inserted and nothing when the
+    # conflict skipped it. (CursorResult.rowcount is -1/"unknown" on psycopg3
+    # for plain inserts, so it cannot distinguish the two outcomes.)
+    inserted_id = result.scalar_one_or_none()
+    if inserted_id is None:
         return None
-    return db.execute(
-        select(Contradiction).where(
-            Contradiction.new_memory_id == new_memory_id,
-            Contradiction.existing_memory_id == existing_memory_id,
-        )
-    ).scalar_one()
+    return db.get(Contradiction, inserted_id)
 
 
 def _find_duplicate(
@@ -610,34 +608,40 @@ def list_contradictions(
     return list(rows), int(total or 0)
 
 
-def sweep_expired(db: Session, *, now: datetime | None = None) -> int:
+def sweep_expired(
+    db: Session, *, now: datetime | None = None, namespace: str | None = None
+) -> int:
     """Soft-delete every active memory whose TTL has passed. Returns the count.
 
     Expiry is lazy everywhere else (search/list filter live), so this sweep only
     exists for bookkeeping: metrics, exports and admin views stay accurate even
     without a live query. Run it from the CLI on a cron, or as a background job.
+    Pass ``namespace`` to scope the sweep; omit it to sweep everything.
     """
     moment = _utc(now) if now else datetime.now(timezone.utc)
-    rows = (
-        db.execute(
-            select(Memory).where(
-                Memory.is_active.is_(True),
-                Memory.expires_at.is_not(None),
-                Memory.expires_at <= moment,
-            )
-        )
-        .scalars()
-        .all()
-    )
+    conditions: list[ColumnElement[bool]] = [
+        Memory.is_active.is_(True),
+        Memory.expires_at.is_not(None),
+        Memory.expires_at <= moment,
+    ]
+    if namespace is not None:
+        conditions.append(Memory.namespace == namespace)
+    rows = db.execute(select(Memory).where(*conditions)).scalars().all()
     for memory in rows:
         memory.is_active = False
-    if rows:
+        # One audit row per swept memory (namespaced + resource-scoped) so
+        # per-namespace audit queries see the sweep, not just a global batch.
+        # The query above filtered expires_at IS NOT NULL, but mypy needs the
+        # explicit guard to narrow the optional.
         audit_service.record(
             db,
             action="memory.swept",
             resource_type="memory",
-            details={"count": len(rows), "namespaces": sorted({m.namespace for m in rows})},
+            namespace=memory.namespace,
+            resource_id=memory.id,
+            details={"expires_at": memory.expires_at.isoformat() if memory.expires_at else None},
         )
+    if rows:
         db.commit()
     return len(rows)
 
