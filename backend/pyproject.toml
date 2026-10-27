@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mnemo-api"
-version = "0.1.0"
+version = "1.0.0"
 description = "Semantic memory service for AI agents: pgvector search, decay scoring, contradiction detection."
 license = { text = "MIT" }
 requires-python = ">=3.12"

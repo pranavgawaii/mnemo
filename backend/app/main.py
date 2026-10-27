@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title="Mnemo",
-    version="0.1.0",
+    version="1.0.0",
     description="Semantic memory API for AI agents: pgvector search, decay "
     "scoring, and contradiction detection.",
     lifespan=lifespan,
