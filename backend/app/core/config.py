@@ -45,6 +45,11 @@ class Settings(BaseSettings):
     # recall, slower scan. Guarded: only sent to Postgres when it accepts it.
     ann_ef_search: int = 100
 
+    # Near-duplicate detection on write. "flag" reports deduplicated_of in the
+    # response; "reject" answers 409; "off" skips the check.
+    dedup_mode: str = "flag"
+    dedup_threshold: float = 0.97
+
     # Logging
     log_json: bool = True
     log_level: str = "info"

@@ -184,20 +184,24 @@ def add_memory(
 ) -> MemoryCreateResult:
     """Add a memory. Any contradictions it introduces are flagged and returned."""
     actor = _actor(request)
-    memory, contradictions = memory_service.add_memory(
-        db,
-        content=payload.content,
-        namespace=payload.namespace,
-        importance=payload.importance,
-        tags=list(payload.tags),
-        meta=payload.meta,
-        expires_at=payload.expires_at,
-        actor_key_id=actor,
-        request_id=request.state.request_id,
-    )
+    try:
+        memory, contradictions, duplicate_of = memory_service.add_memory(
+            db,
+            content=payload.content,
+            namespace=payload.namespace,
+            importance=payload.importance,
+            tags=list(payload.tags),
+            meta=payload.meta,
+            expires_at=payload.expires_at,
+            actor_key_id=actor,
+            request_id=request.state.request_id,
+        )
+    except memory_service.DuplicateMemoryError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     return MemoryCreateResult(
         memory=MemoryOut.model_validate(memory),
         contradictions=[ContradictionOut.model_validate(c) for c in contradictions],
+        deduplicated_of=duplicate_of.id if duplicate_of is not None else None,
     )
 
 
@@ -218,7 +222,7 @@ def add_memories_bulk(
     errors = 0
     for index, item in enumerate(payload.items):
         try:
-            memory, contradictions = memory_service.add_memory(
+            memory, contradictions, _duplicate_of = memory_service.add_memory(
                 db,
                 content=item.content,
                 namespace=item.namespace,

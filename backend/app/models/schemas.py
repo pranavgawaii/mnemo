@@ -116,6 +116,8 @@ class MemoryCreateResult(BaseModel):
 
     memory: MemoryOut
     contradictions: list["ContradictionOut"] = Field(default_factory=list)
+    # Set in dedup mode "flag" when the write near-duplicates an existing memory.
+    deduplicated_of: uuid.UUID | None = None
 
 
 class BulkMemoryRequest(BaseModel):

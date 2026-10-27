@@ -34,6 +34,10 @@ _SEARCH_OVERFETCH = 4
 _UNSET: object = object()
 
 
+class DuplicateMemoryError(ValueError):
+    """Raised in dedup mode ``reject`` when a write is a near-duplicate."""
+
+
 def _utc(value: datetime) -> datetime:
     """Coerce a possibly-naive datetime to UTC."""
     return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
@@ -65,13 +69,25 @@ def add_memory(
     llm_check: LlmCheck | None = None,
     actor_key_id: uuid.UUID | None = None,
     request_id: str | None = None,
-) -> tuple[Memory, list[Contradiction]]:
+) -> tuple[Memory, list[Contradiction], Memory | None]:
     """Embed and persist a memory, flagging any contradictions it introduces.
 
-    Returns the created memory and the list of newly-flagged contradictions.
-    Contradictions are flagged only — never auto-resolved.
+    Returns ``(memory, contradictions, duplicate_of)``. Contradictions are
+    flagged only — never auto-resolved. ``duplicate_of`` is the existing memory
+    this write near-duplicates (dedup mode ``flag``); mode ``reject`` raises
+    :class:`DuplicateMemoryError` instead.
     """
     vector = embed(content)
+
+    duplicate_of = _find_duplicate(
+        db, vector=vector, namespace=namespace, exclude_id=None
+    )
+    if duplicate_of is not None and settings.dedup_mode == "reject":
+        raise DuplicateMemoryError(
+            f"Near-duplicate of existing memory {duplicate_of.id} "
+            f"(threshold {settings.dedup_threshold})."
+        )
+
     memory = Memory(
         namespace=namespace,
         content=content,
@@ -103,14 +119,48 @@ def add_memory(
         resource_id=memory.id,
         actor_key_id=actor_key_id,
         request_id=request_id,
-        details={"importance": importance, "tags": list(tags or [])},
+        details={
+            "importance": importance,
+            "tags": list(tags or []),
+            "duplicate_of": str(duplicate_of.id) if duplicate_of is not None else None,
+        },
     )
 
     db.commit()
     db.refresh(memory)
     for c in contradictions:
         db.refresh(c)
-    return memory, contradictions
+    return memory, contradictions, duplicate_of
+
+
+def _find_duplicate(
+    db: Session, *, vector: list[float], namespace: str, exclude_id: uuid.UUID | None
+) -> Memory | None:
+    """Nearest active neighbour above the dedup threshold, or None.
+
+    No-op when dedup_mode is "off" so deployments that want raw duplicate
+    ingestion skip the extra query entirely.
+    """
+    if settings.dedup_mode == "off" or not (0 < settings.dedup_threshold <= 1):
+        return None
+
+    distance = Memory.embedding.cosine_distance(vector)
+    conditions: list[ColumnElement[bool]] = [
+        Memory.namespace == namespace,
+        Memory.is_active.is_(True),
+    ]
+    if exclude_id is not None:
+        conditions.append(Memory.id != exclude_id)
+    row = db.execute(
+        select(Memory, distance.label("distance"))
+        .where(*conditions)
+        .order_by(distance)
+        .limit(1)
+    ).first()
+    if row is None:
+        return None
+    memory, dist = row
+    return memory if (1.0 - float(dist)) >= settings.dedup_threshold else None
 
 
 def _flag_contradictions(
