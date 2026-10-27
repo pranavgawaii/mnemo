@@ -24,19 +24,24 @@ class JobWorker(threading.Thread):
     def __init__(self, interval_seconds: float = 1.0) -> None:
         super().__init__(name="mnemo-job-worker", daemon=True)
         self.interval_seconds = interval_seconds
-        self._stop = threading.Event()
+        # Deliberately NOT named ``_stop``: that name shadows threading.Thread's
+        # private ``_stop()`` method, which ``join()`` calls during shutdown —
+        # an Event there makes every join explode with "'Event' object is not
+        # callable" (observed intermittently, whenever the thread had not yet
+        # fully exited when join polled it).
+        self._stop_requested = threading.Event()
 
     def stop(self) -> None:
-        self._stop.set()
+        self._stop_requested.set()
 
     def run(self) -> None:
-        while not self._stop.is_set():
+        while not self._stop_requested.is_set():
             try:
                 processed = self._tick()
             except Exception:  # noqa: BLE001 - the loop must survive anything
                 processed = False
             if not processed:
-                self._stop.wait(self.interval_seconds)
+                self._stop_requested.wait(self.interval_seconds)
 
     def _tick(self) -> bool:
         with SessionLocal() as db:

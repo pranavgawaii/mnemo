@@ -2,10 +2,27 @@
 
 from __future__ import annotations
 
+import threading
 from datetime import datetime, timedelta, timezone
 
 from app.services import job_service
 from tests.conftest import requires_db
+
+
+def test_worker_can_be_started_and_joined():
+    """Lifecycle smoke test, hermetic: the tick's DB errors are swallowed by
+    the worker loop, so no database is needed to start/stop/join it."""
+    from app.services.job_worker import JobWorker
+
+    worker = JobWorker(interval_seconds=0.01)
+    worker.start()
+    worker.stop()
+    worker.join(timeout=5)
+    assert not worker.is_alive()
+    # Regression: an Event stored as ``_stop`` shadows threading.Thread's
+    # private ``_stop()`` method and makes ``join()`` blow up mid-shutdown,
+    # depending on thread timing (the CI 3.12 integration job hit this).
+    assert not isinstance(getattr(worker, "_stop", None), threading.Event)
 
 
 @requires_db
