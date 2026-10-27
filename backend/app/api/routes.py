@@ -16,6 +16,10 @@ from sqlalchemy.orm import Session
 from app.api.deps import authenticate, require_scope
 from app.db.session import get_db
 from app.models.schemas import (
+    ApiKeyCreate,
+    ApiKeyCreated,
+    ApiKeyList,
+    ApiKeyOut,
     BulkMemoryRequest,
     BulkMemoryResult,
     BulkMemoryResultItem,
@@ -39,12 +43,13 @@ from app.models.schemas import (
     SearchRequest,
     SearchResponse,
 )
-from app.services import memory_service, namespace_service
+from app.services import api_key_service, memory_service, namespace_service
 
 router = APIRouter(prefix="/v1", dependencies=[Depends(authenticate)])
 
 # Write routes require the "write" scope; GET routes stay readable with "read".
 _WRITE = [Depends(require_scope("write"))]
+_ADMIN = [Depends(require_scope("admin"))]
 
 
 # --------------------------------------------------------------------------- #
@@ -368,3 +373,46 @@ def resolve_contradiction(payload: ResolveRequest, db: Session = Depends(get_db)
     if error is not None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
     return ContradictionOut.model_validate(contradiction)
+
+
+# --------------------------------------------------------------------------- #
+# API key management (admin scope)
+# --------------------------------------------------------------------------- #
+@router.post("/keys", response_model=ApiKeyCreated, status_code=status.HTTP_201_CREATED, dependencies=_ADMIN)
+def create_api_key(payload: ApiKeyCreate, db: Session = Depends(get_db)) -> ApiKeyCreated:
+    """Issue a new API key. The plaintext ``key`` is shown exactly once."""
+    try:
+        row, plaintext = api_key_service.create_api_key(db, label=payload.label, scopes=list(payload.scopes))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+    out = ApiKeyOut.model_validate(row).model_dump()
+    return ApiKeyCreated(key=plaintext, **out)
+
+
+@router.get("/keys", response_model=ApiKeyList, dependencies=_ADMIN)
+def list_api_keys(db: Session = Depends(get_db)) -> ApiKeyList:
+    """All issued keys, prefix and scopes only (secrets are never returned)."""
+    rows = api_key_service.list_api_keys(db)
+    return ApiKeyList(
+        items=[ApiKeyOut.model_validate(r) for r in rows],
+        total=len(rows),
+    )
+
+
+@router.post("/keys/{key_id}/rotate", response_model=ApiKeyCreated, dependencies=_ADMIN)
+def rotate_api_key(key_id: uuid.UUID, db: Session = Depends(get_db)) -> ApiKeyCreated:
+    """Replace a key's secret; label and scopes are unchanged."""
+    result = api_key_service.rotate_api_key(db, key_id=key_id)
+    if result is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Key not found.")
+    row, plaintext = result
+    out = ApiKeyOut.model_validate(row).model_dump()
+    return ApiKeyCreated(key=plaintext, **out)
+
+
+@router.delete("/keys/{key_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=_ADMIN)
+def revoke_api_key(key_id: uuid.UUID, db: Session = Depends(get_db)) -> None:
+    """Deactivate a key. Auth with it starts failing immediately."""
+    row = api_key_service.deactivate_api_key(db, key_id=key_id)
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Key not found.")

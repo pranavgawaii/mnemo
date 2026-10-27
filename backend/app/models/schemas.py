@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from pydantic import (
     AliasChoices,
@@ -298,6 +298,45 @@ class NamespaceList(BaseModel):
     """All configured namespaces."""
 
     items: list[NamespaceOut]
+    total: int
+
+
+# --------------------------------------------------------------------------- #
+# API keys
+# --------------------------------------------------------------------------- #
+class ApiKeyCreate(BaseModel):
+    """Create an issued key. Scopes: read (GET), write (mutations), admin."""
+
+    label: str = Field(..., min_length=1, max_length=64)
+    scopes: list[Literal["read", "write", "admin"]] = Field(
+        default=["read", "write"],
+    )
+
+
+class ApiKeyOut(BaseModel):
+    """An issued key as safe to display (prefix only, never the secret)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    label: str
+    key_prefix: str
+    scopes: list[str]
+    is_active: bool
+    created_at: datetime
+    last_used_at: datetime | None
+
+
+class ApiKeyCreated(ApiKeyOut):
+    """The one response that contains the plaintext key: ``key`` is shown once."""
+
+    key: str
+
+
+class ApiKeyList(BaseModel):
+    """All issued keys."""
+
+    items: list[ApiKeyOut]
     total: int
 
 
