@@ -90,6 +90,33 @@ class NamespaceRow(Base):
     )
 
 
+class ApiKey(Base):
+    """An issued API key, stored hashed.
+
+    The plaintext secret is shown exactly once at creation. Only the SHA-256
+    hash and a short display prefix live in the database, so a database leak
+    does not leak usable credentials.
+    """
+
+    __tablename__ = "api_keys"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    label: Mapped[str] = mapped_column(String(64), nullable=False)
+    key_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    # First few characters of the plaintext, e.g. "mnemo_a1b2" — lets operators
+    # tell keys apart without storing the secret.
+    key_prefix: Mapped[str] = mapped_column(String(16), nullable=False)
+    # "read" (GET routes), "write" (create/update/delete), "admin" (keys + events).
+    scopes: Mapped[list[str]] = mapped_column(
+        ARRAY(String(32)), nullable=False, default=lambda: ["read", "write"]
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 class Contradiction(Base):
     """A flagged (not resolved) contradiction between two memories.
 

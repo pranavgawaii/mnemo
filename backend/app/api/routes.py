@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_api_key
+from app.api.deps import authenticate, require_scope
 from app.db.session import get_db
 from app.models.schemas import (
     BulkMemoryRequest,
@@ -41,7 +41,10 @@ from app.models.schemas import (
 )
 from app.services import memory_service, namespace_service
 
-router = APIRouter(prefix="/v1", dependencies=[Depends(require_api_key)])
+router = APIRouter(prefix="/v1", dependencies=[Depends(authenticate)])
+
+# Write routes require the "write" scope; GET routes stay readable with "read".
+_WRITE = [Depends(require_scope("write"))]
 
 
 # --------------------------------------------------------------------------- #
@@ -164,7 +167,7 @@ def delete_namespace(
 # --------------------------------------------------------------------------- #
 # Memories
 # --------------------------------------------------------------------------- #
-@router.post("/memories", response_model=MemoryCreateResult, status_code=status.HTTP_201_CREATED)
+@router.post("/memories", response_model=MemoryCreateResult, status_code=status.HTTP_201_CREATED, dependencies=_WRITE)
 def add_memory(payload: MemoryCreate, db: Session = Depends(get_db)) -> MemoryCreateResult:
     """Add a memory. Any contradictions it introduces are flagged and returned."""
     memory, contradictions = memory_service.add_memory(
@@ -181,7 +184,7 @@ def add_memory(payload: MemoryCreate, db: Session = Depends(get_db)) -> MemoryCr
     )
 
 
-@router.post("/memories/bulk", response_model=BulkMemoryResult)
+@router.post("/memories/bulk", response_model=BulkMemoryResult, dependencies=_WRITE)
 def add_memories_bulk(payload: BulkMemoryRequest, db: Session = Depends(get_db)) -> BulkMemoryResult:
     """Add many memories in one call, each through the normal write path.
 
@@ -281,7 +284,7 @@ def get_memory(
     return MemoryOut.model_validate(memory)
 
 
-@router.patch("/memories/{memory_id}", response_model=MemoryOut)
+@router.patch("/memories/{memory_id}", response_model=MemoryOut, dependencies=_WRITE)
 def update_memory(
     payload: MemoryUpdate,
     memory_id: uuid.UUID,
@@ -308,7 +311,7 @@ def update_memory(
     return MemoryOut.model_validate(memory)
 
 
-@router.delete("/memories/{memory_id}", response_model=MemoryOut)
+@router.delete("/memories/{memory_id}", response_model=MemoryOut, dependencies=_WRITE)
 def delete_memory(
     memory_id: uuid.UUID,
     namespace: str | None = Query(default=None, min_length=1, max_length=128),
@@ -354,7 +357,7 @@ def list_contradictions(
     )
 
 
-@router.post("/contradictions/resolve", response_model=ContradictionOut)
+@router.post("/contradictions/resolve", response_model=ContradictionOut, dependencies=_WRITE)
 def resolve_contradiction(payload: ResolveRequest, db: Session = Depends(get_db)) -> ContradictionOut:
     """Resolve a contradiction by naming the winner; the loser is soft-deleted."""
     contradiction, error = memory_service.resolve_contradiction(
