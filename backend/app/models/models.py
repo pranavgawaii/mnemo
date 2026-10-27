@@ -16,6 +16,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
     func,
     text,
 )
@@ -282,4 +283,11 @@ class Contradiction(Base):
 
     __table_args__ = (
         Index("ix_contradictions_namespace_status", "namespace", "status"),
+        # Two workers PATCHing the same memory concurrently must not both flag
+        # the same pair; see memory_service._insert_contradiction.
+        UniqueConstraint(
+            "new_memory_id",
+            "existing_memory_id",
+            name="uq_contradictions_pair",
+        ),
     )

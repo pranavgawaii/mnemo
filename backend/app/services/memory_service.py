@@ -136,6 +136,50 @@ def add_memory(
     return memory, contradictions, duplicate_of
 
 
+def _insert_contradiction(
+    db: Session,
+    *,
+    namespace: str,
+    new_memory_id: uuid.UUID,
+    existing_memory_id: uuid.UUID,
+    similarity: float,
+    reason: str,
+) -> Contradiction | None:
+    """Insert one contradiction row, tolerating a racing duplicate.
+
+    Uses ``ON CONFLICT DO NOTHING`` against the ``uq_contradictions_pair``
+    index: when two workers flag the same pair concurrently, the loser's
+    insert becomes a no-op instead of failing the whole write at commit.
+    Returns the inserted row, or None when an identical pair already exists.
+    """
+    from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+    result = db.execute(
+        pg_insert(Contradiction)
+        .values(
+            namespace=namespace,
+            new_memory_id=new_memory_id,
+            existing_memory_id=existing_memory_id,
+            similarity=similarity,
+            reason=reason,
+            status="open",
+        )
+        .on_conflict_do_nothing(
+            index_elements=[Contradiction.new_memory_id, Contradiction.existing_memory_id]
+        )
+    )
+    # CursorResult.rowcount: 1 when inserted, 0 when the conflict hit.
+    rowcount = getattr(result, "rowcount", 0) or 0
+    if rowcount == 0:
+        return None
+    return db.execute(
+        select(Contradiction).where(
+            Contradiction.new_memory_id == new_memory_id,
+            Contradiction.existing_memory_id == existing_memory_id,
+        )
+    ).scalar_one()
+
+
 def _find_duplicate(
     db: Session, *, vector: list[float], namespace: str, exclude_id: uuid.UUID | None
 ) -> Memory | None:
@@ -220,16 +264,18 @@ def _flag_contradictions(
             llm_check=llm_check,
         )
         if verdict.is_contradiction:
-            contradiction = Contradiction(
+            contradiction = _insert_contradiction(
+                db,
                 namespace=namespace,
                 new_memory_id=memory.id,
                 existing_memory_id=existing.id,
                 similarity=verdict.similarity,
                 reason=verdict.reason,
-                status="open",
             )
-            db.add(contradiction)
-            db.flush()
+            if contradiction is None:
+                # Another worker flagged this exact pair first (unique index);
+                # nothing to audit, nothing to notify.
+                continue
             audit_service.record(
                 db,
                 action="contradiction.flagged",
