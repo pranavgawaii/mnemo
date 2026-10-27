@@ -360,6 +360,34 @@ class ApiKeyList(BaseModel):
     total: int
 
 
+# --------------------------------------------------------------------------- #
+# Audit events
+# --------------------------------------------------------------------------- #
+class AuditEventOut(BaseModel):
+    """One audit-trail entry."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    namespace: str | None
+    action: str
+    resource_type: str
+    resource_id: uuid.UUID | None
+    actor_key_id: uuid.UUID | None
+    request_id: str | None
+    details: dict[str, Any]
+    created_at: datetime
+
+
+class AuditEventList(BaseModel):
+    """Paginated audit trail (newest first)."""
+
+    items: list[AuditEventOut]
+    total: int
+    limit: int
+    offset: int
+
+
 class NamespaceStats(BaseModel):
     """Aggregate counts for one namespace."""
 

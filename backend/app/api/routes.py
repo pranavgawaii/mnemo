@@ -21,6 +21,8 @@ from app.models.schemas import (
     ApiKeyCreated,
     ApiKeyList,
     ApiKeyOut,
+    AuditEventList,
+    AuditEventOut,
     BulkMemoryRequest,
     BulkMemoryResult,
     BulkMemoryResultItem,
@@ -44,7 +46,7 @@ from app.models.schemas import (
     SearchRequest,
     SearchResponse,
 )
-from app.services import api_key_service, memory_service, namespace_service
+from app.services import api_key_service, audit_service, memory_service, namespace_service
 from app.services.memory_service import _UNSET
 
 router = APIRouter(prefix="/v1", dependencies=[Depends(authenticate)])
@@ -498,3 +500,32 @@ def _actor(request: Request) -> uuid.UUID | None:
     """The issuing key id for the authenticated caller (None for the env key)."""
     auth = getattr(request.state, "auth", None)
     return getattr(auth, "key_id", None) if auth is not None else None
+
+
+# --------------------------------------------------------------------------- #
+# Audit events (admin scope)
+# --------------------------------------------------------------------------- #
+@router.get("/events", response_model=AuditEventList, dependencies=_ADMIN)
+def list_events(
+    namespace: str | None = Query(default=None, min_length=1, max_length=128),
+    resource_type: str | None = Query(default=None, min_length=1, max_length=32),
+    action: str | None = Query(default=None, min_length=1, max_length=64),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+) -> AuditEventList:
+    """Paginated audit trail, newest first. Filter by namespace, resource, action."""
+    items, total = audit_service.list_events(
+        db,
+        namespace=namespace,
+        resource_type=resource_type,
+        action=action,
+        limit=limit,
+        offset=offset,
+    )
+    return AuditEventList(
+        items=[AuditEventOut.model_validate(e) for e in items],
+        total=total,
+        limit=limit,
+        offset=offset,
+    )
