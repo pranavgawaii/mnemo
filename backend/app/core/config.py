@@ -50,6 +50,15 @@ class Settings(BaseSettings):
     dedup_mode: str = "flag"
     dedup_threshold: float = 0.97
 
+    # LLM verdict hook for contradiction confirmation. Empty = heuristic only.
+    # "openai" uses any OpenAI-compatible chat-completions endpoint (self-hosted
+    # vLLM/Ollama work: set CONTRADICTION_LLM_BASE_URL).
+    contradiction_llm_provider: str = ""
+    contradiction_llm_api_key: str = ""
+    contradiction_llm_base_url: str = "https://api.openai.com/v1"
+    contradiction_llm_model: str = "gpt-4o-mini"
+    contradiction_llm_timeout_seconds: float = 10.0
+
     # Logging
     log_json: bool = True
     log_level: str = "info"

@@ -15,7 +15,7 @@ from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core import hybrid
+from app.core import hybrid, llm
 from app.core.config import settings
 from app.core.contradiction import LlmCheck, check_contradiction
 from app.core.decay import relevance_score
@@ -79,6 +79,8 @@ def add_memory(
     :class:`DuplicateMemoryError` instead.
     """
     vector = embed(content)
+
+    llm_check = llm_check or llm.build_llm_check(settings)
 
     duplicate_of = _find_duplicate(
         db, vector=vector, namespace=namespace, exclude_id=None
