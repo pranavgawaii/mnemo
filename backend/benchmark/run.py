@@ -3,7 +3,7 @@
 Seeds a dedicated namespace with the memories in ``dataset.json`` (backdating
 ``created_at`` so the decay ranking is genuinely exercised), runs every labelled
 query through the real search path in ``app.services.memory_service``, and
-reports top-1 / top-3 accuracy and MRR.
+reports top-1 / top-k accuracy, MRR, NDCG@k, and search latency percentiles.
 
 A query counts as correct at rank *k* if **any** of its gold memory ids appears
 in the top *k* results — several questions have more than one defensible answer
@@ -12,16 +12,18 @@ in the top *k* results — several questions have more than one defensible answe
 Usage::
 
     export DATABASE_URL=postgresql+psycopg://mnemo:mnemo@localhost:5432/mnemo
-    PYTHONPATH=. python benchmark/run.py [--decay/--no-decay]
+    PYTHONPATH=. python benchmark/run.py [--decay/--no-decay] [--json]
 
 ``--no-decay`` re-ranks by raw cosine similarity only, so the contribution of
 the decay/importance scoring can be measured rather than asserted.
+``--json`` prints the score dict (consumed by ``benchmark/gate.py``).
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -31,6 +33,7 @@ from app.core.embedding import embed
 from app.db.session import SessionLocal
 from app.models.models import Contradiction, Memory
 from app.services import memory_service
+from benchmark.metrics import mrr, ndcg_at_k, percentile, top1_accuracy, topk_accuracy
 
 DATASET = Path(__file__).with_name("dataset.json")
 
@@ -76,6 +79,15 @@ def rank_of_gold(hits, gold_uuids: set[str]) -> int | None:
     return None
 
 
+def all_gold_ranks(hits, gold_uuids: set[str], k: int) -> list[int]:
+    """Ranks (1-indexed) of every gold hit inside the top ``k`` window."""
+    return [
+        i
+        for i, (memory, *_rest) in enumerate(hits, start=1)
+        if i <= k and str(memory.id) in gold_uuids
+    ]
+
+
 def search_no_decay(db, *, query: str, namespace: str, limit: int):
     """Baseline: rank by raw cosine similarity, ignoring decay and importance."""
     vector = embed(query)
@@ -94,6 +106,78 @@ def search_no_decay(db, *, query: str, namespace: str, limit: int):
     ]
 
 
+def run_benchmark(db, data: dict, *, k: int = 3, no_decay: bool = False) -> dict:
+    """Seed and evaluate. Returns the machine-readable score dict."""
+    namespace = data["namespace"]
+    id_map = seed(db, data)
+    searcher = search_no_decay if no_decay else memory_service.search
+
+    first_ranks: list[int | None] = []
+    graded_ranks: list[list[int]] = []
+    latencies_ms: list[float] = []
+    misses: list[tuple[str, list[str]]] = []
+
+    for q in data["queries"]:
+        gold_uuids = {id_map[g] for g in q["gold"]}
+        start = time.perf_counter()
+        hits = searcher(db, query=q["query"], namespace=namespace, limit=10)
+        latencies_ms.append((time.perf_counter() - start) * 1000)
+
+        rank = rank_of_gold(hits, gold_uuids)
+        first_ranks.append(rank)
+        graded = all_gold_ranks(hits, gold_uuids, k)
+        graded_ranks.append(graded)
+
+        if rank is None or rank > k:
+            misses.append((q["query"], [m.content for m, *_ in hits[:k]]))
+
+    n = len(data["queries"])
+    return {
+        "queries": n,
+        "memories": len(data["memories"]),
+        "k": k,
+        "top1_accuracy": top1_accuracy(first_ranks),
+        "topk_accuracy": topk_accuracy(first_ranks, k),
+        "mrr": mrr(first_ranks),
+        "ndcg_at_k": ndcg_at_k(graded_ranks, k),
+        "latency_p50_ms": percentile(latencies_ms, 0.50),
+        "latency_p95_ms": percentile(latencies_ms, 0.95),
+        "_latency_mean_ms": sum(latencies_ms) / len(latencies_ms) if latencies_ms else 0.0,
+        "misses": misses,
+    }
+
+
+def format_report(scores: dict, *, no_decay: bool) -> str:
+    """Human-readable benchmark report."""
+    n = scores["queries"]
+    mode = "raw cosine (no decay)" if no_decay else "similarity x decay x importance"
+    k = scores["k"]
+    lines = [
+        "=" * 66,
+        f"Mnemo retrieval benchmark — {n} queries, {scores['memories']} memories",
+        f"Ranking: {mode}",
+        "=" * 66,
+        f"  Top-1 accuracy : {scores['top1_accuracy'] * 100:5.1f}%",
+        f"  Top-{k} accuracy : {scores['topk_accuracy'] * 100:5.1f}%",
+        f"  MRR            : {scores['mrr']:.3f}",
+        f"  NDCG@{k}         : {scores['ndcg_at_k']:.3f}",
+        f"  Search latency : p50 {scores['latency_p50_ms']:.1f} ms"
+        f"  p95 {scores['latency_p95_ms']:.1f} ms"
+        f"  mean {scores['_latency_mean_ms']:.1f} ms",
+        "=" * 66,
+    ]
+    for query, tops in scores["misses"]:
+        lines.append(f"\n  ? {query}")
+        for t in tops:
+            lines.append(f"      -> {t}")
+    return "\n".join(lines)
+
+
+def public_scores(scores: dict) -> dict:
+    """Strip the report-only keys (misses, internals) for --json output."""
+    return {key: value for key, value in scores.items() if not key.startswith("_") and key != "misses"}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -103,65 +187,26 @@ def main() -> None:
     )
     parser.add_argument("--k", type=int, default=3, help="Top-k cutoff (default 3).")
     parser.add_argument(
-        "--verbose", action="store_true", help="Print every miss with its top hits."
+        "--json", action="store_true", help="Print machine-readable scores only."
     )
     args = parser.parse_args()
 
     data = json.loads(DATASET.read_text())
-    namespace = data["namespace"]
 
     db = SessionLocal()
     try:
         db.execute(text("SELECT 1"))
         print(f"Seeding {len(data['memories'])} memories into namespace "
-              f"'{namespace}' (embedding model load may take a moment)...")
-        id_map = seed(db, data)
-
-        queries = data["queries"]
-        top1 = 0
-        topk = 0
-        reciprocal_sum = 0.0
-        misses: list[tuple[str, list[str]]] = []
-
-        searcher = search_no_decay if args.no_decay else memory_service.search
-
-        for q in queries:
-            gold_uuids = {id_map[g] for g in q["gold"]}
-            hits = searcher(db, query=q["query"], namespace=namespace, limit=10)
-            rank = rank_of_gold(hits, gold_uuids)
-
-            if rank == 1:
-                top1 += 1
-            if rank is not None and rank <= args.k:
-                topk += 1
-            else:
-                misses.append(
-                    (q["query"], [m.content for m, *_ in hits[: args.k]])
-                )
-            if rank is not None:
-                reciprocal_sum += 1.0 / rank
-
-        n = len(queries)
-        mode = "raw cosine (no decay)" if args.no_decay else "similarity x decay x importance"
-        print()
-        print("=" * 66)
-        print(f"Mnemo retrieval benchmark — {n} queries, {len(data['memories'])} memories")
-        print(f"Ranking: {mode}")
-        print("=" * 66)
-        print(f"  Top-1 accuracy : {top1}/{n}  ({100.0 * top1 / n:.1f}%)")
-        print(f"  Top-{args.k} accuracy : {topk}/{n}  ({100.0 * topk / n:.1f}%)")
-        print(f"  MRR            : {reciprocal_sum / n:.3f}")
-        print("=" * 66)
-
-        if misses:
-            print(f"\n{len(misses)} miss(es) outside top-{args.k}:")
-            for query, tops in misses:
-                print(f"\n  ? {query}")
-                if args.verbose:
-                    for t in tops:
-                        print(f"      -> {t}")
+              f"'{data['namespace']}' (embedding model load may take a moment)...")
+        scores = run_benchmark(db, data, k=args.k, no_decay=args.no_decay)
     finally:
         db.close()
+
+    if args.json:
+        print(json.dumps(public_scores(scores), indent=2))
+    else:
+        print()
+        print(format_report(scores, no_decay=args.no_decay))
 
 
 if __name__ == "__main__":
