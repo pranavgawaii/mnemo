@@ -138,6 +138,38 @@ class RateLimitCounter(Base):
     count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
 
+class AuditLog(Base):
+    """Append-only record of every mutation.
+
+    Written in the same transaction as the change it describes (flushed, then
+    committed together), so an audit row exists if and only if the change
+    landed. Nothing here is ever updated or deleted.
+    """
+
+    __tablename__ = "audit_log"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # Null for resources without a namespace (e.g. api key changes).
+    namespace: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    # e.g. "memory.created", "contradiction.flagged", "api_key.created".
+    action: Mapped[str] = mapped_column(String(64), nullable=False)
+    resource_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    resource_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    actor_key_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    request_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    details: Mapped[dict[str, object]] = mapped_column(
+        JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        Index("ix_audit_log_namespace_created", "namespace", "created_at"),
+        Index("ix_audit_log_resource", "resource_type", "resource_id"),
+    )
+
+
 class Contradiction(Base):
     """A flagged (not resolved) contradiction between two memories.
 

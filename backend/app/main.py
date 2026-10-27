@@ -65,6 +65,7 @@ async def harden_and_observe(request: Request, call_next) -> Response:
         )
 
     request_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex
+    request.state.request_id = request_id
     start = time.perf_counter()
     try:
         response = await call_next(request)

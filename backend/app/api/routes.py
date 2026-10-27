@@ -10,7 +10,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.api import pagination
@@ -175,8 +175,13 @@ def delete_namespace(
 # Memories
 # --------------------------------------------------------------------------- #
 @router.post("/memories", response_model=MemoryCreateResult, status_code=status.HTTP_201_CREATED, dependencies=_WRITE)
-def add_memory(payload: MemoryCreate, db: Session = Depends(get_db)) -> MemoryCreateResult:
+def add_memory(
+    payload: MemoryCreate,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> MemoryCreateResult:
     """Add a memory. Any contradictions it introduces are flagged and returned."""
+    actor = _actor(request)
     memory, contradictions = memory_service.add_memory(
         db,
         content=payload.content,
@@ -185,6 +190,8 @@ def add_memory(payload: MemoryCreate, db: Session = Depends(get_db)) -> MemoryCr
         tags=list(payload.tags),
         meta=payload.meta,
         expires_at=payload.expires_at,
+        actor_key_id=actor,
+        request_id=request.state.request_id,
     )
     return MemoryCreateResult(
         memory=MemoryOut.model_validate(memory),
@@ -193,7 +200,11 @@ def add_memory(payload: MemoryCreate, db: Session = Depends(get_db)) -> MemoryCr
 
 
 @router.post("/memories/bulk", response_model=BulkMemoryResult, dependencies=_WRITE)
-def add_memories_bulk(payload: BulkMemoryRequest, db: Session = Depends(get_db)) -> BulkMemoryResult:
+def add_memories_bulk(
+    payload: BulkMemoryRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> BulkMemoryResult:
     """Add many memories in one call, each through the normal write path.
 
     Items are processed independently: a failure (bad content, embed error)
@@ -212,6 +223,8 @@ def add_memories_bulk(payload: BulkMemoryRequest, db: Session = Depends(get_db))
                 importance=item.importance,
                 tags=list(item.tags),
                 meta=item.meta,
+                actor_key_id=_actor(request),
+                request_id=request.state.request_id,
             )
         except (ValueError, RuntimeError) as exc:
             errors += 1
@@ -314,6 +327,7 @@ def get_memory(
 def update_memory(
     payload: MemoryUpdate,
     memory_id: uuid.UUID,
+    request: Request,
     namespace: str | None = Query(default=None, min_length=1, max_length=128),
     db: Session = Depends(get_db),
 ) -> MemoryOut:
@@ -336,6 +350,8 @@ def update_memory(
             if "expires_at" in payload.model_fields_set
             else _UNSET
         ),
+        actor_key_id=_actor(request),
+        request_id=request.state.request_id,
     )
     if memory is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Memory not found.")
@@ -345,6 +361,7 @@ def update_memory(
 @router.delete("/memories/{memory_id}", response_model=MemoryOut, dependencies=_WRITE)
 def delete_memory(
     memory_id: uuid.UUID,
+    request: Request,
     namespace: str | None = Query(default=None, min_length=1, max_length=128),
     db: Session = Depends(get_db),
 ) -> MemoryOut:
@@ -354,7 +371,11 @@ def delete_memory(
     caller cannot soft-delete a memory outside the namespace it names.
     """
     memory = memory_service.soft_delete_memory(
-        db, memory_id=memory_id, namespace=namespace
+        db,
+        memory_id=memory_id,
+        namespace=namespace,
+        actor_key_id=_actor(request),
+        request_id=request.state.request_id,
     )
     if memory is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Memory not found.")
@@ -407,12 +428,18 @@ def list_contradictions(
 
 
 @router.post("/contradictions/resolve", response_model=ContradictionOut, dependencies=_WRITE)
-def resolve_contradiction(payload: ResolveRequest, db: Session = Depends(get_db)) -> ContradictionOut:
+def resolve_contradiction(
+    payload: ResolveRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> ContradictionOut:
     """Resolve a contradiction by naming the winner; the loser is soft-deleted."""
     contradiction, error = memory_service.resolve_contradiction(
         db,
         contradiction_id=payload.contradiction_id,
         winner_memory_id=payload.winner_memory_id,
+        actor_key_id=_actor(request),
+        request_id=request.state.request_id,
     )
     if error is not None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
@@ -465,3 +492,9 @@ def revoke_api_key(key_id: uuid.UUID, db: Session = Depends(get_db)) -> None:
     row = api_key_service.deactivate_api_key(db, key_id=key_id)
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Key not found.")
+
+
+def _actor(request: Request) -> uuid.UUID | None:
+    """The issuing key id for the authenticated caller (None for the env key)."""
+    auth = getattr(request.state, "auth", None)
+    return getattr(auth, "key_id", None) if auth is not None else None

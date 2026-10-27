@@ -20,7 +20,7 @@ from app.core.decay import relevance_score
 from app.core.embedding import embed
 from app.models.models import Contradiction, Memory
 from app.models.schemas import MemoryExport
-from app.services import namespace_service
+from app.services import audit_service, namespace_service
 from app.services.namespace_service import ScoringConfig
 
 # How many nearest neighbours to inspect for contradictions when adding.
@@ -61,6 +61,8 @@ def add_memory(
     meta: dict[str, object] | None = None,
     expires_at: datetime | None = None,
     llm_check: LlmCheck | None = None,
+    actor_key_id: uuid.UUID | None = None,
+    request_id: str | None = None,
 ) -> tuple[Memory, list[Contradiction]]:
     """Embed and persist a memory, flagging any contradictions it introduces.
 
@@ -88,6 +90,18 @@ def add_memory(
         namespace=namespace,
         llm_check=llm_check,
         scoring=scoring,
+        actor_key_id=actor_key_id,
+        request_id=request_id,
+    )
+    audit_service.record(
+        db,
+        action="memory.created",
+        resource_type="memory",
+        namespace=namespace,
+        resource_id=memory.id,
+        actor_key_id=actor_key_id,
+        request_id=request_id,
+        details={"importance": importance, "tags": list(tags or [])},
     )
 
     db.commit()
@@ -105,6 +119,8 @@ def _flag_contradictions(
     namespace: str,
     llm_check: LlmCheck | None,
     scoring: ScoringConfig | None = None,
+    actor_key_id: uuid.UUID | None = None,
+    request_id: str | None = None,
 ) -> list[Contradiction]:
     """Compare a new memory against its nearest neighbours and flag conflicts."""
     if scoring is None:
@@ -158,6 +174,21 @@ def _flag_contradictions(
                 status="open",
             )
             db.add(contradiction)
+            db.flush()
+            audit_service.record(
+                db,
+                action="contradiction.flagged",
+                resource_type="contradiction",
+                namespace=namespace,
+                resource_id=contradiction.id,
+                actor_key_id=actor_key_id,
+                request_id=request_id,
+                details={
+                    "new_memory_id": str(memory.id),
+                    "existing_memory_id": str(existing.id),
+                    "similarity": verdict.similarity,
+                },
+            )
             existing_pairs.add(pair)
             flagged.append(contradiction)
 
@@ -268,7 +299,12 @@ def get_memory(
 
 
 def soft_delete_memory(
-    db: Session, *, memory_id: uuid.UUID, namespace: str | None = None
+    db: Session,
+    *,
+    memory_id: uuid.UUID,
+    namespace: str | None = None,
+    actor_key_id: uuid.UUID | None = None,
+    request_id: str | None = None,
 ) -> Memory | None:
     """Soft-delete a memory (``is_active=False``). Never hard-deletes.
 
@@ -278,6 +314,15 @@ def soft_delete_memory(
     if memory is None:
         return None
     memory.is_active = False
+    audit_service.record(
+        db,
+        action="memory.deleted",
+        resource_type="memory",
+        namespace=memory.namespace,
+        resource_id=memory.id,
+        actor_key_id=actor_key_id,
+        request_id=request_id,
+    )
     db.commit()
     db.refresh(memory)
     return memory
@@ -293,6 +338,8 @@ def update_memory(
     tags: list[str] | None = None,
     meta: dict[str, object] | None = None,
     expires_at: datetime | None | object = _UNSET,
+    actor_key_id: uuid.UUID | None = None,
+    request_id: str | None = None,
 ) -> Memory | None:
     """Partially update a memory, re-embedding and re-checking content changes.
 
@@ -304,18 +351,24 @@ def update_memory(
     if memory is None:
         return None
 
+    changed: dict[str, object] = {}
     if importance is not None:
         memory.importance = importance
+        changed["importance"] = importance
     if tags is not None:
         memory.tags = list(tags)
+        changed["tags"] = list(tags)
     if meta is not None:
         memory.meta = dict(meta)
+        changed["metadata_keys"] = sorted(dict(meta).keys())
     if expires_at is not _UNSET:
         memory.expires_at = _utc(expires_at) if expires_at else None  # type: ignore[arg-type]
+        changed["expires_at"] = memory.expires_at.isoformat() if memory.expires_at else None
 
     if content is not None and content != memory.content:
         memory.content = content
         memory.embedding = embed(content)
+        changed["content"] = True
         if memory.is_active:
             _flag_contradictions(
                 db,
@@ -323,8 +376,20 @@ def update_memory(
                 vector=memory.embedding,
                 namespace=memory.namespace,
                 llm_check=None,
+                actor_key_id=actor_key_id,
+                request_id=request_id,
             )
 
+    audit_service.record(
+        db,
+        action="memory.updated",
+        resource_type="memory",
+        namespace=memory.namespace,
+        resource_id=memory.id,
+        actor_key_id=actor_key_id,
+        request_id=request_id,
+        details={"changed": list(changed)},
+    )
     db.commit()
     db.refresh(memory)
     return memory
@@ -378,12 +443,23 @@ def sweep_expired(db: Session, *, now: datetime | None = None) -> int:
     for memory in rows:
         memory.is_active = False
     if rows:
+        audit_service.record(
+            db,
+            action="memory.swept",
+            resource_type="memory",
+            details={"count": len(rows), "namespaces": sorted({m.namespace for m in rows})},
+        )
         db.commit()
     return len(rows)
 
 
 def resolve_contradiction(
-    db: Session, *, contradiction_id: uuid.UUID, winner_memory_id: uuid.UUID
+    db: Session,
+    *,
+    contradiction_id: uuid.UUID,
+    winner_memory_id: uuid.UUID,
+    actor_key_id: uuid.UUID | None = None,
+    request_id: str | None = None,
 ) -> tuple[Contradiction | None, str | None]:
     """Resolve a contradiction, soft-deleting the losing memory.
 
@@ -410,6 +486,16 @@ def resolve_contradiction(
     contradiction.resolved_winner_id = winner_memory_id
     contradiction.resolved_at = datetime.now(timezone.utc)
 
+    audit_service.record(
+        db,
+        action="contradiction.resolved",
+        resource_type="contradiction",
+        namespace=contradiction.namespace,
+        resource_id=contradiction.id,
+        actor_key_id=actor_key_id,
+        request_id=request_id,
+        details={"winner_memory_id": str(winner_memory_id), "loser_memory_id": str(loser_id)},
+    )
     db.commit()
     db.refresh(contradiction)
     return contradiction, None
@@ -569,6 +655,17 @@ def import_namespace(
                 )
             )
 
+        audit_service.record(
+            db,
+            action="namespace.imported",
+            resource_type="namespace",
+            namespace=namespace,
+            details={
+                "memories": len(payload.memories),
+                "contradictions": len(payload.contradictions),
+                "preserve_ids": preserve_ids,
+            },
+        )
         db.commit()
     except IntegrityError as exc:
         db.rollback()
