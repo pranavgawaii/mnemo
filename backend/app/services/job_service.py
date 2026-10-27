@@ -114,7 +114,11 @@ def process_next(db: Session, *, now: datetime | None = None) -> str | None:
         return None
     handler = handler_for(job.kind)
     if handler is None:
-        fail(db, job=job, error=f"no handler registered for kind '{job.kind}'", now=now)
+        # No handler can ever run this kind within this build; retrying would
+        # just churn, so park it terminally instead of backing off.
+        job.status = "failed"
+        job.last_error = f"no handler registered for kind '{job.kind}'"
+        db.commit()
         return "failed:no-handler"
     try:
         handler(job.payload)
