@@ -258,6 +258,7 @@ def search_memories(payload: SearchRequest, db: Session = Depends(get_db)) -> Se
         limit=payload.limit,
         tags=list(payload.tags) or None,
         keyword_weight=payload.keyword_weight,
+        diversity=payload.diversity,
     )
     hits = [
         SearchHit(

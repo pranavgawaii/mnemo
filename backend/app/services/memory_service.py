@@ -19,6 +19,7 @@ from app.core import hybrid
 from app.core.config import settings
 from app.core.contradiction import LlmCheck, check_contradiction
 from app.core.decay import relevance_score
+from app.core.diversity import mmr_select
 from app.core.embedding import cosine_similarity, embed
 from app.models.models import Contradiction, Memory
 from app.models.schemas import MemoryExport
@@ -263,12 +264,14 @@ def search(
     limit: int,
     tags: list[str] | None = None,
     keyword_weight: float | None = None,
+    diversity: float = 0.0,
 ) -> list[tuple[Memory, float, float, float]]:
     """Semantic search, re-ranked by relevance (similarity * decay * importance).
 
     Returns tuples of ``(memory, similarity, relevance_score, age_days)`` sorted
     by ``relevance_score`` descending. ``keyword_weight`` (per-query override of
     the global setting) adds a keyword-evidence boost on top; 0 disables it.
+    ``diversity`` applies greedy MMR when > 0 (app/core/diversity.py).
     """
     vector = embed(query)
     distance = Memory.embedding.cosine_distance(vector)
@@ -318,8 +321,8 @@ def search(
         scoring=scoring,
     )
 
-    scored.sort(key=lambda row: row[2], reverse=True)
-    return scored[:limit]
+    # Optional MMR pass for diversity; pure relevance order when diversity == 0.
+    return mmr_select(scored, diversity=diversity, limit=limit)
 
 
 def _tune_ann(db: Session) -> None:

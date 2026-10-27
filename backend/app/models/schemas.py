@@ -158,6 +158,8 @@ class SearchRequest(BaseModel):
     tags: list[Tag] = Field(default_factory=list, max_length=5)
     # Per-query override of KEYWORD_WEIGHT (0 disables the keyword boost).
     keyword_weight: float | None = Field(default=None, ge=0, le=1)
+    # MMR diversity in [0,1]: 0 = pure relevance, higher spreads the results.
+    diversity: float = Field(default=0.0, ge=0, le=1)
 
 
 class SearchHit(BaseModel):
