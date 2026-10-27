@@ -149,16 +149,18 @@ def update_namespace(
 
 
 def delete_namespace(db: Session, *, name: str) -> bool | None:
-    """Delete the namespace row. Returns None when it doesn't exist, False when
-    it still has memories (deleting live data is refused), True on success."""
-    row = db.get(NamespaceRow, name)
-    if row is None:
-        return None
+    """Delete the namespace row. Returns None when the namespace doesn't exist
+    at all (no row and no memories), False when it still has memories (deleting
+    live data is refused — implicit namespaces created by writes count), True
+    on success."""
     memory_count = db.scalar(
         select(func.count()).select_from(Memory).where(Memory.namespace == name)
     )
     if memory_count:
         return False
+    row = db.get(NamespaceRow, name)
+    if row is None:
+        return None
     db.delete(row)
     db.commit()
     return True
