@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -26,6 +27,11 @@ from benchmark.run import DATASET, run_benchmark
 BASELINES = Path(__file__).with_name("baselines.json")
 
 QUALITY_METRICS = ("top1_accuracy", "topk_accuracy", "mrr", "ndcg_at_k")
+
+
+def _valid_number(value, *, upper: float | None = None) -> bool:
+    return (type(value) in {int, float} and math.isfinite(value) and value >= 0
+            and (upper is None or value <= upper))
 
 
 def compare(scores: dict, baselines: dict) -> list[str]:
@@ -40,17 +46,26 @@ def compare(scores: dict, baselines: dict) -> list[str]:
         if key not in baselines:
             failures.append(f"baseline missing: {key}")
             continue
-        actual = float(scores.get(metric, 0.0))
-        minimum = float(baselines[key])
+        actual, minimum = scores.get(metric), baselines[key]
+        if not _valid_number(actual, upper=1):
+            failures.append(f"{metric}: missing or invalid finite probability")
+            continue
+        if not _valid_number(minimum, upper=1):
+            failures.append(f"baseline invalid: {key}")
+            continue
+        actual, minimum = float(actual), float(minimum)
         if actual < minimum:
             failures.append(f"{metric}: {actual:.3f} < baseline {minimum:.3f}")
 
     if "latency_p95_ms_max" not in baselines:
         failures.append("baseline missing: latency_p95_ms_max")
     else:
-        actual = float(scores.get("latency_p95_ms", float("inf")))
-        ceiling = float(baselines["latency_p95_ms_max"])
-        if actual > ceiling:
+        actual, ceiling = scores.get("latency_p95_ms"), baselines["latency_p95_ms_max"]
+        if not _valid_number(actual):
+            failures.append("latency_p95_ms: missing or invalid finite latency")
+        elif not _valid_number(ceiling):
+            failures.append("baseline invalid: latency_p95_ms_max")
+        elif actual > ceiling:
             failures.append(f"latency_p95_ms: {actual:.1f} > ceiling {ceiling:.1f}")
     return failures
 
@@ -61,6 +76,8 @@ def load_baselines(path: Path) -> dict:
 
 def save_baselines(path: Path, scores: dict) -> None:
     """Re-pin baselines from the current run's public scores."""
+    if compare(scores, {**{f"{key}_min": 0 for key in QUALITY_METRICS}, "latency_p95_ms_max": 1e30}):
+        raise ValueError("Cannot pin missing, non-finite or out-of-range scores.")
     public = {key: value for key, value in scores.items() if not key.startswith("_") and key != "misses"}
     baseline = {
         "top1_accuracy_min": public["top1_accuracy"],

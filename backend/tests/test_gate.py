@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from benchmark.gate import compare
+import pytest
+
+from benchmark.gate import compare, save_baselines
 
 BASELINE = {
     "top1_accuracy_min": 0.8,
@@ -91,3 +93,23 @@ def test_gate_cli_loads_baseline_file(tmp_path, monkeypatch):
         "ndcg_at_k": 0.85, "latency_p95_ms": 500,
     })
     assert gate.main() == 0
+
+
+@pytest.mark.parametrize("bad", [float("nan"), float("inf"), -0.1, 1.1, None, "0.9", True])
+def test_bad_quality_values_never_pass_or_get_pinned(tmp_path, bad):
+    scores = {"top1_accuracy": bad, "topk_accuracy": 0.9, "mrr": 0.9,
+              "ndcg_at_k": 0.9, "latency_p95_ms": 1}
+    assert compare(scores, BASELINE)
+    target = tmp_path / "baseline.json"
+    target.write_text("original")
+    with pytest.raises(ValueError):
+        save_baselines(target, scores)
+    assert target.read_text() == "original"
+
+
+@pytest.mark.parametrize("bad", [float("nan"), float("inf"), -1, None, "500", True])
+def test_invalid_latency_baselines_fail_closed(bad):
+    scores = {"top1_accuracy": 1, "topk_accuracy": 1, "mrr": 1,
+              "ndcg_at_k": 1, "latency_p95_ms": 1}
+    failures = compare(scores, {**BASELINE, "latency_p95_ms_max": bad})
+    assert failures == ["baseline invalid: latency_p95_ms_max"]
