@@ -1,6 +1,6 @@
 <div align="center">
 
-<h1><img src="docs/assets/logo.svg" alt="" width="32" height="32" align="middle" /> Mnemo</h1>
+<h1><img src="docs/assets/wordmark.svg" alt="Mnemo" width="190" height="56" /></h1>
 
 <p><strong>An inspectable memory API for AI agents.</strong></p>
 
