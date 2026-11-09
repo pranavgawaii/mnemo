@@ -9,6 +9,7 @@ Start with the root [quickstart](../README.md#quickstart). The local website at
 | [System architecture](architecture.md) | API process, local encoder, database, worker and design decisions |
 | [Deployment](deployment.md) | Local setup, configuration, operations and integration tests |
 | [Python SDK](../sdk/README.md) | Typed sync/async clients and agent helpers |
+| [Agent context and evaluation](agent-context.md) | Cited context, namespace grants, tools and labelled checks |
 | [Frontend maintenance](frontend.md) | Routes, components, simulation boundaries and content updates |
 | [Contributing](../CONTRIBUTING.md) | Development workflows and validation commands |
 

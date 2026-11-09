@@ -106,6 +106,7 @@ function fields(schema: Schema, location: string): Field[] {
   }));
 }
 function resource(path: string): Resource {
+  if (path === "/v1/context") return "memories";
   if (path.startsWith("/v1/demo/")) return "operations";
   if (path.startsWith("/v1/memories")) return "memories";
   if (path.startsWith("/v1/contradictions")) return "conflicts";
@@ -114,6 +115,7 @@ function resource(path: string): Resource {
   return path.startsWith("/v1/") ? "events" : "operations";
 }
 function scope(path: string, method: string): Endpoint["scope"] {
+  if (path === "/v1/context") return "read";
   if (path === "/v1/demo/availability") return "read + write";
   if (!path.startsWith("/v1/")) return "public";
   if (/^\/v1\/(namespaces|keys|events|webhooks)(\/|$)/.test(path))

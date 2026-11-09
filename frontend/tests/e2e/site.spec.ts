@@ -117,6 +117,9 @@ test("API reference exposes corrected PATCH fields, pagination and public metric
     .getByRole("tab", { name: "GET /v1/memories", exact: true })
     .click();
   await expect(panel.getByText("next_cursor", { exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: "POST /v1/context", exact: true }).click();
+  await expect(panel).toContainText("read scope");
+  await expect(panel.getByText("max_chars", { exact: true }).first()).toBeVisible();
   await page.getByRole("tab", { name: "Operations", exact: true }).click();
   await page.getByRole("tab", { name: "GET /metrics", exact: true }).click();
   await expect(panel).toContainText("No authentication · 200 · text/plain");
@@ -132,8 +135,9 @@ test("API reference exposes corrected PATCH fields, pagination and public metric
         ).length,
       0,
     ),
-  ).toBe(28);
+  ).toBe(29);
   expect(schema.paths["/v1/demo/availability"].get).toBeDefined();
+  expect(schema.paths["/v1/context"].post).toBeDefined();
 });
 
 test("API tabs support keyboard navigation", async ({ page }) => {

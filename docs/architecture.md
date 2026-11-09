@@ -137,6 +137,11 @@ uses expiring leases, stale-worker fencing, `FOR UPDATE SKIP LOCKED`, and retrie
 - The bootstrap key comes from `MNEMO_API_KEY` (all scopes).
 - Issued keys are stored as SHA-256 hashes with an 11-char display prefix;
   scopes are `read`, `write`, `admin`; rotation replaces the secret.
+- Optional exact namespace grants are checked before every memory list, search,
+  write, bulk request and conflict resolution. ID routes filter allowed namespaces
+  in SQL and return 404 for foreign IDs. Restricted keys cannot carry global
+  admin scope; expiry is checked during authentication. NULL grants retain the
+  existing unrestricted access. There is no PostgreSQL row-level security.
 - Rate limiting is a **fixed-minute window in Postgres**
   (`rate_limit_counters`): one upsert per request, per-key override column on
   `api_keys`, `X-RateLimit-*`/`Retry-After` response headers. It is off by
@@ -164,7 +169,7 @@ the sort key `(created_at DESC, id DESC)` is total.
 |---|---|---|
 | `memories` | The facts | embedding vector(384), generated tsv, GIN(tags), HNSW |
 | `namespaces` | Per-namespace scoring overrides | unique name, pattern-checked |
-| `api_keys` | Issued keys | unique key_hash; scopes list |
+| `api_keys` | Issued keys | unique key_hash; scopes, namespace grants and expiry |
 | `rate_limit_counters` | Fixed-window counters | PK (identity, window_start) |
 | `contradictions` | Flagged conflicts | unique (new_memory_id, existing_memory_id) |
 | `audit_log` | Append-only trail | indexed (namespace, created_at) |
@@ -174,7 +179,7 @@ the sort key `(created_at DESC, id DESC)` is total.
 Migrations live in `backend/alembic/versions` (one revision per feature:
 0002 tags, 0003 namespaces, 0004 api_keys, 0005 rate limiting, 0006 TTL,
 0007 audit log, 0008 tsvector, 0009 HNSW, 0010 jobs, 0011 webhooks, 0012
-unique pair, 0013 worker leases). CI runs `alembic upgrade head` before the test suite, so a
+unique pair, 0013 worker leases, 0014 key grants and expiry). CI runs `alembic upgrade head` before the test suite, so a
 broken revision fails the build.
 
 ## Testing strategy

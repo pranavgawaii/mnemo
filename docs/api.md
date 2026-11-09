@@ -304,7 +304,25 @@ curl -X POST https://mnemo.internal/v1/contradictions/resolve \
 The loser is soft-deleted; the contradiction becomes `resolved` with
 `resolved_winner_id` set. Both sides are returned inlined.
 
+## Agent context (read)
+
+`POST /v1/context` accepts a query, namespace, optional tag/ranking controls,
+`candidate_limit` (1–100), `max_chars` (128–32,000), `min_similarity` (-1 to 1),
+`current_values` (default true) and `exclude_conflicts` (default true).
+It returns bounded JSONL context, source-bearing citations, per-candidate
+decisions and exact character usage. It does not generate answers or mutate
+memories. The limit applies to `context`, not the full response or model tokens.
+See [agent context and evaluation](agent-context.md) for status handling and examples.
+
 ## API keys (admin)
+
+Issued keys may set `namespaces` to an exact list of 1–32 names and `expires_at`
+to a future, timezone-aware timestamp. Omitted/null grants preserve unrestricted
+access; existing keys keep working. Restricted keys cannot carry `admin` scope.
+Rotation preserves grants and expiry. Expired keys return the same 401 as invalid
+keys. Foreign namespace requests return 403; foreign memory IDs return 404, even
+if the caller omits the namespace query parameter. Mixed-namespace bulk requests
+are authorized in full before any item writes.
 
 ### `POST /v1/keys`
 
@@ -318,7 +336,7 @@ curl -X POST https://mnemo.internal/v1/keys \
 {
   "id": "...", "label": "support-bot", "key_prefix": "mnemo_1a2b3", "scopes": ["read", "write"],
   "is_active": true, "created_at": "...", "last_used_at": null,
-  "rate_limit_per_minute": 60,
+  "rate_limit_per_minute": 60, "namespaces": null, "expires_at": null,
   "key": "mnemo_4f8d2e7c1b..."
 }
 ```

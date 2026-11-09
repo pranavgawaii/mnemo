@@ -1637,6 +1637,66 @@
         }
       }
     },
+    "/v1/context": {
+      "post": {
+        "tags": [
+          "context"
+        ],
+        "summary": "Agent Context",
+        "description": "Retrieve bounded context with citations and per-candidate decisions.\n\nDoes not resolve conflicts, mutate memories or call a generation model.\nThe character budget applies to ``context``, not the complete JSON response.",
+        "operationId": "agent_context_v1_context_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContextRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/metrics": {
       "get": {
         "tags": [
@@ -1748,6 +1808,34 @@
               }
             ],
             "title": "Rate Limit Per Minute"
+          },
+          "namespaces": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "maxItems": 32,
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Namespaces"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
           }
         },
         "type": "object",
@@ -1755,7 +1843,7 @@
           "label"
         ],
         "title": "ApiKeyCreate",
-        "description": "Create an issued key. Scopes: read (GET), write (mutations), admin."
+        "description": "Create a key with retrieval, mutation or admin scopes and optional grants."
       },
       "ApiKeyCreated": {
         "properties": {
@@ -1810,6 +1898,32 @@
               }
             ],
             "title": "Rate Limit Per Minute"
+          },
+          "namespaces": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Namespaces"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
           },
           "key": {
             "type": "string",
@@ -1906,6 +2020,32 @@
               }
             ],
             "title": "Rate Limit Per Minute"
+          },
+          "namespaces": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Namespaces"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
           }
         },
         "type": "object",
@@ -2133,6 +2273,255 @@
         ],
         "title": "BulkMemoryResultItem",
         "description": "Per-item outcome of a bulk add. Items are independent: one failing item\nnever rolls back the others."
+      },
+      "ContextCitationOut": {
+        "properties": {
+          "citation": {
+            "type": "string",
+            "title": "Citation"
+          },
+          "memory_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Memory Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "source_content": {
+            "type": "string",
+            "title": "Source Content"
+          },
+          "used_current_statement": {
+            "type": "boolean",
+            "title": "Used Current Statement"
+          },
+          "similarity": {
+            "type": "number",
+            "title": "Similarity"
+          },
+          "relevance_score": {
+            "type": "number",
+            "title": "Relevance Score"
+          },
+          "pending_review": {
+            "type": "boolean",
+            "title": "Pending Review"
+          }
+        },
+        "type": "object",
+        "required": [
+          "citation",
+          "memory_id",
+          "text",
+          "source_content",
+          "used_current_statement",
+          "similarity",
+          "relevance_score",
+          "pending_review"
+        ],
+        "title": "ContextCitationOut"
+      },
+      "ContextDecisionOut": {
+        "properties": {
+          "memory_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Memory Id"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "included",
+              "inactive",
+              "expired",
+              "below_similarity",
+              "pending_review",
+              "duplicate",
+              "budget",
+              "empty_content",
+              "invalid_score"
+            ],
+            "title": "Reason"
+          },
+          "citation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Citation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "memory_id",
+          "rank",
+          "reason"
+        ],
+        "title": "ContextDecisionOut"
+      },
+      "ContextRequest": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "maxLength": 8000,
+            "minLength": 1,
+            "title": "Query"
+          },
+          "namespace": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Namespace",
+            "default": "default"
+          },
+          "candidate_limit": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Candidate Limit",
+            "default": 30
+          },
+          "max_chars": {
+            "type": "integer",
+            "maximum": 32000.0,
+            "minimum": 128.0,
+            "title": "Max Chars",
+            "default": 4000
+          },
+          "min_similarity": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": -1.0,
+            "title": "Min Similarity",
+            "default": 0.25
+          },
+          "current_values": {
+            "type": "boolean",
+            "title": "Current Values",
+            "default": true
+          },
+          "exclude_conflicts": {
+            "type": "boolean",
+            "title": "Exclude Conflicts",
+            "default": true
+          },
+          "tags": {
+            "items": {
+              "type": "string",
+              "maxLength": 64,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 5,
+            "title": "Tags"
+          },
+          "keyword_weight": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keyword Weight"
+          },
+          "diversity": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Diversity",
+            "default": 0.0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "ContextRequest"
+      },
+      "ContextResponse": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "namespace": {
+            "type": "string",
+            "title": "Namespace"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "empty",
+              "needs_review",
+              "budget_exhausted"
+            ],
+            "title": "Status"
+          },
+          "context": {
+            "type": "string",
+            "title": "Context"
+          },
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/ContextCitationOut"
+            },
+            "type": "array",
+            "title": "Citations"
+          },
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/ContextDecisionOut"
+            },
+            "type": "array",
+            "title": "Decisions"
+          },
+          "used_chars": {
+            "type": "integer",
+            "title": "Used Chars"
+          },
+          "max_chars": {
+            "type": "integer",
+            "title": "Max Chars"
+          },
+          "has_pending_review": {
+            "type": "boolean",
+            "title": "Has Pending Review"
+          },
+          "candidate_count": {
+            "type": "integer",
+            "title": "Candidate Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query",
+          "namespace",
+          "status",
+          "context",
+          "citations",
+          "decisions",
+          "used_chars",
+          "max_chars",
+          "has_pending_review",
+          "candidate_count"
+        ],
+        "title": "ContextResponse"
       },
       "ContradictionExportItem": {
         "properties": {

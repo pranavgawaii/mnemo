@@ -43,6 +43,11 @@ The browser demo runs offline. Connect the optional Live API walkthrough for bac
 - **Integrate through an API.** Scoped keys, cursor pagination, export/import,
   audit events and a transactional outbox support the service. Optional webhook
   delivery uses signatures, stable event IDs and bounded retries.
+- **Build cited agent context.** A Python-owned context endpoint selects whole
+  facts within a character budget, preserves source text and omits open conflicts
+  by default. Sync/async SDK clients and provider-neutral tools consume it.
+- **Restrict application access.** Issued keys support exact namespace grants
+  and optional expiry. Restricted keys cannot use global admin operations.
 
 Your application supplies facts and generates answers. Mnemo provides memory
 storage, retrieval and conflict review.
@@ -167,6 +172,7 @@ frontend/                Next.js app, dependencies, configuration and browser te
   public/                fonts, OpenAPI schema and saved benchmark
   tests/e2e/             browser regressions
 backend/                 FastAPI, migrations, workers, benchmark and tests
+  evaluation/            labelled, read-only context selection runner
 sdk/                     typed sync/async Python client and client tests
 scripts/                 shared schema export and documentation contract checks
 docs/                    API, architecture, deployment and maintainer guides
@@ -180,8 +186,9 @@ rule data is generated and checked in CI.
 
 ## Current boundaries
 
-- Keys have operation scopes, but are not tenant-bound. Namespaces organize
-  retrieval and do not provide tenant isolation.
+- Namespace grants restrict issued keys at the HTTP API. Existing unrestricted
+  keys and the bootstrap key retain deployment-wide access. There is no database
+  row-level security or tenant account/provisioning system.
 - The default conflict detector is English-only and heuristic. Explicit from/to
   rules cover relocation, favourite cuisine, learning goals and running routines
   when the subject and recorded previous value match. Other changed numbers,
@@ -191,6 +198,10 @@ rule data is generated and checked in CI.
   not create immutable versions of earlier content.
 - The default encoder truncates beyond 256 word pieces. The service does not
   automatically chunk long documents.
+
+See [agent context and evaluation](docs/agent-context.md) for bounded recall,
+Python tools, key grants and labelled selection checks. Character budgets are
+not model token counts, and retrieval evidence does not verify a fact's truth.
 
 <p align="center">
 <a href="LICENSE">MIT license</a> · Built by <a href="https://pranavx.in">Pranav Gawai</a>

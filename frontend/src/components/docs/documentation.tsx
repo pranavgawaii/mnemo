@@ -133,11 +133,12 @@ export function AuthSection() {
       </p>
       <div className="rounded-xl border border-line bg-accent-soft/40 p-5 text-[13px] leading-relaxed">
         <strong className="font-medium text-ink">
-          Single-tenant by design in this version.
+          Scope application keys explicitly.
         </strong>{" "}
-        Namespaces are retrieval buckets. Keys are not tenant-bound, and
-        namespaces are not a database security boundary. A key's permitted
-        operations can apply across namespaces.
+        Issued keys can have an exact namespace allowlist and an expiry.
+        Restricted keys cannot use global admin operations. Existing unrestricted
+        keys and the bootstrap key retain deployment-wide access; this is API
+        access control, without database row-level security.
       </div>
     </DocsSection>
   );

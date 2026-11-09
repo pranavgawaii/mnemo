@@ -28,6 +28,7 @@ Use Python 3.12+ and a virtual environment. From `backend/`:
 ```bash
 pip install -r requirements-api.txt
 python -m pytest tests/test_core.py tests/test_frontend_parity.py -q
+python -m pytest tests/test_context_packing.py tests/test_access_policy.py tests/test_context_evaluation.py -q
 python ../scripts/check-doc-examples.py
 ```
 
@@ -59,3 +60,10 @@ need reproducible evidence, recorded settings and limitations.
 Keep screenshots in `docs/assets/`, third-party notices in `docs/licenses/`, and
 user instructions in the product guides. Keep temporary plans outside the repository. The [frontend guide](docs/frontend.md)
 describes the component boundaries.
+
+To preview the language bar before a push, run `python scripts/language-report.py
+--verify-origin --output /tmp/mnemo-languages.json` from the repository root. This
+reports code bytes and per-file counts, verifies the committed baseline against
+GitHub, and leaves the repository unchanged. It is a projection; GitHub Linguist
+publishes the final language bar after a push to the default branch. Do not pad
+source files or hide frontend languages to influence the chart.
