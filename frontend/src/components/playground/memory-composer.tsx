@@ -2,7 +2,7 @@ import type { WorkbenchModel } from "./use-workbench";
 
 export function MemoryComposer({ model }: { model: WorkbenchModel }) {
   return (
-    <div>
+    <div className="min-w-0">
       <h2 className="text-[16px] font-medium text-ink">
         <span className="mr-2 text-[12px] text-accent-ink">2</span> Store a fact
       </h2>
@@ -20,7 +20,7 @@ export function MemoryComposer({ model }: { model: WorkbenchModel }) {
           onChange={(event) => model.setDraft(event.target.value)}
           placeholder={`${model.scenario.change}…`}
           rows={2}
-          className="h-[100px] min-w-0 resize-none scroll-mt-24 rounded-lg border border-line bg-white px-3 py-2.5 text-[16px] leading-6 sm:h-11 sm:flex-1 sm:text-[13px] sm:leading-5 text-ink placeholder:text-faint focus:border-accent"
+          className="h-[100px] w-full min-w-0 resize-none scroll-mt-24 rounded-lg border border-line bg-white px-3 py-2.5 text-[16px] leading-6 sm:h-11 sm:flex-1 sm:text-[13px] sm:leading-5 text-ink placeholder:text-faint focus:border-accent"
         />
         <button
           type="submit"

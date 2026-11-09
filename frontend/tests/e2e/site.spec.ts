@@ -1,6 +1,20 @@
 import { chooseScenario, showResults } from "./helpers";
 import { expect, test } from "@playwright/test";
 
+test("phone form fields fit even with large native intrinsic widths", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 844 });
+  await page.goto("/playground");
+  const query = page.getByLabel("Recall query", { exact: true });
+  const memory = page.getByLabel("New memory", { exact: true });
+  await query.evaluate(el => el.setAttribute("size", "80"));
+  await memory.evaluate(el => el.setAttribute("cols", "80"));
+  for (const field of [query, memory]) {
+    const box = (await field.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(320);
+  }
+});
+
 const docs = [
   ["/docs", "Your first memory."],
   ["/docs/concepts", "A memory you can inspect."],

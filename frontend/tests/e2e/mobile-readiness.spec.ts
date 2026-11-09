@@ -4,9 +4,9 @@ import { MEMORY_SCENARIOS } from "../../src/lib/memory/scenarios";
 import { LIVE_SCENARIOS } from "../../src/lib/api/demo-scenarios";
 
 for (const width of [320, 390, 768]) {
-  test(`pages and mobile navigation fit ${width}px`, async ({ page }) => {
-    await page.setViewportSize({ width, height: 844 });
-    for (const route of ["/", "/docs", "/docs/concepts", "/docs/api", "/docs/evaluation", "/playground"]) {
+  for (const route of ["/", "/docs", "/docs/concepts", "/docs/api", "/docs/evaluation", "/playground"]) {
+    test(`${route} and mobile navigation fit ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 844 });
       await page.goto(route);
       await expect(page.locator("main h1")).toBeVisible();
       if (route === "/" && width < 640) {
@@ -23,8 +23,8 @@ for (const width of [320, 390, 768]) {
           expect(await control.evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16);
         }
       }
-    }
-  });
+    });
+  }
 }
 
 for (const scenario of MEMORY_SCENARIOS.filter(example => example.id !== "location" && example.id !== "relocation")) {

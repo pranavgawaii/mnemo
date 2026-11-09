@@ -40,7 +40,7 @@ export function MemoryWorkbench() {
             <span className="hidden sm:inline">Reset demo</span>
           </button>
         </div>
-        <div className="grid gap-2 p-3 sm:gap-5 sm:p-5 lg:grid-cols-2 lg:gap-10">
+        <div className="grid min-w-0 grid-cols-1 gap-2 p-3 sm:gap-5 sm:p-5 lg:grid-cols-2 lg:gap-10">
           <RecallQuery model={model} />
           <MemoryComposer model={model} />
         </div>

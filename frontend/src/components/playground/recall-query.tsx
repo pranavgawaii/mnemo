@@ -4,7 +4,7 @@ import type { WorkbenchModel } from "./use-workbench";
 
 export function RecallQuery({ model }: { model: WorkbenchModel }) {
   return (
-    <div>
+    <div className="min-w-0">
       <h2 className="text-[16px] font-medium text-ink">
         <span className="mr-2 text-[12px] text-accent-ink">1</span> Recall a
         fact
