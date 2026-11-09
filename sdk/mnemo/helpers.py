@@ -9,7 +9,7 @@ These wrap :class:`mnemo.MnemoClient` with the defaults agents usually want:
 - :func:`context_block` — build a prompt-ready context string from search.
 
 They are plain functions taking the client as the first argument, so they work
-with both the sync and (via await-less signatures) only the sync client today;
+with the sync client;
 async callers can call the client methods directly.
 """
 
@@ -30,9 +30,9 @@ def remember(
     importance: int = 3,
     tags: list[str] | None = None,
     metadata: dict[str, Any] | None = None,
-    auto_resolve: bool = True,
+    auto_resolve: bool = False,
 ) -> tuple[Memory, list[Contradiction]]:
-    """Add a fact; contradictions are auto-resolved with the new fact winning.
+    """Add a fact; leave contradictions open unless auto-resolution is requested.
 
     ``auto_resolve`` implements the last-write-wins pattern: every freshly
     flagged contradiction is resolved naming the new memory as the winner,

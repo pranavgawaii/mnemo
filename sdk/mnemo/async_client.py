@@ -14,6 +14,7 @@ from typing import Any, Self
 import httpx
 
 from ._parsing import (
+    _UNSET,
     parse_contradiction,
     parse_memory,
     parse_search_hit,
@@ -76,7 +77,9 @@ class AsyncMnemoClient:
                 body = response.json() if response.content else {}
             except ValueError:
                 body = {"detail": response.text}
-            raise_for_status(response.status_code, body, request_id)
+            raise_for_status(response.status_code, body, request_id, response.headers.get("Retry-After"))
+        if not response.content:
+            return None
         return response.json()
 
     # -- memories ---------------------------------------------------------------
@@ -186,7 +189,7 @@ class AsyncMnemoClient:
         importance: int | None = None,
         tags: list[str] | None = None,
         metadata: dict[str, Any] | None = None,
-        expires_at: str | None = None,
+        expires_at: str | None | object = _UNSET,
     ) -> Memory:
         payload: dict[str, Any] = {}
         if content is not None:
@@ -197,7 +200,7 @@ class AsyncMnemoClient:
             payload["tags"] = tags
         if metadata is not None:
             payload["metadata"] = metadata
-        if expires_at is not None:
+        if expires_at is not _UNSET:
             payload["expires_at"] = expires_at
         params = {"namespace": namespace} if namespace else {}
         return parse_memory(

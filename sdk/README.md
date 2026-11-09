@@ -34,8 +34,8 @@ async with AsyncMnemoClient(base_url="https://mnemo.internal", api_key="mnemo_..
 ```python
 from mnemo.helpers import remember, recall, forget, context_block
 
-# last-write-wins: flagged contradictions are auto-resolved with the new fact
-memory, resolved = remember(client, "Riya moved to Pune", tags=["people"])
+# Conflicts stay open for review by default. Pass auto_resolve=True to opt into last-write-wins.
+memory, conflicts = remember(client, "Riya moved to Pune", tags=["people"])
 
 memories = recall(client, "where does Riya live", limit=5)
 context = context_block(client, "Riya's city")   # "" when nothing matches

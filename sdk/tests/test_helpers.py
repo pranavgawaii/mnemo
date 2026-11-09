@@ -44,7 +44,7 @@ def test_remember_auto_resolves_last_write_wins():
         return httpx.Response(404, json={"detail": "unexpected route"})
 
     with make_client(handler) as client:
-        memory, resolved = remember(client, "Riya moved to Berlin")
+        memory, resolved = remember(client, "Riya moved to Berlin", auto_resolve=True)
 
     assert memory.id == uuid.UUID(MEMORY["id"])
     assert len(resolved) == 1

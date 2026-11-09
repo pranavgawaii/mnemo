@@ -8,7 +8,8 @@ typed errors in ``mnemo.errors``.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from typing import TYPE_CHECKING, Any
 
 from .errors import (
@@ -24,6 +25,8 @@ from .errors import (
 
 if TYPE_CHECKING:
     from .models import Contradiction, Memory, SearchHit
+
+_UNSET = object()
 
 
 def parse_datetime(value: object) -> datetime | None:
@@ -59,8 +62,10 @@ def parse_contradiction(data: Any) -> Contradiction:
     return Contradiction(
         id=_uid(data["id"]),
         namespace=data["namespace"],
-        new_memory_id=_uid(data["new_memory_id"]),
-        existing_memory_id=_uid(data["existing_memory_id"]),
+        new_memory_id=_uid(data["new_memory"]["id"] if "new_memory" in data else data["new_memory_id"]),
+        existing_memory_id=_uid(
+            data["existing_memory"]["id"] if "existing_memory" in data else data["existing_memory_id"]
+        ),
         similarity=float(data["similarity"]),
         reason=data["reason"],
         status=data["status"],
@@ -86,7 +91,9 @@ def parse_search_hit(data: Any) -> SearchHit:
     return hit
 
 
-def raise_for_status(status: int, body: dict[str, Any], request_id: str | None) -> None:
+def raise_for_status(
+    status: int, body: dict[str, Any], request_id: str | None, retry_after: str | None = None
+) -> None:
     """Map an HTTP status to a typed error; returns silently on 2xx."""
     if 200 <= status < 300:
         return
@@ -103,10 +110,19 @@ def raise_for_status(status: int, body: dict[str, Any], request_id: str | None) 
     if status == 422:
         raise ValidationError(detail, status=status, request_id=request_id)
     if status == 429:
-        retry_after = body.get("retry_after")
+        delay = body.get("retry_after")
+        if retry_after is not None:
+            try:
+                delay = max(0.0, float(retry_after))
+            except ValueError:
+                try:
+                    moment = parsedate_to_datetime(retry_after)
+                    delay = max(0.0, (moment - datetime.now(timezone.utc)).total_seconds())
+                except (TypeError, ValueError, OverflowError):
+                    delay = None
         raise RateLimitError(
             detail,
-            retry_after=float(retry_after) if retry_after is not None else None,
+            retry_after=float(delay) if delay is not None else None,
             status=status,
             request_id=request_id,
         )
