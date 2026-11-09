@@ -65,6 +65,7 @@ jobs:
           PYTHONPATH: .
         run: |
           python ../scripts/export-memory-rules.py --check
+          python ../scripts/export-config-reference.py --check
           python -m pytest tests/test_core.py tests/test_frontend_parity.py tests/test_changes.py tests/test_context_packing.py tests/test_access_policy.py tests/test_context_evaluation.py -v
 
   backend-integration:
@@ -126,6 +127,12 @@ jobs:
           PYTHONPATH: .
           HF_HUB_DISABLE_TELEMETRY: "1"
         run: python benchmark/gate.py
+
+      - name: Query-only holdout comparison
+        env:
+          PYTHONPATH: .
+          HF_HUB_DISABLE_TELEMETRY: "1"
+        run: python -m benchmark.holdout --output /tmp/mnemo-holdout.json
 
       - name: Run the full suite
         env:

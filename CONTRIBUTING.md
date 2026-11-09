@@ -30,6 +30,7 @@ pip install -r requirements-api.txt
 python -m pytest tests/test_core.py tests/test_frontend_parity.py -q
 python -m pytest tests/test_context_packing.py tests/test_access_policy.py tests/test_context_evaluation.py -q
 python ../scripts/check-doc-examples.py
+python ../scripts/export-config-reference.py --check
 ```
 
 Integration tests need PostgreSQL with pgvector and an explicitly disposable
@@ -56,6 +57,12 @@ python ../scripts/check-doc-examples.py
 Update behavior notes and SDK examples alongside contract changes. Label browser
 simulations and illustrative responses clearly. Performance or quality claims
 need reproducible evidence, recorded settings and limitations.
+
+Configuration defaults in the deployment guide are generated from `Settings`.
+Run `python scripts/export-config-reference.py` from the repository root after
+adding or changing a setting. Keep query-only holdout questions out of ranking
+tuning; publish comparison misses and keep lifecycle assertions distinct from
+retrieval and generated-answer quality.
 
 Keep screenshots in `docs/assets/`, third-party notices in `docs/licenses/`, and
 user instructions in the product guides. Keep temporary plans outside the repository. The [frontend guide](docs/frontend.md)

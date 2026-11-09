@@ -161,6 +161,26 @@ matches using a documented display cutoff. The optional Live API mode uses the c
 
 [Frontend structure and maintenance](docs/frontend.md) · [Contributing and checks](CONTRIBUTING.md)
 
+## Try a complete Python assistant
+
+The [terminal assistant](sdk/examples/README.md) stores approved facts through the
+real API, pauses on pending conflicts, and recalls the reviewed value across
+client sessions. Evidence mode needs no generation model; optional Ollama mode
+uses a separately running local model and checks returned citation references.
+Neither mode automatically approves changed facts.
+
+Local Live API setup is reproducible with `scripts/connect-live-demo.py`; the
+[deployment guide](docs/deployment.md#connect-the-live-api-walkthrough) explains
+private demo keys and the distinction between local and hosted connectivity.
+
+Evaluation now includes [30 new query-only holdout questions](backend/benchmark/holdout-queries.json)
+over the same synthetic corpus and a [seven-scenario lifecycle suite](backend/evaluation/lifecycle.py).
+Saved [retrieval](backend/evaluation/reports/retrieval-holdout.json) and
+[lifecycle](backend/evaluation/reports/lifecycle.json) reports retain their scope:
+these checks do not establish independent-dataset generalization, LLM answer
+quality or production load capacity. The original 50-query results above remain
+unchanged; the new questions are not used to tune ranking.
+
 ## Repository layout
 
 ```text

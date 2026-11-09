@@ -167,8 +167,17 @@ Expected IDs are an exhaustive annotated relevance set when present. Unlabelled
 cases contribute no precision/recall score. An explicit empty expected list
 asserts that no fact should be selected. Precision is undefined for no selections;
 recall is undefined for no relevant IDs. Aggregates show labelled case counts.
-The default gate requires full recall, no forbidden hits, matching labelled
-statuses and a consistent wire contract. `--min-recall` adjusts only recall.
+The default runner requires full recall and precision on labelled cases, no
+forbidden hits, matching labelled statuses and a consistent wire contract.
+`--min-recall` and `--min-precision` adjust their respective thresholds. Reports
+include the case-file hash and measurement time. A result with every gold fact
+plus many irrelevant facts no longer passes a strict precision gate.
 
 These checks measure context selection and reviewed-state behaviour. They do not
 measure generated-answer correctness, factual truth or production throughput.
+
+The [complete assistant](../sdk/examples/README.md) demonstrates persistent
+before/review/after behaviour and optional local answer generation. The
+[query-only holdout and lifecycle runners](../backend/benchmark/README.md#query-only-holdout)
+provide separate retrieval and state-transition evidence. Keep those scopes
+separate when explaining results.

@@ -168,6 +168,13 @@ MNEMO_DEMO_API_URL=http://127.0.0.1:8000
 MNEMO_DEMO_API_KEY=your-api-key
 ```
 
+Prefer the provisioning script `python scripts/connect-live-demo.py --api-url
+http://127.0.0.1:8000` with `MNEMO_API_KEY` set in the operator shell. It issues a
+dedicated read/write key rather than putting the bootstrap key in the frontend
+environment. See [deployment](deployment.md#connect-the-live-api-walkthrough) for
+expiry, public hosting and Vercel configuration. Local configuration does not
+modify the production website.
+
 The API must be reachable by the Next.js server, including from a hosted web
 server when deployed. The proxy accepts only three named actions. A signed,
 15-minute session binds the selected example, random `web-demo-*` namespace and record IDs; callers
