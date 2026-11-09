@@ -16,6 +16,7 @@ from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
 from app.core import hybrid, llm
+from app.core.assertions_v1 import parse_assertion
 from app.core.config import settings
 from app.core.contradiction import LlmCheck, check_contradiction
 from app.core.decay import relevance_score
@@ -28,6 +29,7 @@ from app.services.namespace_service import ScoringConfig
 
 # How many nearest neighbours to inspect for contradictions when adding.
 _CONTRADICTION_CANDIDATES = 5
+_FACT_CANDIDATE_LIMIT = 1000
 _NAMESPACE_LOCK_TIMEOUT_MS = 5000
 # How many nearest neighbours to pull before re-ranking by relevance in search.
 _SEARCH_OVERFETCH = 4
@@ -39,6 +41,9 @@ _UNSET: object = object()
 class DuplicateMemoryError(ValueError):
     """Raised in dedup mode ``reject`` when a write is a near-duplicate."""
 
+
+class ConflictCapacityError(ValueError):
+    """Refuse a write rather than silently omit recognized conflict candidates."""
 
 
 class NamespaceBusyError(RuntimeError):
@@ -272,6 +277,20 @@ def _flag_contradictions(
         .limit(_CONTRADICTION_CANDIDATES)
     )
 
+    candidates = {row[0].id: row for row in db.execute(stmt).all()}
+    fact = parse_assertion(memory.content)
+    if fact:
+        matching = db.execute(select(Memory, distance.label("distance")).where(
+            Memory.namespace == namespace, Memory.is_active.is_(True), _not_expired(),
+            Memory.id != memory.id, Memory.fact_subject == fact.subject,
+            Memory.fact_attribute == fact.attribute, Memory.fact_value != fact.value,
+        ).order_by(Memory.id).limit(_FACT_CANDIDATE_LIMIT + 1)).all()
+        if len(matching) > _FACT_CANDIDATE_LIMIT:
+            raise ConflictCapacityError(
+                "Too many active facts for this subject and attribute. Review or archive existing facts before adding another."
+            )
+        candidates.update((row[0].id, row) for row in matching)
+
     # Never flag the same pair twice (for example when a memory's content is
     # updated and re-checked): keep the original audit entry.
     existing_pairs = {
@@ -286,7 +305,7 @@ def _flag_contradictions(
     }
 
     flagged: list[Contradiction] = []
-    for existing, dist in db.execute(stmt).all():
+    for existing, dist in candidates.values():
         pair = frozenset((memory.id, existing.id))
         if pair in existing_pairs:
             continue

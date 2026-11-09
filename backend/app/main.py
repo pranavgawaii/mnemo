@@ -26,7 +26,7 @@ from app.core.logging_setup import configure_logging
 from app.core.metrics import registry
 from app.db.session import get_db
 from app.services import job_worker
-from app.services.memory_service import NamespaceBusyError
+from app.services.memory_service import ConflictCapacityError, NamespaceBusyError
 
 configure_logging()
 
@@ -166,7 +166,9 @@ async def namespace_busy_handler(request: Request, exc: NamespaceBusyError) -> J
     return JSONResponse(status_code=503, content={"detail": str(exc)}, headers={"Retry-After": "1"})
 
 
-
+@app.exception_handler(ConflictCapacityError)
+async def conflict_capacity_handler(request: Request, exc: ConflictCapacityError) -> JSONResponse:
+    return JSONResponse(status_code=409, content={"detail": str(exc)})
 
 
 @app.get("/metrics", tags=["meta"])

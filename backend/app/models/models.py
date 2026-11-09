@@ -17,12 +17,14 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    event,
     func,
     text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.assertions_v1 import parse_assertion
 from app.core.config import settings
 from app.db.session import Base
 
@@ -41,6 +43,10 @@ class Memory(Base):
     )
     namespace: Mapped[str] = mapped_column(String(128), nullable=False, default="default")
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    # Derived, internal lookup keys. Original text remains the source of truth.
+    fact_subject: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    fact_attribute: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    fact_value: Mapped[str | None] = mapped_column(String(256), nullable=True)
     importance: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
     embedding: Mapped[list[float]] = mapped_column(
         Vector(settings.embedding_dim), nullable=False
@@ -77,9 +83,21 @@ class Memory(Base):
     __table_args__ = (
         # Every query filters by namespace; index the common access path.
         Index("ix_memories_namespace_active", "namespace", "is_active"),
+        Index("ix_memories_fact_lookup", "namespace", "fact_subject", "fact_attribute",
+              postgresql_where=text("is_active IS TRUE AND fact_subject IS NOT NULL")),
         # Tags overlap (`&&`) filtering.
         Index("ix_memories_tags", "tags", postgresql_using="gin"),
     )
+
+
+@event.listens_for(Memory, "before_insert")
+@event.listens_for(Memory, "before_update")
+def _maintain_assertion_index(mapper, connection, memory: Memory) -> None:
+    # All ORM ingestion paths (API, benchmark, restore) use one index rule.
+    fact = parse_assertion(memory.content)
+    memory.fact_subject = fact.subject if fact else None
+    memory.fact_attribute = fact.attribute if fact else None
+    memory.fact_value = fact.value if fact else None
 
 
 class NamespaceRow(Base):

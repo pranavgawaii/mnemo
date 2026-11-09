@@ -1,29 +1,14 @@
-"""Contradiction detection between memories.
+"""Flag possible conflicts without choosing a winner.
 
-The default checks use two forms of evidence:
+The versioned assertion parser compares recognized current values for a literal
+subject/attribute. Explicit from/to changes must match the recorded source.
+These checks can qualify a pair below the vector threshold. Other candidates
+use the similarity-gated polarity heuristic; a configured model verdict takes
+precedence above that gate and may defer to the deterministic fallback.
 
-An explicit "X moved from A to B" can flag a recorded "X lives in A"
-independently of vector similarity. The subject and source city must match.
-The narrow rules in ``relocation.py`` and ``revisions.py`` also cover explicit
-from/to changes to favourite cuisine, learning goals and running routines when
-the subject and full previous value match. All flags still need review.
-
-1. **Vector similarity gate.** Two memories only *can* contradict if they talk
-   about the same thing. We require cosine similarity above
-   ``CONTRADICTION_SIM_THRESHOLD`` (default 0.82) before considering them.
-
-2. **Negation-marker heuristic.** Among near-duplicate pairs, a contradiction is
-   flagged when one memory carries a negation / reversal marker that the other
-   lacks (e.g. "works at X" vs "no longer works at X"). This is a cheap,
-   explainable default.
-
-A pluggable ``llm_check`` callable slot lets a real LLM verdict (e.g. a hosted
-classification model) be swapped in later without touching call sites. When
-provided, it takes precedence for pairs above the similarity gate. A lower-score
-explicit source-matched change uses the deterministic rule without making an LLM call.
-
-Contradictions are *flagged*, never auto-resolved. Resolution is an explicit,
-human-driven action.
+The service combines indexed assertion candidates with nearby vector candidates.
+These narrow rules are not general natural-language inference or factual truth.
+Every flag still requires an explicit review decision.
 """
 
 from __future__ import annotations
@@ -32,6 +17,7 @@ import re
 from dataclasses import dataclass
 from typing import Callable, Optional
 
+from app.core.assertions_v1 import assertion_conflict
 from app.core.config import settings
 from app.core.relocation import RELOCATION_REASON, explicit_relocation
 from app.core.revisions import explicit_revision
@@ -151,10 +137,11 @@ def check_contradiction(
     """
     threshold = settings.contradiction_sim_threshold if sim_threshold is None else sim_threshold
 
+    assertion = assertion_conflict(new_content, existing_content)
     relocation = explicit_relocation(new_content, existing_content)
     revision = explicit_revision(new_content, existing_content)
     # Exact subject/source evidence can qualify a relocation below this gate.
-    if similarity < threshold and not relocation and not revision:
+    if similarity < threshold and not relocation and not revision and not assertion:
         return ContradictionVerdict(
             is_contradiction=False,
             similarity=similarity,
@@ -176,6 +163,12 @@ def check_contradiction(
         return ContradictionVerdict(True, similarity, RELOCATION_REASON)
     if revision:
         return ContradictionVerdict(True, similarity, revision)
+
+    if assertion:
+        return ContradictionVerdict(
+            True, similarity,
+            "Different confirmed values for the same recognized subject and single-valued attribute; review required.",
+        )
 
     # Stage 2b: negation-marker heuristic.
     is_contra, reason = _heuristic_verdict(new_content, existing_content, similarity)
