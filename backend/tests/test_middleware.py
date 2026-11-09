@@ -36,6 +36,19 @@ def test_request_id_generated_when_missing(client):
     assert len(response.headers["X-Request-ID"]) == 32
 
 
+def test_request_id_does_not_exceed_audit_column(client):
+    response = client.get("/health", headers={"X-Request-ID": "x" * 65})
+    assert len(response.headers["X-Request-ID"]) == 32
+
+
+def test_chunked_body_cannot_bypass_cap(monkeypatch):
+    monkeypatch.setattr(settings, "max_body_bytes", 5)
+    with TestClient(app) as c:
+        response = c.request("GET", "/health", content=iter([b"abc", b"def"]))
+    assert response.status_code == 413
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+
+
 def test_oversized_body_rejected(monkeypatch):
     monkeypatch.setattr(settings, "max_body_bytes", 10)
     with TestClient(app) as c:

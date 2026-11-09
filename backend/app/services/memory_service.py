@@ -193,6 +193,7 @@ def _find_duplicate(
     conditions: list[ColumnElement[bool]] = [
         Memory.namespace == namespace,
         Memory.is_active.is_(True),
+        _not_expired(),
     ]
     if exclude_id is not None:
         conditions.append(Memory.id != exclude_id)
@@ -228,6 +229,7 @@ def _flag_contradictions(
         .where(
             Memory.namespace == namespace,
             Memory.is_active.is_(True),
+            _not_expired(),
             Memory.id != memory.id,
         )
         .order_by(distance)
@@ -376,14 +378,13 @@ def search(
 
 
 def _tune_ann(db: Session) -> None:
-    """Apply ann_ef_search to this transaction; silently ignore unsupported GUCs."""
+    """Apply the validated ANN setting to this PostgreSQL transaction."""
     from sqlalchemy import text as sql_text
 
-    try:
-        db.execute(sql_text("SET LOCAL hnsw.ef_search = :ef"), {"ef": settings.ann_ef_search})
-    except Exception:
-        db.rollback()
-        db.execute(sql_text("SELECT 1"))  # reopen the transaction cleanly
+    db.execute(
+        sql_text("SELECT set_config('hnsw.ef_search', :ef, true)"),
+        {"ef": str(settings.ann_ef_search)},
+    )
 
 
 def _with_keyword_boost(
@@ -405,8 +406,6 @@ def _with_keyword_boost(
     if keyword_weight is not None and keyword_weight <= 0:
         return scored
     weight = settings.keyword_weight if keyword_weight is None else keyword_weight
-
-    from sqlalchemy.dialects.postgresql import TSVECTOR  # noqa: F401 - query typing
 
     tsquery = func.websearch_to_tsquery("english", query)
     ts_rank = func.ts_rank(Memory.tsv, tsquery).label("ts_rank")
@@ -562,7 +561,7 @@ def update_memory(
                 memory=memory,
                 vector=memory.embedding,
                 namespace=memory.namespace,
-                llm_check=None,
+                llm_check=llm.build_llm_check(settings),
                 actor_key_id=actor_key_id,
                 request_id=request_id,
             )
@@ -660,7 +659,13 @@ def resolve_contradiction(
     when resolution can't proceed (unknown id, already resolved, winner not part
     of the pair); ``contradiction`` is ``None`` in that case.
     """
-    contradiction = db.get(Contradiction, contradiction_id)
+    # Lock the state transition; eager memory joins must not also be locked.
+    contradiction = db.execute(
+        select(Contradiction)
+        .where(Contradiction.id == contradiction_id)
+        .with_for_update(of=Contradiction)
+        .execution_options(populate_existing=True)
+    ).scalar_one_or_none()
     if contradiction is None:
         return None, "Contradiction not found."
     if contradiction.status != "open":
@@ -669,6 +674,17 @@ def resolve_contradiction(
     valid_ids = {contradiction.new_memory_id, contradiction.existing_memory_id}
     if winner_memory_id not in valid_ids:
         return None, "Winner must be one of the two memories in the contradiction."
+
+    # A stable lock order also protects overlapping conflict pairs.
+    memories = db.execute(
+        select(Memory).where(Memory.id.in_(valid_ids)).order_by(Memory.id).with_for_update()
+        .execution_options(populate_existing=True)
+    ).scalars().all()
+    winner = next((memory for memory in memories if memory.id == winner_memory_id), None)
+    if winner is None or not winner.is_active or (
+        winner.expires_at is not None and _utc(winner.expires_at) <= datetime.now(timezone.utc)
+    ):
+        return None, "Winner must be an active, non-expired memory."
 
     loser_id = (valid_ids - {winner_memory_id}).pop()
     loser = db.get(Memory, loser_id)

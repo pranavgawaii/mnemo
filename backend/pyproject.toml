@@ -26,16 +26,19 @@ dependencies = [
     "pydantic-settings==2.14.2",
     "sentence-transformers==3.3.1",
     "numpy==2.5.1",
+    "httpx==0.28.1",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest==9.1.1",
-    "httpx==0.28.1",
 ]
 
 [tool.setuptools.packages.find]
 include = ["app*"]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "../sdk"]
 
 [tool.ruff]
 # Keep imports tidy and catch real mistakes; formatting is left to the authors

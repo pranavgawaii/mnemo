@@ -36,6 +36,7 @@ def test_enqueue_and_process(client):
 
         with SessionLocal() as db:
             job = job_service.enqueue(db, kind="test-echo", payload={"hello": "world"})
+            db.commit()
             job_id = job.id
             outcome = job_service.process_next(db)
 
@@ -64,6 +65,7 @@ def test_failure_schedules_retry_with_backoff(client):
 
         with SessionLocal() as db:
             job = job_service.enqueue(db, kind="test-flaky", payload={}, max_attempts=3)
+            db.commit()
             job_id = job.id
 
         with SessionLocal() as db:
@@ -94,6 +96,7 @@ def test_exhausted_attempts_park_as_failed(client):
 
         with SessionLocal() as db:
             job = job_service.enqueue(db, kind="test-hopeless", payload={}, max_attempts=1)
+            db.commit()
             job_id = job.id
             job_service.process_next(db)
 
@@ -116,6 +119,7 @@ def test_unknown_kind_marks_failed(client):
 
     with SessionLocal() as db:
         job = job_service.enqueue(db, kind="test-nohandler", payload={})
+        db.commit()
         job_id = job.id
         outcome = job_service.process_next(db)
     assert outcome == "failed:no-handler"

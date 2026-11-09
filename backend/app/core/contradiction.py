@@ -77,7 +77,10 @@ def _negation_markers(text: str) -> set[str]:
     lowered = text.lower()
     found: set[str] = set()
     for marker in _NEGATION_MARKERS:
-        if marker in lowered:
+        boundary = r"(?![a-z])" if marker != "ex-" else ""
+        matched = re.search(r"(?<![a-z])" + re.escape(marker) + boundary, lowered)
+        contraction = marker == "n't" and re.search(r"[a-z]+n't\b", lowered)
+        if matched or contraction:
             found.add(marker)
     return found
 
@@ -97,10 +100,10 @@ def _heuristic_verdict(new_content: str, existing_content: str, similarity: floa
     new_neg = _negation_markers(new_content)
     old_neg = _negation_markers(existing_content)
 
-    # Symmetric difference: a marker present on exactly one side signals a
-    # polarity flip. If both sides negate (or neither does), no contradiction.
+    # Different negative phrases can agree ("never" versus "does not").
+    # Only compare polarity when exactly one statement contains negation.
     only_one_side = new_neg.symmetric_difference(old_neg)
-    if not only_one_side:
+    if bool(new_neg) == bool(old_neg):
         return False, "High similarity but no polarity difference detected."
 
     # Require meaningful shared subject matter so we don't flag two unrelated

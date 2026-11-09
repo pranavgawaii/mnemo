@@ -1,4 +1,4 @@
-"""Append-only audit log of every mutation.
+"""Append-only audit log of memory and conflict mutations.
 
 Rows are written in the same transaction as the change they describe, so the
 audit trail is exactly as durable as the data itself. Actions use

@@ -148,7 +148,7 @@ class RateLimitCounter(Base):
 
 
 class AuditLog(Base):
-    """Append-only record of every mutation.
+    """Append-only record of memory and conflict mutations.
 
     Written in the same transaction as the change it describes (flushed, then
     committed together), so an audit row exists if and only if the change
@@ -199,6 +199,8 @@ class Job(Base):
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending")
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     max_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
+    lease_token: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     run_after: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

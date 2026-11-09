@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -43,7 +44,7 @@ class Settings(BaseSettings):
     # ANN (HNSW) query-time recall knob. The index itself is created by
     # migration 0009 with m=16, ef_construction=64. Higher ef_search = better
     # recall, slower scan. Guarded: only sent to Postgres when it accepts it.
-    ann_ef_search: int = 100
+    ann_ef_search: int = Field(default=100, ge=1, le=1000)
 
     # Near-duplicate detection on write. "flag" reports deduplicated_of in the
     # response; "reject" answers 409; "off" skips the check.
@@ -62,6 +63,7 @@ class Settings(BaseSettings):
     # Background job worker (outbox). Disable to run jobs from cron/CLI instead.
     job_worker_enabled: bool = True
     job_worker_interval_seconds: float = 1.0
+    job_lease_seconds: int = Field(default=300, ge=1)
 
     # Webhook delivery.
     webhook_timeout_seconds: float = 5.0
@@ -73,9 +75,8 @@ class Settings(BaseSettings):
     # Hardening
     # CORS allowlist as a JSON array, e.g. CORS_ALLOW_ORIGINS='["https://mnemo.dev"]'.
     cors_allow_origins: list[str] = []
-    # Reject request bodies larger than this (413). Streaming bodies without a
-    # Content-Length are not inspected.
-    max_body_bytes: int = 1_048_576
+    # Reject oversized bodies before parsing, including chunked uploads.
+    max_body_bytes: int = Field(default=1_048_576, ge=1)
 
     # Rate limiting (per API key, fixed-minute window in Postgres). Off by
     # default so existing deployments and CI don't get throttled on upgrade.

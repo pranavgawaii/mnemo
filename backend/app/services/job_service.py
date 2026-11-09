@@ -2,8 +2,9 @@
 
 The outbox pattern keeps background work consistent with the change that
 triggered it: the caller writes the ``jobs`` row inside the same transaction as
-the domain change, and the worker delivers it later. Nothing is lost if the
-process dies mid-delivery — the job simply stays ``pending``.
+the domain change, and the worker delivers it later. A job abandoned mid-delivery
+is reclaimed after its lease expires. Delivery is at least once, so webhook
+consumers deduplicate stable event IDs.
 
 Handlers are registered per ``kind`` with :func:`register`; they receive the
 payload dict and may raise, which schedules an exponential backoff retry
@@ -13,13 +14,15 @@ payload dict and may raise, which schedules an exponential backoff retry
 from __future__ import annotations
 
 import logging
+import uuid
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.models import Job
 
 logger = logging.getLogger("mnemo.jobs")
@@ -56,7 +59,7 @@ def enqueue(
     run_after: datetime | None = None,
     max_attempts: int = 5,
 ) -> Job:
-    """Queue one job. Commits — the caller's transaction stays intact."""
+    """Queue inside the caller's transaction; the caller owns the commit."""
     job = Job(
         kind=kind,
         payload=payload,
@@ -64,46 +67,74 @@ def enqueue(
         max_attempts=max_attempts,
     )
     db.add(job)
-    db.commit()
-    db.refresh(job)
+    db.flush()
     return job
 
 
 def claim_next(db: Session, *, now: datetime | None = None) -> Job | None:
-    """Atomically claim the next runnable job (FOR UPDATE SKIP LOCKED)."""
+    """Claim pending work or recover an expired lease, using SKIP LOCKED.
+
+    Delivery is at least once. A fresh token fences completion by a worker
+    whose lease was reclaimed; receivers must deduplicate stable event IDs.
+    """
     moment = now or datetime.now(timezone.utc)
+    expired = and_(
+        Job.status == "running",
+        or_(Job.lease_expires_at.is_(None), Job.lease_expires_at <= moment),
+    )
+    db.execute(
+        update(Job).where(expired, Job.attempts >= Job.max_attempts).values(
+            status="failed", lease_token=None, lease_expires_at=None,
+            last_error="Worker lease expired after the final attempt.",
+        )
+    )
     claimed = db.execute(
         select(Job)
-        .where(Job.status == "pending", Job.run_after <= moment)
-        .order_by(Job.run_after)
+        .where(
+            or_(and_(Job.status == "pending", Job.run_after <= moment), expired),
+            Job.attempts < Job.max_attempts,
+        )
+        .order_by(Job.run_after, Job.id)
         .limit(1)
         .with_for_update(skip_locked=True)
+        .execution_options(populate_existing=True)
     ).scalar_one_or_none()
     if claimed is None:
+        db.commit()
         return None
     claimed.status = "running"
+    claimed.attempts += 1
+    claimed.lease_token = uuid.uuid4()
+    claimed.lease_expires_at = moment + timedelta(seconds=settings.job_lease_seconds)
     db.commit()
     db.refresh(claimed)
     return claimed
 
 
-def complete(db: Session, *, job: Job) -> None:
-    job.status = "done"
-    job.last_error = None
+def _finish(db: Session, job: Job, values: dict[str, Any]) -> bool:
+    result = db.execute(
+        update(Job).where(
+            Job.id == job.id, Job.status == "running", Job.lease_token == job.lease_token,
+        ).values(**values, lease_token=None, lease_expires_at=None)
+        .execution_options(synchronize_session=False)
+    )
     db.commit()
+    return bool(result.rowcount)  # type: ignore[attr-defined]
 
 
-def fail(db: Session, *, job: Job, error: str, now: datetime | None = None) -> None:
+def complete(db: Session, *, job: Job) -> bool:
+    return _finish(db, job, {"status": "done", "last_error": None})
+
+
+def fail(db: Session, *, job: Job, error: str, now: datetime | None = None) -> bool:
     """Record a failure: retry with backoff, or park as ``failed`` when exhausted."""
-    job.attempts += 1
-    job.last_error = error[:2000]
+    values: dict[str, Any] = {"last_error": error[:2000]}
     if job.attempts >= job.max_attempts:
-        job.status = "failed"
+        values["status"] = "failed"
     else:
         moment = now or datetime.now(timezone.utc)
-        job.status = "pending"
-        job.run_after = moment + backoff_for(job.attempts)
-    db.commit()
+        values.update(status="pending", run_after=moment + backoff_for(job.attempts))
+    return _finish(db, job, values)
 
 
 def process_next(db: Session, *, now: datetime | None = None) -> str | None:
@@ -116,14 +147,14 @@ def process_next(db: Session, *, now: datetime | None = None) -> str | None:
     if handler is None:
         # No handler can ever run this kind within this build; retrying would
         # just churn, so park it terminally instead of backing off.
-        job.status = "failed"
-        job.last_error = f"no handler registered for kind '{job.kind}'"
-        db.commit()
+        _finish(db, job, {
+            "status": "failed", "last_error": f"no handler registered for kind '{job.kind}'",
+        })
         return "failed:no-handler"
     try:
         handler(job.payload)
     except Exception as exc:  # noqa: BLE001 - job handlers may fail in any way
-        logger.info("job %s (%s) attempt %s failed: %s", job.id, job.kind, job.attempts + 1, exc)
+        logger.info("job %s (%s) attempt %s failed: %s", job.id, job.kind, job.attempts, exc)
         fail(db, job=job, error=str(exc), now=now)
         return "failed"
     complete(db, job=job)
@@ -137,11 +168,3 @@ def stats(db: Session) -> dict[str, int]:
     for known in ("pending", "running", "done", "failed"):
         result.setdefault(known, 0)
     return result
-
-
-def enqueue_many(db: Session, jobs: list[dict[str, Any]]) -> list[Job]:
-    """Queue several jobs in one commit (used by importers/tests)."""
-    rows = [Job(kind=j["kind"], payload=j.get("payload", {})) for j in jobs]
-    db.add_all(rows)
-    db.commit()
-    return rows

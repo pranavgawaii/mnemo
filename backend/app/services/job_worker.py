@@ -12,6 +12,7 @@ loop from cron via ``mnemo jobs run --once``).
 
 from __future__ import annotations
 
+import logging
 import threading
 
 from app.db.session import SessionLocal
@@ -39,6 +40,7 @@ class JobWorker(threading.Thread):
             try:
                 processed = self._tick()
             except Exception:  # noqa: BLE001 - the loop must survive anything
+                logging.getLogger("mnemo.jobs").exception("Job worker tick failed")
                 processed = False
             if not processed:
                 self._stop_requested.wait(self.interval_seconds)

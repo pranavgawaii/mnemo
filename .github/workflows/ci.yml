@@ -76,17 +76,20 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    env:
+      DATABASE_URL: postgresql+psycopg://mnemo:mnemo@localhost:5432/mnemo_test_ci
+      MNEMO_TEST_DATABASE_URL: postgresql+psycopg://mnemo:mnemo@localhost:5432/mnemo_test_ci
     services:
       postgres:
         image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: mnemo
           POSTGRES_PASSWORD: mnemo
-          POSTGRES_DB: mnemo
+          POSTGRES_DB: mnemo_test_ci
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U mnemo -d mnemo"
+          --health-cmd "pg_isready -U mnemo -d mnemo_test_ci"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -115,7 +118,7 @@ jobs:
 
       - name: Run the full suite
         env:
-          DATABASE_URL: postgresql+psycopg://mnemo:mnemo@localhost:5432/mnemo
+          DATABASE_URL: postgresql+psycopg://mnemo:mnemo@localhost:5432/mnemo_test_ci
           PYTHONPATH: .
           HF_HUB_DISABLE_TELEMETRY: "1"
         run: python -m pytest tests/ -v

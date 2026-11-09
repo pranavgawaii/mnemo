@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import time
 import uuid
 from collections.abc import AsyncIterator
@@ -11,10 +12,10 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.api.body_limit import BodyLimitMiddleware
 from app.api.routes import router as api_router
 from app.core.config import settings
 from app.core.logging_setup import configure_logging
@@ -65,6 +66,7 @@ def _install_cors(application: FastAPI, origins: list[str]) -> None:
 
 _install_cors(app, settings.cors_allow_origins)
 app.add_middleware(GZipMiddleware, minimum_size=1024)
+app.add_middleware(BodyLimitMiddleware, max_bytes=lambda: settings.max_body_bytes)
 
 app.include_router(api_router)
 
@@ -77,14 +79,10 @@ async def harden_and_observe(request: Request, call_next) -> Response:
     route runs, decorate every response with the hardening headers, then
     observe and log the outcome.
     """
-    content_length = request.headers.get("content-length")
-    if content_length and content_length.isdigit() and int(content_length) > settings.max_body_bytes:
-        return JSONResponse(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            content={"detail": "Request body too large."},
-        )
-
-    request_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex
+    presented_id = request.headers.get("X-Request-ID", "")
+    request_id = (
+        presented_id if re.fullmatch(r"[A-Za-z0-9._:-]{1,64}", presented_id) else uuid.uuid4().hex
+    )
     request.state.request_id = request_id
     start = time.perf_counter()
     try:
@@ -130,7 +128,7 @@ async def harden_and_observe(request: Request, call_next) -> Response:
 def _route_path(request: Request) -> str:
     """Route template when the request matched a route, else the raw path."""
     route = request.scope.get("route")
-    return getattr(route, "path", None) or request.url.path
+    return getattr(route, "path", None) or "unmatched"
 
 
 def _observe_metrics(request: Request, status_code: int, duration_s: float) -> None:

@@ -54,10 +54,6 @@ def list_webhooks(db: Session, *, namespace: str | None = None) -> list[Webhook]
     return list(db.execute(stmt).scalars().all())
 
 
-def get_webhook(db: Session, *, webhook_id: uuid.UUID) -> Webhook | None:
-    return db.get(Webhook, webhook_id)
-
-
 def deactivate_webhook(db: Session, *, webhook_id: uuid.UUID) -> Webhook | None:
     row = db.get(Webhook, webhook_id)
     if row is None:
@@ -85,6 +81,7 @@ def notify_contradiction_flagged(
     new_memory = db.get(Memory, contradiction.new_memory_id)
     existing_memory = db.get(Memory, contradiction.existing_memory_id)
     body_payload = {
+        "event_id": str(contradiction.id),
         "event": "contradiction.flagged",
         "namespace": namespace,
         "contradiction": {
@@ -118,6 +115,7 @@ def build_request(webhook: Webhook, body_payload: dict[str, Any]) -> tuple[str, 
         "Content-Type": "application/json",
         "X-Mnemo-Event": "contradiction.flagged",
         "X-Mnemo-Signature": sign(webhook.secret, body),
+        "X-Mnemo-Event-ID": str(body_payload.get("event_id", "")),
     }
     return webhook.url, body, headers
 

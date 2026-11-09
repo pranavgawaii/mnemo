@@ -11,6 +11,7 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, status
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api import pagination
@@ -63,13 +64,14 @@ router = APIRouter(prefix="/v1", dependencies=[Depends(authenticate)])
 
 # Write routes require the "write" scope; GET routes stay readable with "read".
 _WRITE = [Depends(require_scope("write"))]
+_READ = [Depends(require_scope("read"))]
 _ADMIN = [Depends(require_scope("admin"))]
 
 
 # --------------------------------------------------------------------------- #
 # Namespace administration
 # --------------------------------------------------------------------------- #
-@router.get("/namespaces/{namespace}/export", response_model=MemoryExport)
+@router.get("/namespaces/{namespace}/export", response_model=MemoryExport, dependencies=_ADMIN)
 def export_namespace(
     namespace: str = Path(..., min_length=1, max_length=128),
     db: Session = Depends(get_db),
@@ -93,7 +95,7 @@ def export_namespace(
     )
 
 
-@router.get("/namespaces/{namespace}/stats", response_model=NamespaceStats)
+@router.get("/namespaces/{namespace}/stats", response_model=NamespaceStats, dependencies=_ADMIN)
 def namespace_stats(
     namespace: str = Path(..., min_length=1, max_length=128),
     db: Session = Depends(get_db),
@@ -106,7 +108,7 @@ def namespace_stats(
 # --------------------------------------------------------------------------- #
 # Namespace configuration (CRUD)
 # --------------------------------------------------------------------------- #
-@router.post("/namespaces", response_model=NamespaceOut, status_code=status.HTTP_201_CREATED)
+@router.post("/namespaces", response_model=NamespaceOut, status_code=status.HTTP_201_CREATED, dependencies=_ADMIN)
 def create_namespace(payload: NamespaceCreate, db: Session = Depends(get_db)) -> NamespaceOut:
     """Register a namespace with optional scoring overrides."""
     try:
@@ -122,7 +124,7 @@ def create_namespace(payload: NamespaceCreate, db: Session = Depends(get_db)) ->
     return NamespaceOut.model_validate(row).model_copy(update={"total_memories": 0})
 
 
-@router.get("/namespaces", response_model=NamespaceList)
+@router.get("/namespaces", response_model=NamespaceList, dependencies=_ADMIN)
 def list_namespaces(db: Session = Depends(get_db)) -> NamespaceList:
     """All configured namespaces with their memory counts."""
     rows = namespace_service.list_namespaces(db)
@@ -133,7 +135,7 @@ def list_namespaces(db: Session = Depends(get_db)) -> NamespaceList:
     return NamespaceList(items=items, total=len(items))
 
 
-@router.get("/namespaces/{namespace}", response_model=NamespaceOut)
+@router.get("/namespaces/{namespace}", response_model=NamespaceOut, dependencies=_ADMIN)
 def get_namespace(
     namespace: str = Path(..., min_length=1, max_length=128),
     db: Session = Depends(get_db),
@@ -145,7 +147,7 @@ def get_namespace(
     return NamespaceOut.model_validate(row).model_copy(update={"total_memories": int(count or 0)})
 
 
-@router.patch("/namespaces/{namespace}", response_model=NamespaceOut)
+@router.patch("/namespaces/{namespace}", response_model=NamespaceOut, dependencies=_ADMIN)
 def update_namespace(
     payload: NamespaceUpdate,
     namespace: str = Path(..., min_length=1, max_length=128),
@@ -167,7 +169,7 @@ def update_namespace(
     return NamespaceOut.model_validate(row).model_copy(update={"total_memories": int(count or 0)})
 
 
-@router.delete("/namespaces/{namespace}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/namespaces/{namespace}", status_code=status.HTTP_204_NO_CONTENT, dependencies=_ADMIN)
 def delete_namespace(
     namespace: str = Path(..., min_length=1, max_length=128),
     db: Session = Depends(get_db),
@@ -179,7 +181,7 @@ def delete_namespace(
     if outcome is False:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Namespace still contains memories; move or delete them first.",
+            detail="Namespace still contains memory rows, including inactive history; it cannot be deleted.",
         )
 
 
@@ -239,12 +241,15 @@ def add_memories_bulk(
                 importance=item.importance,
                 tags=list(item.tags),
                 meta=item.meta,
+                expires_at=item.expires_at,
                 actor_key_id=_actor(request),
                 request_id=request.state.request_id,
             )
-        except (ValueError, RuntimeError) as exc:
+        except (ValueError, RuntimeError, SQLAlchemyError) as exc:
+            db.rollback()
             errors += 1
-            results.append(BulkMemoryResultItem(index=index, status="error", error=str(exc)))
+            error = "Database rejected this memory." if isinstance(exc, SQLAlchemyError) else str(exc)
+            results.append(BulkMemoryResultItem(index=index, status="error", error=error))
             continue
         created += 1
         results.append(
@@ -258,7 +263,7 @@ def add_memories_bulk(
     return BulkMemoryResult(created=created, errors=errors, results=results)
 
 
-@router.post("/memories/search", response_model=SearchResponse)
+@router.post("/memories/search", response_model=SearchResponse, dependencies=_READ)
 def search_memories(payload: SearchRequest, db: Session = Depends(get_db)) -> SearchResponse:
     """Semantic search, ranked by relevance (similarity * decay * importance)."""
     results = memory_service.search(
@@ -282,7 +287,7 @@ def search_memories(payload: SearchRequest, db: Session = Depends(get_db)) -> Se
     return SearchResponse(query=payload.query, namespace=payload.namespace, hits=hits)
 
 
-@router.get("/memories", response_model=MemoryList)
+@router.get("/memories", response_model=MemoryList, dependencies=_READ)
 def list_memories(
     namespace: str = Query(default="default"),
     limit: int = Query(default=20, ge=1, le=100),
@@ -334,7 +339,7 @@ def list_memories(
     )
 
 
-@router.get("/memories/{memory_id}", response_model=MemoryOut)
+@router.get("/memories/{memory_id}", response_model=MemoryOut, dependencies=_READ)
 def get_memory(
     memory_id: uuid.UUID,
     namespace: str | None = Query(default=None, min_length=1, max_length=128),
@@ -416,7 +421,7 @@ def delete_memory(
 # --------------------------------------------------------------------------- #
 # Contradictions
 # --------------------------------------------------------------------------- #
-@router.get("/contradictions", response_model=ContradictionList)
+@router.get("/contradictions", response_model=ContradictionList, dependencies=_READ)
 def list_contradictions(
     namespace: str = Query(default="default"),
     status_filter: str | None = Query(default="open", alias="status"),
