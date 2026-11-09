@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "../lib/site";
+import { SITE_URL } from "@/lib/site";
 
 /**
  * Crawler rules. The marketing pages are meant to be indexed, so everything is

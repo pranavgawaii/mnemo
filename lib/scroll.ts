@@ -15,6 +15,23 @@
 /** Fallback when a target declares no `scroll-margin-top`. */
 export const NAV_OFFSET = 64;
 
+type ScrollDriver = (top: number, smooth: boolean) => void;
+let scrollDriver: ScrollDriver | null = null;
+
+export function registerScrollDriver(driver: ScrollDriver) {
+  scrollDriver = driver;
+  return () => {
+    if (scrollDriver === driver) scrollDriver = null;
+  };
+}
+
+/** Shared by anchors and the footer; no competing native and eased animations. */
+export function scrollToPosition(top: number, smooth = true) {
+  const animate = smooth && !prefersReducedMotion();
+  if (scrollDriver) scrollDriver(top, animate);
+  else window.scrollTo({ top, behavior: animate ? "smooth" : "auto" });
+}
+
 /** The fragment id in an href: handles `#features` and `/#features` alike. */
 function fragmentId(href: string): string | null {
   const index = href.indexOf("#");
@@ -42,7 +59,7 @@ export function prefersReducedMotion(): boolean {
  */
 function offsetFor(element: Element): number {
   const margin = Number.parseFloat(
-    window.getComputedStyle(element).scrollMarginTop
+    window.getComputedStyle(element).scrollMarginTop,
   );
   return Number.isFinite(margin) && margin > 0 ? margin : NAV_OFFSET;
 }
@@ -61,12 +78,12 @@ export function scrollToElement(element: Element, smooth = true): void {
   const top = Math.max(
     0,
     Math.round(
-      element.getBoundingClientRect().top + window.scrollY - offsetFor(element)
-    )
+      element.getBoundingClientRect().top + window.scrollY - offsetFor(element),
+    ),
   );
   const behavior = smooth && !prefersReducedMotion() ? "smooth" : "auto";
 
-  window.scrollTo({ top, behavior });
+  scrollToPosition(top, behavior === "smooth");
   if (behavior === "auto") return;
 
   // Safety net: some engines silently refuse animated scrolling when `html` and

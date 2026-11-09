@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
-import { SiteNav } from "../../components/site-nav";
-import { SiteFooter } from "../../components/site-footer";
-import { MemoryWorkbench } from "../../components/memory-workbench";
+import { SiteNav } from "@/components/layout/site-nav";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { MemoryWorkbench } from "@/components/playground/memory-workbench";
 
 export const metadata: Metadata = {
   title: "Playground | Mnemo",
   description:
-    "A hands-on workbench for Mnemo's memory: search six facts by meaning, age the whole store, flip between similarity and relevance, store a contradicting memory, and settle the conflict yourself. Everything runs in your browser.",
+    "Recall, store and review sample memories. A browser simulation with optional scoring experiments; no backend or model requests.",
   alternates: { canonical: "/playground" },
   openGraph: {
     type: "article",
     url: "/playground",
     title: "Playground | Mnemo",
     description:
-      "Search six facts by meaning, age the whole store, and settle the conflicts yourself. Everything runs in your browser.",
+      "Recall a fact, store a change and review a possible conflict in a browser simulation. Everything runs in your browser.",
     images: [
       { url: "/og.png", width: 1200, height: 630, alt: "Mnemo playground" },
     ],
@@ -22,19 +22,11 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Playground | Mnemo",
     description:
-      "Search six facts by meaning, age the whole store, and settle the conflicts yourself.",
+      "Recall a fact, store a change and review a possible conflict in a browser simulation.",
     images: ["/og.png"],
   },
 };
 
-/**
- * The playground.
- *
- * One workbench, no chapters. The page exists to be touched: a field of memory
- * nodes around the query, a composer, a time slider and a conflict queue. The
- * only prose is the line under the title, because a playground should explain
- * itself by responding, not by describing itself first.
- */
 export default function PlaygroundPage() {
   return (
     <div className="relative flex min-h-screen flex-col bg-background">
@@ -58,7 +50,7 @@ export default function PlaygroundPage() {
             className="pointer-events-none absolute -right-24 -top-36 h-[340px] w-[340px] rounded-full bg-accent/[0.07] blur-[100px]"
           />
 
-          <div className="relative z-10 mx-auto max-w-frame px-6 pb-7 pt-[116px] sm:pt-[130px]">
+          <div className="relative z-10 mx-auto max-w-frame px-6 pb-4 pt-[96px] sm:pt-[104px]">
             <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-accent-ink">
               Playground
             </span>
@@ -76,8 +68,8 @@ export default function PlaygroundPage() {
               </h1>
 
               <p className="max-w-[430px] text-balance text-[13.5px] leading-[1.7] text-muted lg:text-right">
-                Six facts, one formula, no network. Search them, age them,
-                contradict them, and settle the conflict yourself.
+                Pick a scenario, store a change and see what recall keeps. Six
+                sample facts, with every review under your control.
               </p>
             </div>
           </div>

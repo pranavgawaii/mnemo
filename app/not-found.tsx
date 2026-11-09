@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { ArrowRight } from "lucide-react";
-import { SiteNav } from "../components/site-nav";
-import { SiteFooter } from "../components/site-footer";
-import { DOCS_URL, PLAYGROUND_URL } from "../lib/site";
+import { SiteNav } from "@/components/layout/site-nav";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { DOCS_URL, PLAYGROUND_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Page not found | Mnemo",

@@ -13,6 +13,7 @@
 // is fetched: the faces come from the host page or the fallback stacks.
 
 import * as React from "react"
+import { scrollToPosition } from "@/lib/scroll"
 
 export interface HalftonePalette {
   /** The footer background. */
@@ -463,7 +464,7 @@ export default function HalftoneWordmarkFooter({
   }, [key])
 
   const toTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
+    scrollToPosition(0)
   }
 
   return (

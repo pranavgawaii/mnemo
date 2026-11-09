@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { SITE_TAGLINE } from "../lib/site";
+import { SITE_TAGLINE } from "@/lib/site";
 
 /**
  * Web app manifest. Without one, an installed shortcut to the site picks up the

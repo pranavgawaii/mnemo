@@ -1,197 +1,161 @@
-# Mnemo: marketing site + documentation
+# Mnemo frontend
 
-Three pages for the Mnemo memory service, built with Next.js 15 (App Router) +
-Tailwind CSS and matched to the Specboard editorial developer-tool aesthetic
-(same `#F7F7F5` canvas, 1200px frame, `#E5E5E5` hairlines, Outfit + Redaction
-type, and scroll-reveal behaviour).
+Next.js 15 App Router, React 19, TypeScript and Tailwind CSS. The visual system
+uses the existing Outfit and Redaction fonts, pale canvas, indigo accents and
+hairline borders. The hero layout is preserved. Navigation uses a lightly
+transparent backdrop with a solid fallback; the mobile menu stays opaque. The navbar places the logo before the wordmark, then Playground, an icon-only
+GitHub link with a subtle indigo colour change and a compact GitHub tooltip, and Read docs.
+The tooltip opens on hover/focus and dismisses with Escape. Read docs is the docs entry;
+there is no duplicate Docs link. Narrow screens use a labelled mobile menu.
 
-- **`/`**: the marketing landing page. Hero, recall-path marquee, product
-  explainer, a static "How it works" walkthrough, the differentiator, the design
-  principle and the final CTA. No interactive tools, no code dumps.
-- **`/docs`**: the technical documentation and interactive tools, organised with
-  the Diátaxis model: **Getting started** (a tutorial), **Concepts**
-  (explanation), **Reference** (information) and **Guides**, plus an
-  **Interactive** group. Three of its sections are live diagrams: the
-  architecture flow, the memory lifecycle and the REST explorer. The desktop
-  rail stays pinned in one place; only the active section highlight moves as you
-  scroll.
-- **`/playground`**: a standalone workbench on the same shell as the rest of the
-  site: one live recall field, a query composer, a time slider, a ranking switch,
-  and a conflict queue. There is no tab rail and no prose walkthrough.
+## Routes and content
 
-All three pages are **static at runtime**: nothing calls the API from the browser
-(see "Interactive demos"). All technical claims use the real behaviour and
-parameters from `backend/app/` (`backend/app/core/config.py`,
-`backend/app/core/decay.py`, `backend/app/core/contradiction.py`,
-`backend/app/models/schemas.py`).
+The landing has exactly five body sections:
 
-## Landing page (`/`)
+1. Existing hero and illustrative product window. Try the playground is the
+   primary action; View on GitHub is secondary. Both buttons use text-only labels.
+2. Agent memory example: recall a fact, introduce a change, explicitly keep it.
+3. Store / retrieve / review: a compact explanation of the service boundary.
+4. Evidence: the saved 60-memory, 50-query comparison, including the cosine win.
+5. Quickstart: real store/search commands and a link to setup.
 
-| Section | Component | Anchor |
-|---|---|---|
-| Centred-logo nav (wordmark · links · logo · links · Read docs) | `components/site-nav.tsx` | none |
-| Hero + scaled product window | `components/hero.mdx`, `memory-window.tsx` | `/#top` |
-| Recall-path marquee (full-bleed rules + caption) | `components/pipeline-marquee.mdx` | none |
-| Product explainer (what / why / how to explore) | `components/product-explainer.mdx` | none |
-| How it works: Store → Search → Rank → Review | `components/how-it-works.mdx` | `/#how-it-works` |
-| Mnemo vs other memory layers | `components/differentiator.mdx` | `/#features` |
-| Design-principle quote | `components/principle-quote.mdx` | `/#principle` |
-| Final CTA | `components/final-cta.mdx` | none |
-| Watermark + footer | `app/page.tsx`, `site-footer.tsx` | none |
+Documentation has four pages, each with its own metadata, canonical and contents:
 
-The static sections above are `.mdx` files. Their JSX is wrapped in a single
-expression so MDX does not reinterpret the ported markup as Markdown; without
-that, MDX injects `<p>` tags into headings. Interactive islands stay `.tsx`.
+| Route | Purpose |
+| --- | --- |
+| `/docs` | Run the service, store a fact, recall it, connect an agent, troubleshoot |
+| `/docs/concepts` | System diagram, optional retrieval explorer, ranking, conflict lifecycle, limitations |
+| `/docs/api` | Schema-backed operations, permissions, eight-table data model |
+| `/docs/evaluation` | Saved results, methodology, reproduction, future experiments |
 
-The landing stays a **single light theme**. Sections read as separate chapters
-by alternating between the page background and a white full-bleed band, and by
-varying layout: numbered editorial columns (the explainer), a white comparison
-band (the difference), alternating walkthrough rows (How it works), then a
-pull-quote and the closing CTA back on the background.
+Old `/docs#…` bookmarks redirect to the corresponding page or playground tool.
+The sitemap includes all six page routes. Docs navigation wraps to a two-column
+grid on narrow screens; Evaluation uses result cards on mobile and a full-width
+table on larger screens, with no horizontal scrolling. Each page includes
+previous/next navigation. The quickstart shares a cURL/Python language choice
+across both requests; mobile API navigation uses an operation selector.
+SDK installation is a separate optional setup disclosure. Store/search code
+frames reserve the larger cURL/Python variant using non-interactive, aria-hidden
+text in a shared grid; copy controls always use the selected example. Syntax
+highlighting uses highlight.js core with only Bash, Python and JSON grammars, in
+a light theme. Raw source is preserved for copying. API operations offer an
+expanded reading view. Architecture previews have no inner scrolling; Expand
+opens the full map or flow, with Fit diagram and Read larger options on desktop.
+Concepts separates a deployment map from a Remember / Recall / Review user
+flow. The map uses a real process boundary, distinct component icons, a database
+cylinder, and solid request paths versus dashed polling/delivery paths. A
+readable component layout replaces the vector map when its container is narrow.
+The agent guide includes a model-independent Python adapter. It retrieves real
+SDK results, skips generation on empty results or pending review, and delegates
+generation to the application's callback. The validator checks all three paths
+with a mocked HTTP transport and model callback; it does not measure a live model.
 
-## Docs page (`/docs`)
+The playground starts with recall, store and review. Search commits on submit,
+including Enter. Conflicts preserve both facts until an explicit choice; the
+losing row moves to inactive history. Reset restores the six sample memories.
+Location, Learning, Routine and Preferences scenario buttons fill a question and suggested
+change without replacing the user's store. After resolution, a before/after
+summary shows both previously active facts, the kept fact and the archived fact.
+Focus moves to that summary; reset or a new store/scenario clears it.
+The main workspace exposes time and ranking controls. Results and review use
+stable, scroll-free previews. Selecting a result opens a full-fact inspector
+with readable score signals and an importance control. Long conflicts and all
+inactive history remain accessible through Open review & history. The preview
+shows the first pending conflict; the expanded review contains the whole queue.
+Rank feedback compares the next setting against the previous setting, showing
+actual promotions/demotions and explaining whether time, policy or importance
+changed. Slider drags retain their starting comparison until the gesture ends.
+The Preferences scenario supplies several relevant facts for comparing policies.
+The retrieval trace starts as a compact four-stage summary. Its expanded view
+contains keyboard-accessible Query / Candidates / Rank / Handoff tabs. Replay is
+explicit, finite, interruptible and respects reduced motion. The candidate view
+sorts locally scored active facts by illustrative similarity; ranking shows
+similarity and base-score bars. Handoff explains the returned context without
+repeating the facts; Copy context uses the same match selection as the primary
+result list. The list returns up to three matches at demo similarity 0.25 or
+higher, separate from the backend search policy. Weaker matches are inspectable
+through the trace or advanced memory map.
+Expanded views share a native modal with focus containment, Escape/backdrop
+closing and focus restoration. Only its body scrolls; tab changes preserve the
+window size and reset reading position. The main page stays fixed behind it.
+The memory map, pairwise calculator, conflict checker and local activity remain
+optional. Tool deep links open the relevant disclosures automatically. The
+landing example also reserves one frame for all four stages.
 
-| Section | Component | Anchor |
-|---|---|---|
-| Page title and guide content | `components/docs-guide.mdx` | `#overview` |
-| Chapter headers (heavy rule + label + note) | `components/docs-chapter.tsx` | none |
-| Sticky contents (`hook-sidebar`, one continuous rail) | `components/docs-toc.tsx`, `components/ui/hook-sidebar.tsx` | none |
-| **Getting started** · Local setup | `components/documentation.tsx` | `#quickstart` |
-| **Concepts** · How it's built (interactive diagram) | `components/architecture-explorer.tsx` | `#architecture` |
-| **Concepts** · Retrieval & ranking | `components/documentation.tsx` | `#retrieval` |
-| **Concepts** · Contradictions (interactive lifecycle) | `components/lifecycle-explorer.tsx` | `#contradictions` |
-| **Reference** · Data model | `components/documentation.tsx` | `#data-model` |
-| **Reference** · REST API (interactive explorer) | `components/api-explorer.tsx` | `#api` |
-| **Reference** · Auth & namespaces | `components/documentation.tsx` | `#auth` |
-| **Guides** · Evaluation / benchmark | `components/evaluation.tsx` | `#evaluation` |
-| **Guides** · Limitations / troubleshooting | `components/documentation.tsx` | `#limitations`, `#troubleshooting` |
-| **Interactive** · Playground / calculators / checker | `components/memory-playground.tsx`, `ranking-explorer.tsx`, `contradiction-explainer.tsx` | `#playground` … |
+## Structure
 
-The guide body lives in `components/docs-guide.mdx`, wrapped in one expression
-for the same reason as the landing sections. `app/docs/page.tsx` keeps the
-metadata, nav, progress bar, contents rail and footer, so the MDX file owns only
-the article content.
+- `app/`: route composition, metadata and the shared docs layout.
+- `components/layout/`: navigation, footer, logo and site utilities.
+- `components/landing/`: the five landing sections and protected hero artwork.
+- `components/docs/`: shared headings, contents and documentation explorers.
+- `components/playground/`: a small workbench composition, query and composer,
+  context results, optional advanced controls, calculators and memory field.
+- `components/ui/`: reusable animation, copyable code and footer primitives.
+- `hooks/`: memory-store mutations, section tracking and keyboard tabs.
+- `lib/memory/`: base scoring mirror and browser store simulation.
+- `lib/api/`: OpenAPI-derived field catalog, cURL/Python requests and complete
+  illustrative response fixtures.
+- `lib/docs.ts`, `lib/site.ts`: route/navigation metadata and shared destinations.
+- `public/`: fonts, OpenAPI snapshot and saved benchmark results.
+- `tests/e2e/`: browser, keyboard, mobile, bookmark and memory-flow regressions.
 
-The sections are grouped into five chapters: **Getting started**, **Concepts**,
-**Reference**, **Guides** and **Interactive**, each opened by a heavy rule, a
-label and a one-line note, so the page reads as chapters rather than one
-continuous run of sections. Every section then carries its own `1px` hairline
-(`components/docs-section.tsx`), including the first one under a chapter header,
-with even space either side of it, so a boundary is visible wherever you land,
-and the rule never sits against the previous section's last block.
+Obsolete landing sections and duplicate docs simulations were removed from the
+runtime tree. The original design kit remains in `docs/design-reference/`.
 
-Sections set `scroll-margin-top` to clear exactly the chrome covering the top of
-the viewport (120px on narrow screens, where the pinned chip row sits under the
-bar; 66px on desktop, where only the progress bar does), so a contents jump
-lands with the section's rule and heading showing and nothing sliced in half
-above them.
+## Accuracy and maintenance
 
-The docs page carries **no code blocks**. The REST API is documented by an
-interactive explorer: pick a route and read its request/response **field
-lists**, and configuration values are shown as plain-language rows and cells
-rather than shell snippets or formulas rendered as code.
+Demos make no backend or model requests and persist only for the current page
+session. Similarity is a lexical/topic approximation; the API uses MiniLM
+embeddings. The browser workbench isolates the base score, excluding keyword
+blending and MMR. Conflict checks mirror the default English heuristic, not an
+optional model verdict. No Claude integration or endorsement is implied.
 
-The desktop sidebar is the `hook-sidebar` component from the
-[`swamimalode07/rare-ui`](https://github.com/swamimalode07/rare-ui) registry,
-vendored verbatim into `components/ui/hook-sidebar.tsx` (it needs `motion` and
-the `cn` helper in `lib/utils.ts`). `components/docs-toc.tsx` renders **one**
-`HookSidebar` for the whole page: a single continuous dashed indigo rail,
-flattened from `DOC_NAV` so the marker never resets between chapters, and drives
-it with an `IntersectionObserver` scroll-spy. The aside is `sticky` with its own
-scroll area; this only works because `html, body` use `overflow-x: clip` (never
-`hidden`, which would create a scroll container and break stickiness).
-The shared section shell is `components/docs-section.tsx`; static product mocks
-(write, cosine match, decay curve, flagged contradiction) live in
-`components/visuals.tsx`. Cross-page anchors are centralised in `lib/site.ts`
-(`ANCHORS`, `DOC_NAV`, `NAV_LEFT`, `NAV_RIGHT`, `NAV_LINKS`, `NAV_CTA`,
-`PLAYGROUND_URL`).
+API request/response fields come from `public/openapi.json`; curated notes cover
+behavior that a schema cannot express. Regenerate after backend contract changes:
 
-## Playground page (`/playground`)
+```bash
+cd backend
+.venv/bin/python ../scripts/export-api-schema.py
+```
 
-| Section | Component | Anchor |
-|---|---|---|
-| One interactive workbench | `components/memory-workbench.tsx` | `#workbench` |
-| Field, conflict card, metrics and layout helpers | `components/workbench/` | none |
+This imports the application to export its schema; it does not start the API or
+connect to a database. Run `.venv/bin/python ../scripts/check-doc-examples.py`
+from `backend/` to validate documented response fixtures and Python SDK examples
+without a running service. The live backend also exposes its own `/docs` and
+`/openapi.json` on port 8000. Benchmark figures come from the checked-in snapshot;
+they are a small in-sample retrieval comparison, not agent-quality measurements.
 
-The playground is built on the same shell as the rest of the site (`SiteNav`,
-the light `bg-background` canvas, `SiteFooter`), so it reads as part of the
-product rather than a separate app. `MemoryWorkbench` is the whole page: a field
-places every active memory on three orbits, the query re-scores it live, the time
-slider ages the store, and the mode switch swaps raw similarity for the
-composite score. Storing a negating fact opens a conflict card; resolving it
-soft-deletes the loser without removing the row. The field, conflict card,
-metric bars and layout helpers live in `components/workbench/`; the page keeps
-the state and actions. All motion stops under `prefers-reduced-motion`.
-
-## Interactive demos
-
-Three docs sections are interactive and are **explicitly labelled simulations**:
-
-- **Memory playground** (`#playground`): add a memory, search, see the ranking
-  breakdown, then introduce a contradictory fact and resolve it.
-- **Ranking calculator** (`#ranking-calculator`): a calculator over the real
-  scoring formula in `backend/app/core/decay.py`.
-- **Contradiction checker** (`#contradiction-checker`): runs the ported
-  two-stage heuristic from `backend/app/core/contradiction.py`.
-
-The standalone `/playground` is a different surface: one workbench rather than
-the three docs demos. The docs demos reuse the same `lib/` scoring and
-contradiction logic, so the numbers agree even though the presentation differs.
-
-The real API authenticates every request with a private `X-API-Key`, which a
-public page must not embed, so the demos do not call the backend. They reuse the
-exact ranking formula and contradiction logic (`lib/mnemo.ts`, a deliberate port
-of `backend/app/core/`) over an in-browser store (`lib/playground.ts`). The one thing
-that is *not* faithful is similarity: the live service embeds text with
-`all-MiniLM-L6-v2`, while `lib/playground.ts` approximates relatedness with a
-lexical + topic score. That approximation is always labelled "illustrative" in
-the UI. Request and response shapes are documented as field tables in the REST
-API section, so the docs page contains no runnable code snippets.
-
-## Run
+## Run and verify
 
 ```bash
 pnpm install
-pnpm dev          # http://localhost:3005  (docs at /docs, playground at /playground)
-```
-
-Production build and checks:
-
-```bash
+pnpm dev          # frontend only, http://localhost:3005
+pnpm typecheck
+pnpm test:e2e     # Chromium regressions; uses an existing frontend if available
 pnpm build
-pnpm start        # http://localhost:3005
-pnpm typecheck    # tsc --noEmit
-pnpm test:e2e     # Playwright smoke tests
+pnpm start        # production frontend on port 3005
 ```
 
-Port `3005` is used so an existing dev server on `3000` is not disturbed. The dev
-script writes to `.next-3005`, while `next build` writes to `.next`, so the two
-can run alongside each other. Override the dev directory with `NEXT_DIST_DIR` if
-you need a different isolated build.
+Stop the process using port 3005 before switching between dev and production.
+Development output uses `.next-3005`; production output uses `.next`.
+No backend service is required for the frontend.
 
-## Configuration (optional)
+## Scrolling and the footer
 
-Copy `.env.example` to `.env.local` only to override the default:
+[Lenis](https://github.com/darkroomengineering/lenis) 1.3.27 is loaded only for
+fine-pointer devices without reduced motion. Wheel easing is deliberately light
+(`lerp: 0.14`, `wheelMultiplier: 0.95`); touch stays native. Nested scroll areas
+keep their native behavior. Anchor offsets and Back to top use the same scroll
+driver, and a live preference change tears the driver down.
 
-| Variable | Effect |
-|---|---|
-| `NEXT_PUBLIC_GITHUB_URL` | Repository URL used by the "GitHub" nav/footer links and the "View on GitHub" CTAs. Defaults to `https://github.com/pranavgawaii/mnemo`, so the links appear without any setup. The navbar's own corner button always reads "Read docs". |
+Every route shares the footer arrival: a 24–40px transition band and a 30px
+scroll-linked settle create a visual pause before the halftone footer.
+No timer freezes scrolling, keyboard input or access to links. Reduced motion
+uses a static footer with a smaller gap. The footer canvas retains its existing
+visibility and reduced-motion handling.
+On narrow screens, two flexible link columns and a 500px minimum footer height
+keep the credits clear of the decorative wordmark, including at 320px.
 
-## Content accuracy
-
-Every technical claim on either page is taken from the source:
-
-- Ranking is `similarity × decay × importance` (`backend/app/core/decay.py`).
-- Decay: 180-day half-life, floor 0.7; importance band 0.9 to 1.1 (`backend/app/core/config.py`).
-- Contradictions: 0.82 similarity gate, then a negation-marker heuristic
-  (`backend/app/core/contradiction.py`); resolution soft-deletes the loser
-  (`backend/app/services/memory_service.py`).
-- Endpoints, request/response shapes and constraints match `backend/app/api/routes.py`
-  and `backend/app/models/schemas.py`; the data model matches
-  `backend/alembic/versions/0001_initial_schema.py`.
-- Benchmark figures (60 memories, 50 queries, top-1/top-3/MRR and the raw-cosine
-  baseline) come from `backend/benchmark/` and the root `README.md`.
-
-Deliberately **not** claimed: rate limiting, per-tenant keys, row-level security,
-LLM verdicts, or any benchmark other than the repository's own. The docs state
-these as limitations instead.
+Optional public configuration: `NEXT_PUBLIC_GITHUB_URL` changes the repository
+links; `NEXT_PUBLIC_SITE_URL` sets the deployed canonical origin. Neither is a
+backend credential. Never expose a real API key through public environment vars.

@@ -1,13 +1,11 @@
-import { SiteNav } from "../components/site-nav";
-import Hero from "../components/hero.mdx";
-import PipelineMarquee from "../components/pipeline-marquee.mdx";
-import ProductExplainer from "../components/product-explainer.mdx";
-import HowItWorks from "../components/how-it-works.mdx";
-import Differentiator from "../components/differentiator.mdx";
-import PrincipleQuote from "../components/principle-quote.mdx";
-import FinalCta from "../components/final-cta.mdx";
-import { SiteFooter } from "../components/site-footer";
-import { StructuredData } from "../components/structured-data";
+import { SiteNav } from "@/components/layout/site-nav";
+import Hero from "@/components/landing/hero.mdx";
+import { AgentMemoryDemo } from "@/components/landing/agent-memory-demo";
+import { MemoryPipeline } from "@/components/landing/memory-pipeline";
+import { RetrievalEvidence } from "@/components/landing/retrieval-evidence";
+import { GetStarted } from "@/components/landing/get-started";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { StructuredData } from "@/components/layout/structured-data";
 
 export default function LandingPage() {
   return (
@@ -24,12 +22,10 @@ export default function LandingPage() {
 
       <main id="main" className="flex-1 w-full relative z-10">
         <Hero />
-        <PipelineMarquee />
-        <ProductExplainer />
-        <HowItWorks />
-        <Differentiator />
-        <PrincipleQuote />
-        <FinalCta />
+        <AgentMemoryDemo />
+        <MemoryPipeline />
+        <RetrievalEvidence />
+        <GetStarted />
       </main>
 
       <SiteFooter />

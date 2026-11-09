@@ -1,13 +1,13 @@
 """Guards against drift between the backend and its browser-side mirror.
 
-``lib/mnemo.ts`` deliberately re-declares Mnemo's scoring thresholds,
+``lib/memory/scoring.ts`` deliberately re-declares Mnemo's scoring thresholds,
 limits and contradiction marker list so the static docs page can run the *real*
 logic in the browser without an API key. Nothing at runtime keeps the two in
 sync, so this test does — by parsing the two source files, which needs neither
 torch nor a database and therefore runs in plain CI.
 
 If you change a value in ``app/core/config.py``, ``app/services/memory_service.py``
-or the request schemas, change it in ``lib/mnemo.ts`` too (or update this map if
+or the request schemas, change it in ``lib/memory/scoring.ts`` too (or update this map if
 the constant itself was renamed).
 """
 
@@ -22,7 +22,7 @@ SERVICE_PY = ROOT / "app" / "services" / "memory_service.py"
 SCHEMAS_PY = ROOT / "app" / "models" / "schemas.py"
 ROUTES_PY = ROOT / "app" / "api" / "routes.py"
 CONTRADICTION_PY = ROOT / "app" / "core" / "contradiction.py"
-MNEMO_TS = ROOT.parent / "lib" / "mnemo.ts"
+MNEMO_TS = ROOT.parent / "lib" / "memory" / "scoring.ts"
 
 
 # --------------------------------------------------------------------------- #
@@ -33,13 +33,13 @@ def _ts_source() -> str:
 
 
 def _ts_const(name: str) -> str:
-    """The literal on the right of `export const NAME = ...;` in lib/mnemo.ts."""
+    """The literal on the right of `export const NAME = ...;` in lib/memory/scoring.ts."""
     match = re.search(
         rf"^export const {re.escape(name)}\s*=\s*(.+?);\s*$",
         _ts_source(),
         re.MULTILINE,
     )
-    assert match, f"{name} not found in lib/mnemo.ts"
+    assert match, f"{name} not found in lib/memory/scoring.ts"
     return match.group(1).strip()
 
 
@@ -144,7 +144,7 @@ def _py_negation_markers() -> list[str]:
 
 def _ts_negation_markers() -> list[str]:
     block = re.search(r"NEGATION_MARKERS\s*=\s*\[(.*?)\]", _ts_source(), re.DOTALL)
-    assert block, "NEGATION_MARKERS array not found in lib/mnemo.ts"
+    assert block, "NEGATION_MARKERS array not found in lib/memory/scoring.ts"
     return re.findall(r'"([^"]+)"', block.group(1))
 
 
@@ -153,7 +153,7 @@ def test_negation_markers_match():
     ts = _ts_negation_markers()
     assert py == ts, (
         "Negation markers drifted between app/core/contradiction.py and "
-        "lib/mnemo.ts.\n"
+        "lib/memory/scoring.ts.\n"
         f"backend only: {sorted(set(py) - set(ts))}\n"
         f"frontend only: {sorted(set(ts) - set(py))}"
     )

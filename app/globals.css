@@ -2,7 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Lenis owns wheel easing; anchor helpers supply offsets and reduced-motion fallbacks. */
+html.lenis, html.lenis body { height: auto; }
+html.lenis { scroll-behavior: auto; }
+
+.architecture-panel { container-type: inline-size; }
+.architecture-map { display: none; }
+.architecture-mobile { display: block; }
+@container (min-width: 760px) {
+  .architecture-map { display: block; }
+  .architecture-mobile { display: none; }
+}
+
 @layer base {
+  html:has(.mnemo-dialog[open]) { overflow: hidden; }
+  .mnemo-dialog { height: min(820px, calc(100dvh - 2rem)); max-height: calc(100dvh - 2rem); }
+  .code-highlight .hljs-keyword,
+  .code-highlight .hljs-literal,
+  .code-highlight .hljs-built_in { color: #4338ca; }
+  .code-highlight .hljs-string { color: #0f6256; }
+  .code-highlight .hljs-number { color: #9a3412; }
+  .code-highlight .hljs-attr,
+  .code-highlight .hljs-title { color: #334b8c; }
+  .code-highlight .hljs-comment,
+  .code-highlight .hljs-meta { color: #586271; }
   :root {
     --background: #f7f7f5;
     --foreground: #0a0a0f;
@@ -39,6 +62,26 @@
     border-radius: 4px;
   }
 
+  .site-header {
+    background: #f7f7f5;
+  }
+
+  @supports (backdrop-filter: blur(16px)) or (-webkit-backdrop-filter: blur(16px)) {
+    .site-header {
+      background: rgba(247, 247, 245, 0.88);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+    }
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .site-header {
+      background: #f7f7f5;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+
   /* The footer brand line reads as the navbar wordmark: the mark sits beside
      the name with no tile behind it: a white chip read as a sticker pasted
      onto the warm grey, and the mark's own rounded square is already a frame.
@@ -71,6 +114,21 @@
     font-size: 13.5px;
   }
 
+  .hwf-root .hwf-note,
+  .hwf-root .hwf-brand > span {
+    opacity: 0.72;
+  }
+
+  @media (max-width: 720px) {
+    .hwf-root.mnemo-footer {
+      min-height: 500px;
+    }
+    .hwf-root.mnemo-footer .hwf-col {
+      min-width: 0;
+      flex: 1 1 calc(50% - 16px);
+    }
+  }
+
   /* The footer's "Mnemo" word warms to the brand indigo on hover. */
   .hwf-brand strong {
     transition: color 0.2s ease;
@@ -93,6 +151,7 @@
 }
 
 @layer utilities {
+  .scroll-stable { scrollbar-gutter: stable; }
   .animate-fade-up {
     animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     opacity: 0;
@@ -183,7 +242,33 @@
   }
 }
 
+@keyframes contextPass {
+  0% { transform: translateX(-35%); opacity: 0; }
+  20%, 75% { opacity: 1; }
+  100% { transform: translateX(35%); opacity: 0; }
+}
+
+@keyframes recallSignal {
+  0% { transform: translateX(0); opacity: 0; }
+  15%, 80% { opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+
+.recall-signal { animation: recallSignal 850ms ease-in-out both; }
+
+.agent-transfer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  animation: contextPass 850ms ease-in-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .recall-signal { animation: none; }
+  .agent-transfer { animation: none; opacity: 0; }
   html {
     scroll-behavior: auto;
   }
@@ -203,54 +288,5 @@
   }
   .link-underline {
     transition: none;
-  }
-}
-
-/* ---------------------------------------------------------------------------
-   Memory orbit: components/memory-orbit.tsx (the playground's recall visual)
-   --------------------------------------------------------------------------- */
-@keyframes orbit-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes orbit-pulse {
-  0%,
-  100% {
-    opacity: 0.45;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.85;
-    transform: scale(1.14);
-  }
-}
-
-.orbit-spin,
-.orbit-upright {
-  animation-name: orbit-spin;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  animation-duration: var(--orbit-dur, 60s);
-}
-
-.orbit-core-pulse {
-  animation: orbit-pulse 4.5s ease-in-out infinite;
-}
-
-/* Freeze the rings while the pointer is over the stage, so a node is easy to
-   hit. The counter-rotation pauses with the ring, so nodes stay upright. */
-.orbit-stage:hover .orbit-spin,
-.orbit-stage:hover .orbit-upright,
-.orbit-stage:hover .orbit-core-pulse {
-  animation-play-state: paused;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .orbit-spin,
-  .orbit-upright,
-  .orbit-core-pulse {
-    animation: none;
   }
 }
