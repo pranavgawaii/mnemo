@@ -106,7 +106,7 @@ The Next.js site runs separately; its demos do not send API or model requests.
 The [system design](docs/architecture.md) explains process boundaries, ranking,
 conflict checks, concurrency and the data model. The
 [API reference](docs/api.md) covers operation scopes and contracts. A schema
-snapshot used by the web reference lives in [public/openapi.json](public/openapi.json).
+snapshot used by the web reference lives in [frontend/public/openapi.json](frontend/public/openapi.json).
 
 ## Evaluation
 
@@ -119,7 +119,7 @@ Raw cosine performs best on this dataset:
 | Decay + importance | 72.0% | 92.0% | 0.824 |
 | Default keyword boost | 70.0% | 90.0% | 0.809 |
 
-Source: [results, settings and environment](public/benchmark-results.json).
+Source: [results, settings and environment](frontend/public/benchmark-results.json).
 This in-sample comparison does not establish agent answer quality, conflict
 precision/recall or production-scale performance. Additional ranking signals
 have no demonstrated retrieval gain on this run. The
@@ -127,9 +127,10 @@ have no demonstrated retrieval gain on this run. The
 
 ## Frontend development
 
-From the repository root, with Node.js 20+ and pnpm 9 (the CI toolchain):
+With Node.js 20+ and pnpm 9 (the CI toolchain), run from the repository root:
 
 ```bash
+cd frontend
 pnpm install
 pnpm dev          # http://localhost:3005
 pnpm typecheck
@@ -147,19 +148,19 @@ matches using a documented display cutoff.
 ## Repository layout
 
 ```text
-app/                     Next.js routes and page metadata
-components/              layout / landing / docs / playground / shared UI
-hooks/                   memory-store operations, keyboard tabs, section tracking
-lib/                     memory simulation, API examples, schema reference, site config
+frontend/                Next.js app, dependencies, configuration and browser tests
+  src/app/               routes and page metadata
+  src/components/        layout / landing / docs / playground / shared UI
+  src/hooks/             memory-store operations, keyboard tabs and scrolling
+  src/lib/               memory simulation, API examples and site configuration
+  public/                fonts, OpenAPI schema and saved benchmark
+  tests/e2e/             browser regressions
 backend/                 FastAPI, migrations, workers, benchmark and tests
 sdk/                     typed sync/async Python client and client tests
-public/                  fonts, OpenAPI schema and measured benchmark snapshot
-tests/e2e/               frontend browser regressions
-scripts/                 schema export and documentation contract checks
+scripts/                 shared schema export and documentation contract checks
 docs/                    API, architecture, deployment and maintainer guides
   assets/                repository screenshots
-  internal/              planning notes and implementation history
-  design-reference/      archived design kit; excluded from runtime builds
+  licenses/              third-party asset attribution
 ```
 
 ## Current boundaries

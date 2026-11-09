@@ -5,9 +5,10 @@ changes focused on the relevant area; the frontend works without the API.
 
 ## Frontend
 
-Use Node.js 20+ and pnpm 9 (the CI toolchain) from the repository root:
+Use Node.js 20+ and pnpm 9 (the CI toolchain). From the repository root:
 
 ```bash
+cd frontend
 pnpm install
 pnpm dev
 pnpm typecheck
@@ -55,6 +56,6 @@ Update behavior notes and SDK examples alongside contract changes. Label browser
 simulations and illustrative responses clearly. Performance or quality claims
 need reproducible evidence, recorded settings and limitations.
 
-Keep screenshots in `docs/assets/`, planning notes in `docs/internal/`, and user
-instructions in the product guides. The [frontend guide](docs/frontend.md)
+Keep screenshots in `docs/assets/`, third-party notices in `docs/licenses/`, and
+user instructions in the product guides. Keep temporary plans outside the repository. The [frontend guide](docs/frontend.md)
 describes the component boundaries.

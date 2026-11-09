@@ -15,7 +15,7 @@ PYTHONPATH=. python benchmark/report.py
 
 This command deletes and reseeds the dataset's `benchmark` namespace, including
 its contradiction rows, for each policy. Do not keep application data in that
-namespace. It writes `public/benchmark-results.json` and leaves the saved gate
+namespace. It writes `frontend/public/benchmark-results.json` and leaves the saved gate
 baselines unchanged.
 
 The report compares:

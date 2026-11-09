@@ -84,23 +84,26 @@ landing example also reserves one frame for all four stages.
 
 ## Structure
 
-- `app/`: route composition, metadata and the shared docs layout.
-- `components/layout/`: navigation, footer, logo and site utilities.
-- `components/landing/`: the five landing sections and protected hero artwork.
-- `components/docs/`: shared headings, contents and documentation explorers.
-- `components/playground/`: a small workbench composition, query and composer,
+All paths below are relative to `frontend/`.
+
+- `src/app/`: route composition, metadata and the shared docs layout.
+- `src/components/layout/`: navigation, footer, logo and site utilities.
+- `src/components/landing/`: the five landing sections and protected hero artwork.
+- `src/components/docs/`: shared headings, contents and documentation explorers.
+- `src/components/playground/`: a small workbench composition, query and composer,
   context results, optional advanced controls, calculators and memory field.
-- `components/ui/`: reusable animation, copyable code and footer primitives.
-- `hooks/`: memory-store mutations, section tracking and keyboard tabs.
-- `lib/memory/`: base scoring mirror and browser store simulation.
-- `lib/api/`: OpenAPI-derived field catalog, cURL/Python requests and complete
+- `src/components/ui/`: reusable animation, copyable code and footer primitives.
+- `src/hooks/`: memory-store mutations, section tracking and keyboard tabs.
+- `src/lib/memory/`: base scoring mirror and browser store simulation.
+- `src/lib/api/`: OpenAPI-derived field catalog, cURL/Python requests and complete
   illustrative response fixtures.
-- `lib/docs.ts`, `lib/site.ts`: route/navigation metadata and shared destinations.
+- `src/lib/docs.ts`, `src/lib/site.ts`: route/navigation metadata and shared destinations.
 - `public/`: fonts, OpenAPI snapshot and saved benchmark results.
 - `tests/e2e/`: browser, keyboard, mobile, bookmark and memory-flow regressions.
 
 Obsolete landing sections and duplicate docs simulations were removed from the
-runtime tree. The original design kit remains in `docs/design-reference/`.
+runtime tree. Historical planning notes and the archived design kit have been
+removed; runtime font notices remain in `public/fonts/LICENSE-OFL-1.1.txt`.
 
 ## Accuracy and maintenance
 
@@ -110,7 +113,7 @@ embeddings. The browser workbench isolates the base score, excluding keyword
 blending and MMR. Conflict checks mirror the default English heuristic, not an
 optional model verdict. No Claude integration or endorsement is implied.
 
-API request/response fields come from `public/openapi.json`; curated notes cover
+API request/response fields come from `frontend/public/openapi.json`; curated notes cover
 behavior that a schema cannot express. Regenerate after backend contract changes:
 
 ```bash
@@ -128,6 +131,7 @@ they are a small in-sample retrieval comparison, not agent-quality measurements.
 ## Run and verify
 
 ```bash
+cd frontend
 pnpm install
 pnpm dev          # frontend only, http://localhost:3005
 pnpm typecheck
@@ -137,7 +141,9 @@ pnpm start        # production frontend on port 3005
 ```
 
 Stop the process using port 3005 before switching between dev and production.
-Development output uses `.next-3005`; production output uses `.next`.
+Development output uses `frontend/.next-3005`; production output uses
+`frontend/.next`. The Vercel project root must be `frontend` (see
+[deployment](deployment.md#vercel--monorepo-notes)).
 No backend service is required for the frontend.
 
 ## Scrolling and the footer
