@@ -80,11 +80,16 @@ def context_block(
     limit: int = 5,
     max_chars: int = 2000,
     header: str = "Relevant memories:",
+    current_values: bool = False,
 ) -> str:
     """Format search results as a bulleted block for a prompt.
 
     Empty search results yield an empty string, so callers can skip injecting
     the block at all.
+
+    ``current_values=True`` uses a server-supplied current-statement projection
+    when present. It does not verify claims or bypass conflict review. Older
+    servers and unsupported text fall back to the complete source content.
     """
     memories = recall(client, query, namespace=namespace, limit=limit)
     if not memories:
@@ -92,7 +97,8 @@ def context_block(
     lines = [header]
     used = len(header) + 1
     for memory in memories:
-        line = f"- {memory.content}"
+        content = (memory.current_statement or memory.content) if current_values else memory.content
+        line = f"- {content}"
         if used + len(line) + 1 > max_chars:
             break
         lines.append(line)

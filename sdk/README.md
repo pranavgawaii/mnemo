@@ -58,3 +58,18 @@ Every failure raises a typed exception from `mnemo.errors`:
 
 GET requests retry automatically on 429/5xx/network errors with backoff;
 writes never retry (they are not idempotent).
+
+### Current values and source records
+
+The Python API derives `memory.current_statement` for supported explicit
+transitions. `memory.content` always retains the complete source text. Older
+servers and unsupported text leave `current_statement` as `None`. To prefer
+current values when formatting agent context:
+
+```python
+context = context_block(client, "Riya's city", current_values=True)
+```
+
+This is a display projection, not a truth check or conflict resolution. Review
+open contradictions before handing conflicting facts to an agent. The default
+context formatter continues to use source content.

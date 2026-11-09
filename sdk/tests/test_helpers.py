@@ -116,3 +116,17 @@ def test_context_block_empty_when_no_hits():
     body = {"hits": [], "total_memories": 0, "returned": 0, "top_similarity": None}
     with make_client(route_handler({("POST", "/v1/memories/search"): body})) as client:
         assert context_block(client, "anything") == ""
+
+
+def test_current_values_context_is_opt_in_and_old_servers_fall_back():
+    source = "Riya moved from Bengaluru to Pune"
+    body = {"hits": [{
+        "memory": {**MEMORY, "content": source, "current_statement": "Riya lives in Pune"},
+        "similarity": 0.9, "relevance_score": 0.8, "age_days": 0,
+    }]}
+    with make_client(lambda request: httpx.Response(200, json=body)) as client:
+        assert source in context_block(client, "Where does Riya live?")
+        projected = context_block(client, "Where does Riya live?", current_values=True)
+        assert "Riya lives in Pune" in projected and "Bengaluru" not in projected
+        body["hits"][0]["memory"].pop("current_statement")
+        assert source in context_block(client, "Where does Riya live?", current_values=True)

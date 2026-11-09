@@ -21,6 +21,7 @@ class Memory:
     created_at: datetime | None = None
     updated_at: datetime | None = None
     expires_at: datetime | None = None
+    current_statement: str | None = None
 
 
 @dataclass(frozen=True)

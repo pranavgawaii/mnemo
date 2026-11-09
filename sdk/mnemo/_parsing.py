@@ -53,6 +53,7 @@ def parse_memory(data: Any) -> Memory:
         created_at=parse_datetime(data.get("created_at")),
         updated_at=parse_datetime(data.get("updated_at")),
         expires_at=parse_datetime(data.get("expires_at")),
+        current_statement=data.get("current_statement"),
     )
 
 

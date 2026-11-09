@@ -67,3 +67,12 @@ def test_remember_leaves_conflicts_for_review_by_default():
         _, flags = remember(client, "A changed fact")
     assert flags[0].status == "open"
     assert paths == ["/v1/memories"]
+
+
+def test_current_statement_is_additive_and_source_content_is_retained():
+    source = "Riya moved from Bengaluru to Pune"
+    body = {**MEMORY, "content": source, "current_statement": "Riya lives in Pune"}
+    with make_client(lambda request: httpx.Response(200, json=body)) as client:
+        memory = client.get_memory(MEMORY["id"])
+    assert memory.content == source
+    assert memory.current_statement == "Riya lives in Pune"
