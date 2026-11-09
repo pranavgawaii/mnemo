@@ -5,6 +5,59 @@ versions follow [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+### Visual and repository polish
+- Prioritize Try the playground in the hero, keep GitHub secondary and use Read docs as the navbar entry.
+- Place the logo before the wordmark; simplify navigation to Playground, a labelled GitHub icon and Read docs with a translucent backdrop.
+- Fit all docs navigation on narrow screens and add previous/next page links.
+- Replace the scrolling benchmark layout with a full-width table and mobile cards.
+- Add cURL/Python quickstart choices and complete, schema-validated response examples.
+- Explain weak demo matches, inspect full facts and scores in an expanded view, and add a useful empty state.
+- Separate playground composition, result presentation and optional advanced controls.
+- Shorten the README, add a repository screenshot and separate planning notes from product documentation.
+
+### Playground feedback and expanded reading
+- Show real rank movements and explain changes from time, policy or importance.
+- Keep one returned-context list with a copyable handoff summary.
+- Remove inner scrolling from the main playground previews; expand facts, trace, review and history on demand.
+- Add themed Bash, Python and JSON highlighting while preserving exact copied source.
+- Expand architecture and API operations with keyboard access and focus restoration; fit or enlarge the system map.
+
+### Architecture documentation
+- Add a responsive system diagram with explicit application, API process, database and webhook boundaries.
+- Keep detailed retrieval stages under an optional disclosure; mirror the system in Mermaid in the repository docs.
+
+### Focused product frontend
+- Keep the existing hero and fonts; reduce the landing to five sections.
+- Add a user-controlled agent memory example with reduced-motion support.
+- Split documentation into Get started, Concepts, API reference and Evaluation.
+- Generate operation fields from OpenAPI and add copyable store/search requests.
+- Present recall, store and conflict review first; disclose advanced experiments on demand.
+- Preserve old docs bookmarks and give the navigation a translucent backdrop.
+- Correct scoring, duplicate, expiry, history, webhook and benchmark claims.
+
+### Frontend organization and interaction fixes
+- Group components under layout, landing, docs, playground and UI directories.
+- Share memory-store operations and move scoring/simulation into `lib/memory/`.
+- Separate the API catalog, workbench state, query, composer and conflict review.
+- Put the memory input before the visual field on mobile.
+- Submit recall with Enter; close mobile navigation with Escape and restore focus.
+- Track documentation sections correctly while scrolling in either direction.
+- Archive the design kit under `docs/design-reference/` and update source links.
+- Add browser regressions for memory interactions, keyboard use and mobile layout.
+
+### Reliability and contract repairs
+- Migration 0013 adds recoverable outbox leases and stale-worker fencing.
+- Webhook jobs commit with the triggering change and carry a stable event ID.
+- Conflict resolution is serialized and requires a live winner.
+- Read scopes and admin scopes on namespace administration are enforced.
+- Bulk expiry and expired duplicate/conflict candidates are handled consistently.
+- The SDK parses nested conflicts, honors Retry-After and supports clearing expiry.
+- `remember()` leaves conflicts open by default; pass `auto_resolve=True` for last-write-wins.
+- Integration tests require `MNEMO_TEST_DATABASE_URL` naming a disposable `mnemo_test_*` database.
+- The benchmark gate and NDCG are repaired; saved local comparisons show no ranking gain.
+- Chunked bodies are capped and request IDs validated before audit persistence.
+
+
 ### Fixed
 - Repaired the Alembic migration chain: `0002` now points at the real base
   revision id (`0001`), and the HNSW index migration drops the initial
@@ -22,7 +75,7 @@ versions follow [SemVer](https://semver.org/).
   is refused with 409 instead of a misleading 404.
 - CI: the lint job no longer installs `types-httpx`, which does not exist on
   PyPI (httpx ships its own inline types).
-- The API explorer on the site documents all twenty-six routes, and the
+- The API explorer on the site documents all twenty-seven operations, and the
   browser smoke tests match the current copy.
 
 ## [1.0.0] — 2026-10-27
@@ -105,6 +158,6 @@ suite and documentation.
 - Complete API reference with examples for every route.
 - Architecture and data-model deep dive.
 - Deployment guide with configuration reference and runbook.
-- Frontend design kit (`landing-kit/`) and frontend docs.
+- Frontend design kit (`docs/design-reference/`) and frontend docs.
 
 [1.0.0]: https://github.com/pranavgawaii/mnemo/releases/tag/v1.0.0

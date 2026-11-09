@@ -1,3 +1,13 @@
+# Historical implementation plan
+
+This preserves the earlier 38-step design plan. It is historical context, not
+the commit sequence for the current working tree. Its original future-tense
+statements and release suggestions have not been revalidated.
+
+For the current proposed commits, see [commit-plan.md](commit-plan.md).
+
+---
+
 # Mnemo Commit Plan (38 commits)
 
 Takes the repo from "working prototype" to a full product. Python-heavy by

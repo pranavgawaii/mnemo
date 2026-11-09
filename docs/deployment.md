@@ -1,8 +1,8 @@
 # Deploying Mnemo
 
 From laptop to production: local development, configuration reference, and the
-deployment checklist. For the API surface see [API.md](API.md); for internals
-see [ARCHITECTURE.md](ARCHITECTURE.md).
+deployment checklist. For the API surface see [api.md](api.md); for internals
+see [architecture.md](architecture.md).
 
 ## Local development
 
@@ -73,15 +73,15 @@ All settings are environment variables (prefix-free, see
    real; it costs one upsert per request.
 6. **CORS** — set `CORS_ALLOW_ORIGINS` to the console origin(s).
 7. **Observability** — scrape `/metrics` (Prometheus text format); ship the
-   JSON logs (`LOG_JSON=true`); alert on `mnemo_contradictions_open` and the
-   job `failed` count (`mnemo jobs stats`).
+   JSON logs (`LOG_JSON=true`); monitor HTTP errors and latency; inspect failed jobs with
+   `python -m app.cli jobs stats`.
 8. **Cron** — `mnemo sweep-expired` hourly keeps namespace counts honest when
    TTLs are used.
 
 ### Vercel / monorepo notes
 
 The web deployment is the Next.js app at the repo root; `.vercelignore`
-keeps `backend/`, `sdk/`, `landing-kit/`, tests and docs out of the upload.
+keeps `backend/`, `sdk/`, tests and repository docs (including the design kit) out of the upload.
 `requirements-api.txt` carries the `-api` suffix so Vercel's monorepo detector
 does not mistake `backend/` for a deployable Python project.
 
@@ -104,11 +104,11 @@ Async twin and the agent-pattern helpers (`remember`/`recall`/`forget`/
 
 ```python
 from mnemo import AsyncMnemoClient
-from mnemo.helpers import remember, recall, context_block
+
 
 async with AsyncMnemoClient(base_url="...", api_key="...") as client:
-    memory, resolved = await remember(client, "Riya moved to Berlin")  # see note
-    memories = await recall(client, "Riya's city")
+    memory, conflicts = await client.add_memory("Riya moved to Berlin")
+    response = await client.search("Riya's city")
 ```
 
 Note: the helpers are sync-flavoured today; async callers use the client
@@ -125,3 +125,18 @@ methods directly (the async client mirrors every method).
 - **Duplicate flags** — shouldn't happen (unique pair index + ON CONFLICT);
   if you see it, verify migration 0012 is applied (`doctor` reports
   migration state).
+
+## Integration test isolation
+
+Integration tests require `MNEMO_TEST_DATABASE_URL` with a database named
+`mnemo_test_*`. They create and drop tables only in that explicitly selected
+disposable database; the normal `DATABASE_URL` is not used. A configured test
+database that cannot be reached fails collection. The default unit tier skips
+DB tests when no disposable URL is supplied.
+
+## Worker leases
+
+Apply migration 0013 before starting the updated API or worker.
+`JOB_LEASE_SECONDS` defaults to 300 and must exceed the longest handler timeout.
+An expired lease can be reclaimed; an old worker cannot complete a reclaimed
+job. Delivery is at least once. Deduplicate `X-Mnemo-Event-ID` at the receiver.

@@ -1,34 +1,38 @@
 # Mnemo architecture
 
 A deep dive into how Mnemo is built: the process layout, every table, the
-scoring pipeline, and the invariants that make agent memory trustworthy.
+scoring pipeline, and the contracts that control memory storage, retrieval and review.
 
 ## System layout
 
+```mermaid
+flowchart TB
+  client["Your application / agent<br/>owns conversations and LLM answers"]
+  subgraph api["Mnemo: one Python API process"]
+    http["FastAPI<br/>auth, scopes, validation"]
+    memory["Memory service<br/>store, rank, flag, resolve"]
+    embed["Local MiniLM encoder<br/>384 dimensions"]
+    worker["JobWorker thread<br/>optional background processing"]
+    http --> memory
+    memory -->|encode text| embed
+  end
+  db[("PostgreSQL + pgvector<br/>memories, vectors, conflicts, audit, jobs, config")]
+  receiver["Optional webhook receiver"]
+  client -->|JSON/HTTP + X-API-Key| http
+  memory <-->|SQLAlchemy queries and writes| db
+  worker -->|poll and claim outbox jobs| db
+  worker -->|signed HTTP POST, bounded retries| receiver
 ```
-                      ┌────────────────────────────────────────┐
-  agents / SDK / CLI  │  FastAPI (uvicorn)                     │
- ────────────────────►│  auth → rate limit → scope → service   │
-                      │  logging + metrics + gzip + CORS       │
-                      └───────────────┬────────────────────────┘
-                                      │ SQLAlchemy (sync, psycopg)
-                      ┌───────────────▼────────────┐
-                      │ Postgres + pgvector        │
-                      │  memories (HNSW + tsvector)│
-                      │  namespaces, api_keys,     │
-                      │  contradictions, audit_log │
-                      │  rate_limit_counters       │
-                      │  jobs (outbox), webhooks   │
-                      └───────────────┬────────────┘
-                                      │ FOR UPDATE SKIP LOCKED
-                      ┌───────────────▼────────────┐
-                      │ JobWorker (daemon thread)  │──► webhook HTTP delivery
-                      └────────────────────────────┘
-```
+
+The Next.js landing page, docs and playground are a separate browser-only
+presentation. They do not call this API. The diagram shows the default local
+embedding and heuristic conflict path; a configured LLM verdict provider adds
+an optional external model call.
+
 
 - **API process** — FastAPI, fully sync SQLAlchemy (a connection pool is
   cheaper to reason about than a sync-over-async bridge). Lifespan starts one
-  `JobWorker` thread; `JOB_WORKER_ENABLED=false` moves jobs to cron.
+  `JobWorker` thread; `JOB_WORKER_ENABLED=false` disables this thread; external scheduling must then be configured explicitly.
 - **Worker** — polls the outbox every second, claims one job with
   `FOR UPDATE SKIP LOCKED`, runs its handler, retries with backoff.
 - **SDK** — `sdk/mnemo`: typed sync + async clients over httpx with retries
@@ -42,8 +46,7 @@ scoring pipeline, and the invariants that make agent memory trustworthy.
   similarity is a dot product.
 - `memories.embedding` is `pgvector` with an **HNSW index** (`m=16`,
   `ef_construction=64`). Search sets `SET LOCAL hnsw.ef_search`
-  (`ANN_EF_SEARCH`, default 40) inside the session transaction; a server
-  without the GUC is handled by rollback + reopen.
+  (`ANN_EF_SEARCH`, default 100) inside the session transaction; the validated value is applied with PostgreSQL `set_config` in the current transaction.
 - A **generated tsvector column** (`to_tsvector('english', content)`) with a
   GIN index powers the keyword half of hybrid search.
 - `tags` gets a GIN index for ANY-match tag filters.
@@ -56,7 +59,7 @@ nearest active, non-expired memories, then fuses signals in Python:
 1. **Similarity** — cosine between query and memory vectors.
 2. **Decay** — exponential half-life: `exp(-ln(2) * age_days / half_life)`,
    floored at `decay_floor` (global or per-namespace).
-3. **Importance** — `1 + 0.25 * (importance - 1)` multiplier.
+3. **Importance** — `1 + 0.05 * (importance - 3)` multiplier.
 4. **Keyword fusion** — relevance is multiplied by
    `1 + keyword_weight * keyword_norm`, where `keyword_norm` is the tsvector
    match evidence for the query (pure helpers in `app/core/hybrid.py`). Zero
@@ -65,9 +68,10 @@ nearest active, non-expired memories, then fuses signals in Python:
    `mmr = (1 - d) * relevance - d * max_redundancy(selected)` (pure helpers in
    `app/core/diversity.py`).
 
-`relevance_score = similarity * decay * importance` is the contract the
-frontend, SDK and docs all mirror; similarity and age are surfaced separately
-so callers can explain every ranking.
+The base score is `similarity * decay * importance`. The API's returned
+`relevance_score` also includes keyword boosting when enabled; MMR changes the
+selection order. The browser calculator isolates the base formula. Similarity
+and age are surfaced separately so callers can inspect each ranking signal.
 
 ## Contradiction detection
 
@@ -81,8 +85,8 @@ On every write (create **and** content update):
    shared-word overlap decides `is_contradiction` with a reason.
 3. **Optional LLM verdict** — `CONTRADICTION_LLM_PROVIDER=openai` asks an
    OpenAI-compatible chat model (self-hosted vLLM/Ollama work) to confirm;
-   any failure or timeout defers to the heuristic. Writes are never blocked
-   by an LLM.
+   errors or timeouts fall back to the heuristic. A configured model check
+   can add latency to a write.
 4. Flags are inserted with **`ON CONFLICT DO NOTHING`** against the unique
    `uq_contradictions_pair(new_memory_id, existing_memory_id)` index, so two
    workers racing on the same memory produce exactly one row — the loser's
@@ -118,8 +122,8 @@ db.commit()                        # change + audit + jobs land atomically
 ```
 
 If the process dies after commit, the worker still delivers later; if the
-transaction rolls back, nothing was ever enqueued. Exactly-once-ish delivery
-comes from the claim protocol (`FOR UPDATE SKIP LOCKED`) plus retries
+transaction rolls back, nothing was ever enqueued. At-least-once delivery
+uses expiring leases, stale-worker fencing, `FOR UPDATE SKIP LOCKED`, and retries
 (1s, 2s, 4s, ... capped at 60s) and a terminal `failed` state after
 `max_attempts`.
 
@@ -139,7 +143,7 @@ comes from the claim protocol (`FOR UPDATE SKIP LOCKED`) plus retries
   (`LOG_JSON=true`).
 - **Prometheus metrics** hand-rolled in `app/core/metrics.py` (no client
   dependency): request counts and latency histograms by route/status.
-- **Audit log** — every mutation records actor key id, request id and
+- **Audit log** — memory and conflict mutations record actor key id, request id and
   details in the same transaction as the change (not after it).
 
 ## Pagination
@@ -165,7 +169,7 @@ the sort key `(created_at DESC, id DESC)` is total.
 Migrations live in `backend/alembic/versions` (one revision per feature:
 0002 tags, 0003 namespaces, 0004 api_keys, 0005 rate limiting, 0006 TTL,
 0007 audit log, 0008 tsvector, 0009 HNSW, 0010 jobs, 0011 webhooks, 0012
-unique pair). CI runs `alembic upgrade head` before the test suite, so a
+unique pair, 0013 worker leases). CI runs `alembic upgrade head` before the test suite, so a
 broken revision fails the build.
 
 ## Testing strategy

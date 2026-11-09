@@ -31,8 +31,9 @@ Readiness. Actually queries Postgres; 503 when the database is unreachable.
 
 ### `GET /metrics`
 
-Prometheus text format: mnemo_requests_total, mnemo_request_duration_seconds,
-mnemo_memories_active, mnemo_contradictions_open.
+Prometheus text format: `http_requests_total` and the
+`http_request_duration_seconds` histogram. These are process-local HTTP metrics;
+no memory-count or contradiction-count gauges are currently exposed.
 
 ## Namespaces (admin)
 
@@ -244,8 +245,8 @@ curl -X PATCH "https://mnemo.internal/v1/memories/$ID?namespace=people" \
 
 ### `DELETE /v1/memories/{memory_id}` (write)
 
-Soft-delete (`is_active: false`). Rows are never hard-deleted; the audit trail
-preserves the tombstone. Returns the updated memory.
+Soft-delete (`is_active: false`). This operation preserves the memory row for inspection; it does not retain
+immutable versions of earlier content. Returns the updated memory.
 
 ## Contradictions
 
@@ -326,7 +327,7 @@ Revoke: auth starts failing at once.
 
 ### `GET /v1/events?namespace=people&limit=20`
 
-Append-only trail of every mutation: `memory.created/updated/deleted/swept`,
+Append-only trail of memory, conflict and import mutations: `memory.created/updated/deleted/swept`,
 `contradiction.flagged/resolved`, `namespace.imported`.
 
 ```json
