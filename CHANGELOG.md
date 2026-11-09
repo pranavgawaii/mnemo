@@ -5,6 +5,11 @@ versions follow [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+### Repository structure
+- Move the web app, assets, dependencies and browser tests into `frontend/`, with application code under `frontend/src/`.
+- Update CI working directories, generated artifact paths and deployment configuration for the frontend project root.
+- Remove historical planning notes and the archived design kit while retaining runtime font and asset licenses.
+
 ### Visual and repository polish
 - Prioritize Try the playground in the hero, keep GitHub secondary and use Read docs as the navbar entry.
 - Place the logo before the wordmark; simplify navigation to Playground, a labelled GitHub icon and Read docs with a translucent backdrop.
@@ -43,7 +48,7 @@ versions follow [SemVer](https://semver.org/).
 - Put the memory input before the visual field on mobile.
 - Submit recall with Enter; close mobile navigation with Escape and restore focus.
 - Track documentation sections correctly while scrolling in either direction.
-- Archive the design kit under `docs/design-reference/` and update source links.
+- Separate application code from repository guides and update source links.
 - Add browser regressions for memory interactions, keyboard use and mobile layout.
 
 ### Reliability and contract repairs
@@ -159,6 +164,6 @@ suite and documentation.
 - Complete API reference with examples for every route.
 - Architecture and data-model deep dive.
 - Deployment guide with configuration reference and runbook.
-- Frontend design kit (`docs/design-reference/`) and frontend docs.
+- Frontend design kit and frontend docs (the archived kit was subsequently removed).
 
 [1.0.0]: https://github.com/pranavgawaii/mnemo/releases/tag/v1.0.0
