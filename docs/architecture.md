@@ -5,26 +5,16 @@ scoring pipeline, and the contracts that control memory storage, retrieval and r
 
 ## System layout
 
-```mermaid
-flowchart TB
-  client["Your application / agent<br/>owns conversations and LLM answers"]
-  subgraph api["Mnemo: one Python API process"]
-    http["FastAPI<br/>auth, scopes, validation"]
-    memory["Memory service<br/>store, rank, flag, resolve"]
-    embed["Local MiniLM encoder<br/>384 dimensions"]
-    worker["JobWorker thread<br/>optional background processing"]
-    http --> memory
-    memory -->|encode text| embed
-  end
-  db[("PostgreSQL + pgvector<br/>memories, vectors, conflicts, audit, jobs, config")]
-  receiver["Optional webhook receiver"]
-  web["Next.js website + optional live demo proxy"]
-  web -.->|fixed demo calls, server-only API key| http
-  client -->|JSON/HTTP + X-API-Key| http
-  memory <-->|SQLAlchemy queries and writes| db
-  worker -->|poll and claim outbox jobs| db
-  worker -->|signed HTTP POST, bounded retries| receiver
-```
+<p align="center">
+<a href="assets/architecture.svg">
+<img src="assets/architecture.svg" alt="Mnemo system architecture: the application and its model, the Next.js website and live demo proxy, the Python API with its memory service, local encoder and job worker, PostgreSQL with pgvector, and the webhook receiver." width="1100" />
+</a>
+</p>
+
+<p align="center">
+<a href="https://trymnemo.pranavx.in/docs/concepts#architecture">Explore the interactive architecture and user flow</a> ·
+<a href="assets/architecture.svg">View the full-size diagram</a>
+</p>
 
 The Next.js site is separate. Its browser simulation stays offline; the optional
 live walkthrough uses a server-side proxy to call this API. Neither frontend demo
@@ -82,9 +72,11 @@ On every write (create **and** content update):
 
 1. The new memory's 5 nearest neighbours are fetched
    (`_CONTRADICTION_CANDIDATES`), ignoring itself.
-2. An explicit `X moved from A to B` paired with `X lives in A` qualifies for review
-   when the subject and source city match and the destination differs. This narrow
-   English rule does not require the vector gate.
+2. Python-owned rules in `app/core/changes.py` recognize explicit from/to
+   changes to residence, favourite cuisine, learning goals and running routines.
+   The subject and recorded previous value must match. These narrow English
+   rules can qualify a pair below the vector gate; they never resolve it.
+   A second change is compared with the latest active value.
 3. Other pairs above the namespace's `contradiction_sim_threshold` (global default
    `CONTRADICTION_SIM_THRESHOLD`) go through `app/core/contradiction.py`:
    a negation-marker heuristic ("no longer", "not", "used to", ...) plus
@@ -98,23 +90,30 @@ On every write (create **and** content update):
    workers racing on the same memory produce exactly one row — the loser's
    insert becomes a silent no-op instead of a 500 (stress-tested in
    `tests/test_concurrency.py`).
-5. Audit event + webhook outbox jobs (one per active subscriber) are written
+6. Audit event + webhook outbox jobs (one per active subscriber) are written
    in the same transaction.
-6. **Resolution** — `POST /v1/contradictions/resolve` names a winner; the
+7. **Resolution** — `POST /v1/contradictions/resolve` names a winner; the
    loser is soft-deleted and the row becomes `resolved` with
    `resolved_winner_id` set.
 
+The API's `current_statement` is a display projection for supported changes;
+`content` retains the complete source record. It does not verify a claim or
+approve a conflict. The offline browser uses rule data generated from the same
+Python source, with shared fixtures and a CI drift check.
+
 ## Soft delete, TTL and the sweep
 
-Nothing is ever hard-deleted: `is_active=false` is the tombstone, and the
-audit log is append-only. Two exclusions apply to every read:
+Memories are soft-deleted: `is_active=false` is the tombstone, and the
+audit log is append-only. Search and normal active-memory lists exclude rows
+that fail either eligibility check:
 
 - `is_active.is_(True)`
 - `expires_at IS NULL OR expires_at > now()` (TTL)
 
 `sweep_expired()` (API on startup? no — CLI `sweep-expired`, cron-friendly)
-soft-deletes expired rows so counts stay honest; live reads never see expired
-memories either way.
+soft-deletes expired rows so counts stay honest. Search and normal lists exclude
+expired memories immediately. Direct memory-by-ID reads remain available for
+inspecting inactive or expired source history.
 
 ## The outbox pattern
 
