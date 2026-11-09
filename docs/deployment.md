@@ -41,6 +41,18 @@ without running inference. `EMBEDDING_WARMUP=true` validates the encoder during
 startup before accepting requests. `/v1/demo/availability` checks read/write key
 scopes and the memory table, and reports a cold/warm encoder.
 
+## Updating an existing backend
+
+Drain writes and stop older API processes before `alembic upgrade head`, then
+start the new version. Migration 0015 adds a derived assertion index and backfills
+existing rows in batches without changing source text. It requires an online
+connection; offline SQL generation cannot perform this Python extraction step.
+Do not run older writers during the backfill or mix versions that do not maintain
+the new index. Docker runs the migration before starting its new API process.
+
+The [backend guide](../backend/README.md) documents supported changes, namespace
+lock budgets, local load results and the synthetic pg_dump/pg_restore drill.
+
 ## Configuration reference
 
 The defaults below are generated from Python field definitions, not environment

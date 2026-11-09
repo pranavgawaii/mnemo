@@ -238,8 +238,9 @@ backend credential. Never expose a real API key through public environment vars.
 ## Mobile and browser verification
 
 The composer reserves space for multiline facts; text fields use 16px type on
-small screens to avoid iOS focus zoom. Phones use a compact native scenario selector; wider screens retain the scenario
-buttons.
+small screens to avoid iOS focus zoom. A labelled native scenario selector works at every width. The default Move city
+scenario prefills a Bengaluru-to-Pune change. The guide shows progress; the forms,
+review choices and comparison provide one next action per stage.
 Live API context stacks vertically on phones so facts and scores remain readable.
 Result frames stay reserved through loading, review and error states.
 
@@ -274,8 +275,9 @@ On phones and tablets below 1024px, Context and Review share a fixed result
 panel with keyboard-accessible tabs. Storing a conflict opens Review; verifying
 recall opens Context. Both remain side by side on desktop.
 
-The availability badge probes `/v1/demo/availability` on opening the live tab,
-on window focus, and on Check availability. It shows database/key readiness,
+The playground probes `/v1/demo/availability` through its server proxy on opening the page,
+on window focus, and on Check availability. Setup requirements are visible before
+switching to Live API; both services run locally without new hosting. It shows database/key readiness,
 a check time and cold/warm encoder state. Failed writes mark it unavailable;
 results are retained for inspection and retry. `/health` alone is not used to
 claim that the demo is available.

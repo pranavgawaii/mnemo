@@ -79,8 +79,10 @@ curl -sS http://localhost:8000/v1/memories/search \
   -d '{"namespace":"demo","query":"Where does Pranav live?","limit":3}'
 ```
 
-The first memory request loads the embedding model and may take longer. The
-local development key above must match your deployment's `MNEMO_API_KEY`.
+Docker warms the embedding model before accepting requests; the first image
+build downloads its weights. Direct Python starts load it on first use unless
+`EMBEDDING_WARMUP=true`. The local development key above must match your
+deployment's `MNEMO_API_KEY`.
 Interactive backend documentation is at `http://localhost:8000/docs`.
 
 For the Python client, use Python 3.12+ and install from the repository root in
@@ -141,6 +143,15 @@ precision/recall or production-scale performance. Additional ranking signals
 have no demonstrated retrieval gain on this run. The
 [benchmark runner](backend/benchmark/README.md) documents reproduction.
 
+The [evaluation page](https://trymnemo.pranavx.in/docs/evaluation) also separates
+30 additional queries over the same corpus, 27 authored lifecycle checks, and a
+24-pair conflict challenge. The original conflict run found **7 true positives,
+0 false positives and 5 misses**. The [backend hardening results](backend/README.md#measured-evidence)
+now cover all 12 labelled conflicts on that same development set, with no false
+positives across its 12 negative pairs. Those labels informed the new rules;
+this is not independent accuracy or generated-answer quality. The original
+report remains available. See the [reproduction guide](backend/benchmark/README.md).
+
 ## Frontend development
 
 With Node.js 20+ and pnpm 9 (the CI toolchain), run from the repository root:
@@ -173,13 +184,6 @@ Local Live API setup is reproducible with `scripts/connect-live-demo.py`; the
 [deployment guide](docs/deployment.md#connect-the-live-api-walkthrough) explains
 private demo keys and the distinction between local and hosted connectivity.
 
-Evaluation now includes [30 new query-only holdout questions](backend/benchmark/holdout-queries.json)
-over the same synthetic corpus and a [seven-scenario lifecycle suite](backend/evaluation/lifecycle.py).
-Saved [retrieval](backend/evaluation/reports/retrieval-holdout.json) and
-[lifecycle](backend/evaluation/reports/lifecycle.json) reports retain their scope:
-these checks do not establish independent-dataset generalization, LLM answer
-quality or production load capacity. The original 50-query results above remain
-unchanged; the new questions are not used to tune ranking.
 
 ## Repository layout
 

@@ -66,7 +66,8 @@ jobs:
         run: |
           python ../scripts/export-memory-rules.py --check
           python ../scripts/export-config-reference.py --check
-          python -m pytest tests/test_core.py tests/test_frontend_parity.py tests/test_changes.py tests/test_context_packing.py tests/test_access_policy.py tests/test_context_evaluation.py -v
+          python ../scripts/export-evaluation-reports.py --check
+          python -m pytest tests/test_core.py tests/test_frontend_parity.py tests/test_changes.py tests/test_context_packing.py tests/test_access_policy.py tests/test_context_evaluation.py tests/test_assertions.py -v
 
   backend-integration:
     name: Backend - pgvector integration (${{ matrix.python-version }})

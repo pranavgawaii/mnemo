@@ -113,8 +113,10 @@ ordinary agent tools keep this option enabled.
 | `needs_review` | No safe selected facts remain and a qualifying candidate needs review |
 | `budget_exhausted` | No whole eligible fact fits; increase the budget or refine the query |
 
-Retrieval and conflict reads reflect database state during the request; the
-response is not an immutable snapshot or a guarantee against concurrent changes.
+Context retrieval and conflict reads share a namespace lock while the request
+runs; concurrent memory mutations take the exclusive counterpart. Multiple
+context readers can proceed together. The returned response is not an immutable
+snapshot after the request completes, and TTL eligibility is time dependent.
 `has_pending_review` covers the retrieved candidates, not every fact in the namespace.
 
 ## Use provider-neutral tools

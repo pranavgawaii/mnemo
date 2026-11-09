@@ -286,7 +286,9 @@ immutable versions of earlier content. Returns the updated memory.
 }
 ```
 
-`status` is `open` (default) or `resolved`. Contradictions are detected on
+`status` is `open` (default) or `resolved`. Open listings contain actionable
+pairs whose two memories are active and unexpired; obsolete unresolved records
+remain in namespace exports for history. Contradictions are detected on
 write: the new memory is compared against its 5 nearest neighbours
 (`CONTRADICTION_CANDIDATES`). Exact subject/source matches for explicit from/to
 relocations and explicit source-matched cuisine, learning and running-routine

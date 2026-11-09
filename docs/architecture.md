@@ -70,9 +70,14 @@ and age are surfaced separately so callers can inspect each ranking signal.
 
 On every write (create **and** content update):
 
-1. The new memory's 5 nearest neighbours are fetched
-   (`_CONTRADICTION_CANDIDATES`), ignoring itself.
-2. Python-owned rules in `app/core/changes.py` recognize explicit from/to
+1. The new memory's 5 nearest neighbours are fetched, ignoring itself.
+   A derived index additionally fetches active, unexpired records with the same
+   recognized subject and attribute. These candidates are not limited by vector
+   rank. Recognized candidate sets above 1,000 fail closed with 409.
+2. Versioned assertion rules compare confirmed current residence, employer,
+   favourite cuisine, same-currency grocery budget and work start time. Unknown
+   grammar, uncertainty, history and alternatives are declined. Python-owned
+   rules in `app/core/changes.py` also recognize explicit from/to
    changes to residence, favourite cuisine, learning goals and running routines.
    The subject and recorded previous value must match. These narrow English
    rules can qualify a pair below the vector gate; they never resolve it.
@@ -95,6 +100,19 @@ On every write (create **and** content update):
 7. **Resolution** — `POST /v1/contradictions/resolve` names a winner; the
    loser is soft-deleted and the row becomes `resolved` with
    `resolved_winner_id` set.
+
+Writes take a transaction-scoped PostgreSQL advisory lock per namespace before
+checking prior rows. Context requests share that lock so multiple readers can
+proceed together while their retrieval/conflict checks agree on committed writes.
+The wait budget is five seconds; contention returns 503 with Retry-After instead
+of waiting indefinitely. Index updates, audit events and outbox jobs commit with
+the source mutation. Soft deletion, content changes and conflict resolution use
+the same write lock. Expiry eligibility is still evaluated at request time.
+
+Open-conflict views and context consider a pair actionable only while both source
+rows are live in the same namespace. Obsolete unresolved pairs remain in exports
+for history without indefinitely blocking the surviving current fact. This does
+not automatically choose a winner or rewrite an audit decision.
 
 The API's `current_statement` is a display projection for supported changes;
 `content` retains the complete source record. It does not verify a claim or
@@ -179,7 +197,7 @@ the sort key `(created_at DESC, id DESC)` is total.
 Migrations live in `backend/alembic/versions` (one revision per feature:
 0002 tags, 0003 namespaces, 0004 api_keys, 0005 rate limiting, 0006 TTL,
 0007 audit log, 0008 tsvector, 0009 HNSW, 0010 jobs, 0011 webhooks, 0012
-unique pair, 0013 worker leases, 0014 key grants and expiry). CI runs `alembic upgrade head` before the test suite, so a
+unique pair, 0013 worker leases, 0014 key grants and expiry, 0015 assertion lookup and backfill). CI runs `alembic upgrade head` before the test suite, so a
 broken revision fails the build.
 
 ## Testing strategy
@@ -195,3 +213,10 @@ Three tiers, enforced by marks:
    backend source for the constants the TypeScript mirror must match
    (`_CONTRADICTION_CANDIDATES`, `_SEARCH_OVERFETCH`, limits) — if the backend
    changes a constant, the frontend test fails until the mirror catches up.
+
+## Backend verification
+
+See the [backend guide](../backend/README.md) for supported assertion forms,
+concurrency boundaries, exact evaluation scopes, bounded load sampling and the
+local PostgreSQL dump/restore drill. These are measured local checks, not claims
+of universal conflict understanding or production scale.
