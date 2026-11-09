@@ -650,6 +650,7 @@ def resolve_contradiction(
     *,
     contradiction_id: uuid.UUID,
     winner_memory_id: uuid.UUID,
+    allowed_namespaces: tuple[str, ...] | None = None,
     actor_key_id: uuid.UUID | None = None,
     request_id: str | None = None,
 ) -> tuple[Contradiction | None, str | None]:
@@ -660,9 +661,11 @@ def resolve_contradiction(
     of the pair); ``contradiction`` is ``None`` in that case.
     """
     # Lock the state transition; eager memory joins must not also be locked.
+    statement = select(Contradiction).where(Contradiction.id == contradiction_id)
+    if allowed_namespaces is not None:
+        statement = statement.where(Contradiction.namespace.in_(allowed_namespaces))
     contradiction = db.execute(
-        select(Contradiction)
-        .where(Contradiction.id == contradiction_id)
+        statement
         .with_for_update(of=Contradiction)
         .execution_options(populate_existing=True)
     ).scalar_one_or_none()

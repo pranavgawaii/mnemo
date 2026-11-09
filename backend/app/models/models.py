@@ -85,7 +85,7 @@ class Memory(Base):
 class NamespaceRow(Base):
     """Optional per-namespace configuration row.
 
-    Namespaces are implicit (any string is a tenant key); a row here exists to
+    Namespaces are implicit groupings; a row here exists to
     hold scoring overrides and administration metadata. Every override column
     is NULL = use the global setting.
     """
@@ -128,6 +128,9 @@ class ApiKey(Base):
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # Per-key override of the global rate limit (requests/minute); NULL = global.
     rate_limit_per_minute: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # NULL = operator/unrestricted key; [] fails closed if inserted outside API.
+    namespaces: Mapped[list[str] | None] = mapped_column(ARRAY(String(128)), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class RateLimitCounter(Base):

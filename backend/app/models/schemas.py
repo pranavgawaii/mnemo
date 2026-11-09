@@ -7,7 +7,7 @@ objects.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Annotated, Any, Literal
 
 from pydantic import (
@@ -345,7 +345,7 @@ class NamespaceList(BaseModel):
 # API keys
 # --------------------------------------------------------------------------- #
 class ApiKeyCreate(BaseModel):
-    """Create an issued key. Scopes: read (GET), write (mutations), admin."""
+    """Create a key with retrieval, mutation or admin scopes and optional grants."""
 
     label: str = Field(..., min_length=1, max_length=64)
     scopes: list[Literal["read", "write", "admin"]] = Field(
@@ -353,6 +353,19 @@ class ApiKeyCreate(BaseModel):
     )
     # Per-key override of the global requests/minute budget.
     rate_limit_per_minute: int | None = Field(default=None, ge=1, le=10_000)
+    namespaces: list[str] | None = Field(default=None, min_length=1, max_length=32)
+    expires_at: datetime | None = None
+
+    @model_validator(mode="after")
+    def validate_grant(self) -> "ApiKeyCreate":
+        from app.core.access import validate_namespace_grant
+
+        validate_namespace_grant(self.namespaces, self.scopes)
+        if self.expires_at is not None and (
+            self.expires_at.tzinfo is None or self.expires_at <= datetime.now(timezone.utc)
+        ):
+            raise ValueError("Key expiry must be a timezone-aware time in the future.")
+        return self
 
 
 class ApiKeyOut(BaseModel):
@@ -368,6 +381,8 @@ class ApiKeyOut(BaseModel):
     created_at: datetime
     last_used_at: datetime | None
     rate_limit_per_minute: int | None
+    namespaces: list[str] | None = None
+    expires_at: datetime | None = None
 
 
 class ApiKeyCreated(ApiKeyOut):

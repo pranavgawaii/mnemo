@@ -15,6 +15,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api import pagination
+from app.api.access import authorize_memory, authorize_namespace, namespace_grant
 from app.api.deps import authenticate, require_scope
 from app.db.session import get_db
 from app.models.schemas import (
@@ -196,6 +197,7 @@ def add_memory(
 ) -> MemoryCreateResult:
     """Add a memory. Any contradictions it introduces are flagged and returned."""
     actor = _actor(request)
+    authorize_namespace(request, payload.namespace)
     try:
         memory, contradictions, duplicate_of = memory_service.add_memory(
             db,
@@ -229,6 +231,10 @@ def add_memories_bulk(
     marks that item as ``error`` and never rolls back the others. Contradiction
     flags created by earlier items in the same batch are visible to later ones.
     """
+    # Authorize the entire batch before its first commit. A mixed-namespace
+    # payload must never create a permitted prefix and then fail halfway.
+    for item in payload.items:
+        authorize_namespace(request, item.namespace)
     results: list[BulkMemoryResultItem] = []
     created = 0
     errors = 0
@@ -264,8 +270,9 @@ def add_memories_bulk(
 
 
 @router.post("/memories/search", response_model=SearchResponse, dependencies=_READ)
-def search_memories(payload: SearchRequest, db: Session = Depends(get_db)) -> SearchResponse:
+def search_memories(payload: SearchRequest, request: Request, db: Session = Depends(get_db)) -> SearchResponse:
     """Semantic search, ranked by relevance (similarity * decay * importance)."""
+    authorize_namespace(request, payload.namespace)
     results = memory_service.search(
         db,
         query=payload.query,
@@ -289,6 +296,7 @@ def search_memories(payload: SearchRequest, db: Session = Depends(get_db)) -> Se
 
 @router.get("/memories", response_model=MemoryList, dependencies=_READ)
 def list_memories(
+    request: Request,
     namespace: str = Query(default="default"),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
@@ -297,6 +305,7 @@ def list_memories(
     db: Session = Depends(get_db),
 ) -> MemoryList:
     """Paginated list of active memories for a namespace, newest first."""
+    authorize_namespace(request, namespace)
     tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else None
     _, total = memory_service.list_memories(
         db, namespace=namespace, limit=1, offset=0, tags=tag_list
@@ -342,6 +351,7 @@ def list_memories(
 @router.get("/memories/{memory_id}", response_model=MemoryOut, dependencies=_READ)
 def get_memory(
     memory_id: uuid.UUID,
+    request: Request,
     namespace: str | None = Query(default=None, min_length=1, max_length=128),
     db: Session = Depends(get_db),
 ) -> MemoryOut:
@@ -351,6 +361,7 @@ def get_memory(
     memory lives in a different namespace, this returns 404 rather than
     revealing that the id exists elsewhere.
     """
+    namespace = authorize_memory(request, db, memory_id, namespace)
     memory = memory_service.get_memory(
         db, memory_id=memory_id, namespace=namespace
     )
@@ -373,6 +384,7 @@ def update_memory(
     flags surface through ``GET /v1/contradictions``. Accepts the same optional
     ``namespace`` scope as the fetch and delete routes.
     """
+    namespace = authorize_memory(request, db, memory_id, namespace)
     memory = memory_service.update_memory(
         db,
         memory_id=memory_id,
@@ -406,6 +418,7 @@ def delete_memory(
     Accepts the same optional ``namespace`` scope as the fetch route, so a
     caller cannot soft-delete a memory outside the namespace it names.
     """
+    namespace = authorize_memory(request, db, memory_id, namespace)
     memory = memory_service.soft_delete_memory(
         db,
         memory_id=memory_id,
@@ -423,6 +436,7 @@ def delete_memory(
 # --------------------------------------------------------------------------- #
 @router.get("/contradictions", response_model=ContradictionList, dependencies=_READ)
 def list_contradictions(
+    request: Request,
     namespace: str = Query(default="default"),
     status_filter: str | None = Query(default="open", alias="status"),
     limit: int = Query(default=20, ge=1, le=100),
@@ -431,6 +445,7 @@ def list_contradictions(
     db: Session = Depends(get_db),
 ) -> ContradictionList:
     """Paginated list of flagged contradictions (defaults to open ones)."""
+    authorize_namespace(request, namespace)
     _, total = memory_service.list_contradictions(
         db, namespace=namespace, status=status_filter, limit=1, offset=0
     )
@@ -487,6 +502,7 @@ def resolve_contradiction(
         db,
         contradiction_id=payload.contradiction_id,
         winner_memory_id=payload.winner_memory_id,
+        allowed_namespaces=namespace_grant(request),
         actor_key_id=_actor(request),
         request_id=request.state.request_id,
     )
@@ -507,6 +523,8 @@ def create_api_key(payload: ApiKeyCreate, db: Session = Depends(get_db)) -> ApiK
             label=payload.label,
             scopes=list(payload.scopes),
             rate_limit_per_minute=payload.rate_limit_per_minute,
+            namespaces=payload.namespaces,
+            expires_at=payload.expires_at,
         )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc

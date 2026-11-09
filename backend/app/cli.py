@@ -188,11 +188,15 @@ def _keys(args: argparse.Namespace) -> int:
                 label=args.label,
                 scopes=[scope for scope in args.scopes.split(",") if scope],
                 rate_limit_per_minute=args.rate_limit_per_minute,
+                namespaces=args.namespace,
+                expires_at=datetime.fromisoformat(args.expires_at) if args.expires_at else None,
             )
             print(f"key:      {plaintext}")
             print("          (shown once - store it now)")
             print(f"id:       {row.id}")
             print(f"scopes:   {','.join(row.scopes)}")
+            print(f"namespaces: {','.join(row.namespaces) if row.namespaces is not None else '(all)'}")
+            print(f"expires:  {row.expires_at or '(never)'}")
             return 0
 
         if args.keys_command == "list":
@@ -200,7 +204,9 @@ def _keys(args: argparse.Namespace) -> int:
                 status = "active" if row.is_active else "revoked"
                 scopes = ",".join(row.scopes)
                 limit = row.rate_limit_per_minute or "-"
-                print(f"{row.id}  {status:7}  [{scopes}]  rpm={limit}  {row.label}")
+                grant = ",".join(row.namespaces) if row.namespaces is not None else "(all)"
+                expiry = row.expires_at.isoformat() if row.expires_at else "(never)"
+                print(f"{row.id}  {status:7}  [{scopes}]  rpm={limit}  ns={grant}  expires={expiry}  {row.label}")
             return 0
 
         if args.keys_command == "rotate":
@@ -414,6 +420,22 @@ def _dump(args: argparse.Namespace) -> int:
     return 0
 
 
+def _context(args: argparse.Namespace) -> int:
+    """Operator-local read, bypassing HTTP auth like the other database commands."""
+    from app.models.context import ContextRequest
+    from app.services.context_service import build_context
+
+    payload = ContextRequest(
+        namespace=args.namespace, query=args.query, max_chars=args.max_chars,
+        min_similarity=args.min_similarity, exclude_conflicts=not args.allow_conflicts,
+        current_values=not args.source_text,
+    )
+    with SessionLocal() as db:
+        result = build_context(db, payload)
+    print(result.model_dump_json(indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="mnemo",
@@ -480,6 +502,8 @@ def build_parser() -> argparse.ArgumentParser:
     keys_create.add_argument("--label", default="unnamed")
     keys_create.add_argument("--scopes", default="read", help="Comma-separated: read,write,admin.")
     keys_create.add_argument("--rate-limit-per-minute", type=int, default=None)
+    keys_create.add_argument("--namespace", action="append", help="Exact namespace grant; repeat for more.")
+    keys_create.add_argument("--expires-at", help="Timezone-aware ISO 8601 expiry.")
     keys_sub.add_parser("list", help="List keys (prefixes only, never secrets).")
     keys_rotate = keys_sub.add_parser("rotate", help="Replace a key's secret.")
     keys_rotate.add_argument("--id", required=True)
@@ -496,6 +520,15 @@ def build_parser() -> argparse.ArgumentParser:
 
     doctor_parser = subparsers.add_parser("doctor", help="Check database, migrations, embeddings, jobs.")
     doctor_parser.set_defaults(handler=_doctor)
+
+    context_parser = subparsers.add_parser("context", help="Inspect cited context without generating an answer.")
+    context_parser.add_argument("--namespace", default="default")
+    context_parser.add_argument("--query", required=True)
+    context_parser.add_argument("--max-chars", type=int, default=4000)
+    context_parser.add_argument("--min-similarity", type=float, default=0.25)
+    context_parser.add_argument("--allow-conflicts", action="store_true", help="Include disputed facts with review flags.")
+    context_parser.add_argument("--source-text", action="store_true", help="Use original statements instead of current projections.")
+    context_parser.set_defaults(handler=_context)
 
     dump_parser = subparsers.add_parser(
         "dump", help="Snapshot every namespace into one JSON file."

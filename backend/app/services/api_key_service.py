@@ -14,9 +14,10 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
+from app.core.access import validate_namespace_grant
 from app.models.models import ApiKey
 
 VALID_SCOPES = ("read", "write", "admin")
@@ -31,6 +32,7 @@ class AuthContext:
     scopes: frozenset[str]
     via_env: bool
     rate_limit_per_minute: int | None = None  # None = use the global setting
+    namespaces: tuple[str, ...] | None = None
 
     def has_scope(self, scope: str) -> bool:
         return scope in self.scopes
@@ -50,6 +52,8 @@ def create_api_key(
     label: str,
     scopes: list[str],
     rate_limit_per_minute: int | None = None,
+    namespaces: list[str] | None = None,
+    expires_at: datetime | None = None,
 ) -> tuple[ApiKey, str]:
     """Create a key row. Returns the row and the plaintext secret (shown once)."""
     unknown = [s for s in scopes if s not in VALID_SCOPES]
@@ -57,6 +61,11 @@ def create_api_key(
         raise ValueError(f"Unknown scopes: {', '.join(unknown)}.")
     if not scopes:
         raise ValueError("At least one scope is required.")
+    grant = validate_namespace_grant(namespaces, scopes)
+    if expires_at is not None and (
+        expires_at.tzinfo is None or expires_at <= datetime.now(timezone.utc)
+    ):
+        raise ValueError("Key expiry must be a timezone-aware time in the future.")
 
     plaintext = generate_secret()
     row = ApiKey(
@@ -65,6 +74,8 @@ def create_api_key(
         key_prefix=plaintext[:11],
         scopes=list(scopes),
         rate_limit_per_minute=rate_limit_per_minute,
+        namespaces=list(grant) if grant is not None else None,
+        expires_at=expires_at,
     )
     db.add(row)
     db.commit()
@@ -73,9 +84,12 @@ def create_api_key(
 
 
 def verify(db: Session, *, presented: str) -> AuthContext | None:
-    """Resolve a presented key to an AuthContext, or None when unknown/inactive."""
+    """Resolve a presented key, or None when unknown, inactive or expired."""
     row = db.execute(
-        select(ApiKey).where(ApiKey.key_hash == hash_key(presented), ApiKey.is_active.is_(True))
+        select(ApiKey).where(
+            ApiKey.key_hash == hash_key(presented), ApiKey.is_active.is_(True),
+            or_(ApiKey.expires_at.is_(None), ApiKey.expires_at > func.now()),
+        )
     ).scalar_one_or_none()
     if row is None:
         return None
@@ -87,6 +101,7 @@ def verify(db: Session, *, presented: str) -> AuthContext | None:
         scopes=frozenset(row.scopes),
         via_env=False,
         rate_limit_per_minute=row.rate_limit_per_minute,
+        namespaces=tuple(row.namespaces) if row.namespaces is not None else None,
     )
 
 

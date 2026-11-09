@@ -16,6 +16,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.api.body_limit import BodyLimitMiddleware
+from app.api.context import router as context_router
 from app.api.demo import router as demo_router
 from app.api.routes import router as api_router
 from app.core.config import settings
@@ -71,6 +72,7 @@ app.add_middleware(BodyLimitMiddleware, max_bytes=lambda: settings.max_body_byte
 
 app.include_router(api_router)
 app.include_router(demo_router)
+app.include_router(context_router)
 
 
 @app.middleware("http")

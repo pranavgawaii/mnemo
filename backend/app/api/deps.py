@@ -7,9 +7,13 @@ Auth model:
 - Issued keys live in ``api_keys`` (hashed) and carry scopes. Verification is a
   hash lookup, so the plaintext secret never needs to be stored or compared.
 
-Scope semantics: ``read`` for GET routes, ``write`` for mutations, ``admin``
+Scope semantics: ``read`` for retrieval, ``write`` for mutations, ``admin``
 for key management and the events feed. The resolved context is attached to
 ``request.state.auth`` for per-route scope checks.
+
+Issued keys may also restrict exact namespaces and expire. Restricted keys
+never authorize global admin operations, even if a malformed row carries that
+scope. The bootstrap key remains an unrestricted operator credential.
 """
 
 from __future__ import annotations
@@ -89,7 +93,9 @@ def require_scope(scope: str) -> Callable[[Request], None]:
 
     def check(request: Request) -> None:
         auth: AuthContext | None = getattr(request.state, "auth", None)
-        if auth is None or not auth.has_scope(scope):
+        if auth is None or not auth.has_scope(scope) or (
+            scope == "admin" and auth.namespaces is not None
+        ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"This operation requires the '{scope}' scope.",
