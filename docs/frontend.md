@@ -82,6 +82,25 @@ The memory map, pairwise calculator, conflict checker and local activity remain
 optional. Tool deep links open the relevant disclosures automatically. The
 landing example also reserves one frame for all four stages.
 
+## Guided playground flow
+
+The workbench guides recall → store → review → recall again while keeping custom
+inputs available. Ranking and time controls remain visible below the main
+results, before the retrieval trace. A non-conflicting write skips the decision
+step and returns to recall.
+
+Resolving a conflict captures the displayed context immediately before and
+after that decision, using the same submitted query, ranking mode, time offset
+and display cutoff. Recall again reveals that labelled snapshot; Current context
+returns to the live results. Snapshots retain their original settings when later
+experiments change ranking. Choosing another scenario, submitting a different
+question or storing another fact clears the previous comparison. Input, result and guidance frames reserve their
+space across these state changes.
+
+The README diagram in `docs/assets/architecture.svg` is a static export of
+`frontend/src/components/docs/system-map.tsx`. Keep the asset synchronized with
+the interactive architecture when process boundaries or data paths change.
+
 ## Structure
 
 All paths below are relative to `frontend/`.

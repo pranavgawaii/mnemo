@@ -5,6 +5,12 @@ versions follow [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+### Guided memory walkthrough
+- Guide recall, store, review and recall again without hiding custom inputs or ranking controls.
+- Compare captured context before and after an explicit review decision.
+- Show the agent model connection example before the full adapter and clarify application-supplied facts.
+- Replace the README's basic flowchart with the docs' component architecture visual.
+
 ### Repository structure
 - Move the web app, assets, dependencies and browser tests into `frontend/`, with application code under `frontend/src/`.
 - Update CI working directories, generated artifact paths and deployment configuration for the frontend project root.

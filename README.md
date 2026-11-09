@@ -1,15 +1,33 @@
-# Mnemo
+<div align="center">
 
-**An inspectable memory API for AI agents.** Store application-supplied facts,
-retrieve context with local embeddings, and review possible conflicts when facts
-change. Built with FastAPI, PostgreSQL + pgvector and a typed Python SDK.
+<h1>Mnemo</h1>
 
-[Get started](#quickstart) · [Documentation](docs/README.md) · [Python SDK](sdk/README.md) · [Architecture](docs/architecture.md)
+<p><strong>An inspectable memory API for AI agents.</strong></p>
 
-![Mnemo landing page and illustrative memory interface](docs/assets/overview.jpg)
+<p>
+Store application-supplied facts, retrieve context with local embeddings,<br />
+and review possible conflicts when facts change.
+</p>
 
-**Status:** early, single-tenant prototype. The web playground is a browser
-simulation. Run the API for real MiniLM embeddings and PostgreSQL persistence.
+<p>FastAPI · PostgreSQL + pgvector · Typed Python SDK</p>
+
+<p>
+<a href="#quickstart">Get started</a> ·
+<a href="docs/README.md">Documentation</a> ·
+<a href="sdk/README.md">Python SDK</a> ·
+<a href="docs/architecture.md">Architecture</a>
+</p>
+
+<a href="https://trymnemo.pranavx.in">
+<img src="docs/assets/overview.jpg" alt="Mnemo landing page and illustrative memory interface" width="1200" />
+</a>
+
+<p>
+<strong>Early, single-tenant prototype.</strong><br />
+The playground is a browser simulation. Run the API for real MiniLM embeddings and PostgreSQL persistence.
+</p>
+
+</div>
 
 ## What it does
 
@@ -83,24 +101,17 @@ with MnemoClient(
 See [deployment and configuration](docs/deployment.md) for an existing database,
 configuration variables, operational commands and integration-test setup.
 
-## Architecture
+<h2 align="center">Architecture</h2>
 
-```mermaid
-flowchart LR
-  App["Your application / agent"]
-  subgraph API["Mnemo API process"]
-    Service["FastAPI + memory service"]
-    Model["Local MiniLM encoder"]
-    Worker["Outbox worker thread"]
-    Service --> Model
-  end
-  DB[("PostgreSQL + pgvector")]
-  Hook["Optional webhook receiver"]
-  App -->|JSON/HTTP + API key| Service
-  Service <-->|queries and writes| DB
-  Worker -->|poll and claim jobs| DB
-  Worker -->|signed HTTP POST| Hook
-```
+<p align="center">
+<a href="https://trymnemo.pranavx.in/docs/concepts#architecture">
+<img src="docs/assets/architecture.svg" alt="Mnemo architecture: your application calls its model and the API. FastAPI, the memory service, local MiniLM encoder and job worker share one process connected to PostgreSQL and pgvector. The browser simulation is separate." width="880" />
+</a>
+</p>
+
+<p align="center">
+<a href="https://trymnemo.pranavx.in/docs/concepts#architecture">Explore the interactive system map and user flow</a>
+</p>
 
 The Next.js site runs separately; its demos do not send API or model requests.
 The [system design](docs/architecture.md) explains process boundaries, ranking,
@@ -174,4 +185,6 @@ docs/                    API, architecture, deployment and maintainer guides
 - The default encoder truncates beyond 256 word pieces. The service does not
   automatically chunk long documents.
 
-[MIT license](LICENSE) · Built by [Pranav Gawai](https://pranavx.in)
+<p align="center">
+<a href="LICENSE">MIT license</a> · Built by <a href="https://pranavx.in">Pranav Gawai</a>
+</p>
