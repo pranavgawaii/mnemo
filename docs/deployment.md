@@ -80,10 +80,28 @@ All settings are environment variables (prefix-free, see
 
 ### Vercel / monorepo notes
 
-The web deployment is the Next.js app at the repo root; `.vercelignore`
-keeps `backend/`, `sdk/`, tests and repository docs (including the design kit) out of the upload.
-`requirements-api.txt` carries the `-api` suffix so Vercel's monorepo detector
-does not mistake `backend/` for a deployable Python project.
+Set the Vercel project's **Root Directory** to `frontend` before the next
+repository deployment. Select the Next.js framework preset. Install and build
+commands are declared in `frontend/vercel.json`; the output directory uses the
+Next.js default (`.next`). Commands run relative to `frontend/`:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm build
+```
+
+Set public website variables from `frontend/.env.example` in the project's
+environment settings. Local development variables belong in
+`frontend/.env.local`. The browser does not need backend credentials.
+
+`frontend/.vercelignore` excludes browser-test sources and generated test output.
+The web app reads its schema and benchmark from `frontend/public/`; it has no
+build-time dependency on the API or SDK directories. The frontend CI job runs
+from `frontend/` and caches `frontend/pnpm-lock.yaml`.
+
+Root Directory is a Vercel project setting, not a `vercel.json` property. Changing
+files locally does not change the hosted project or deploy this checkout. See
+[Vercel's Root Directory settings](https://vercel.com/docs/builds/configure-a-build#root-directory).
 
 ## SDK quickstart
 

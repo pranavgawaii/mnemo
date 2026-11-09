@@ -1,0 +1,6 @@
+# Paths are relative to the frontend project root.
+/tests/
+/test-results/
+/playwright-report/
+/blob-report/
+*.tsbuildinfo
