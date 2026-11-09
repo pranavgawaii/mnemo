@@ -1,4 +1,14 @@
 import { defineConfig, devices } from "@playwright/test";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+// Firefox 157 consults the real Firefox app-data directory even with a test
+// profile. Keep test state separate on macOS 27, without granting disk access.
+// https://github.com/microsoft/playwright/issues/42768
+const firefoxHome = process.platform === "darwin"
+  ? mkdtempSync(join(tmpdir(), "mnemo-firefox-"))
+  : undefined;
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3005";
 
@@ -24,6 +34,20 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "firefox-mobile-layout",
+      testMatch: "**/mobile-readiness.spec.ts",
+      use: {
+        ...devices["Desktop Firefox"],
+        hasTouch: true,
+        launchOptions: firefoxHome ? { env: { ...process.env, CFFIXED_USER_HOME: firefoxHome } } : {},
+      },
+    },
+    {
+      name: "webkit-mobile",
+      testMatch: "**/mobile-readiness.spec.ts",
+      use: { ...devices["iPhone 13"] },
     },
   ],
 });

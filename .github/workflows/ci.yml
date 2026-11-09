@@ -63,7 +63,9 @@ jobs:
       - name: Run pure-logic + frontend-parity tests
         env:
           PYTHONPATH: .
-        run: python -m pytest tests/test_core.py tests/test_frontend_parity.py -v
+        run: |
+          python ../scripts/export-memory-rules.py --check
+          python -m pytest tests/test_core.py tests/test_frontend_parity.py tests/test_changes.py -v
 
   backend-integration:
     name: Backend - pgvector integration (${{ matrix.python-version }})
@@ -185,8 +187,8 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Install the Chromium test browser
-        run: pnpm exec playwright install --with-deps chromium
+      - name: Install browser engines
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
 
       - name: Run browser smoke tests
         env:
