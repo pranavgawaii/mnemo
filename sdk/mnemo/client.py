@@ -16,13 +16,21 @@ import httpx
 
 from ._parsing import (
     _UNSET,
+    parse_context,
     parse_contradiction,
     parse_memory,
     parse_search_hit,
     raise_for_status,
 )
 from ._retry import attempts_allowed, delay_for, should_retry
-from .models import Contradiction, ContradictionList, Memory, MemoryList, SearchResponse
+from .models import (
+    ContextResponse,
+    Contradiction,
+    ContradictionList,
+    Memory,
+    MemoryList,
+    SearchResponse,
+)
 
 
 class MnemoClient:
@@ -178,6 +186,27 @@ class MnemoClient:
             returned=data.get("returned"),
             top_similarity=data.get("top_similarity"),
         )
+
+    def context(
+        self, query: str, *, namespace: str | None = None, candidate_limit: int = 30,
+        max_chars: int = 4000, min_similarity: float = 0.25, current_values: bool = True,
+        exclude_conflicts: bool = True, tags: list[str] | None = None,
+        keyword_weight: float | None = None, diversity: float = 0.0,
+    ) -> ContextResponse:
+        """Retrieve cited context; omit pending conflicts and never truncate facts.
+
+        Requires the server's ``POST /v1/context`` endpoint and read scope.
+        There is no automatic fallback to unbounded search on older servers.
+        """
+        data = self._request("POST", "/v1/context", json_body={
+            "query": query, "namespace": namespace or self.default_namespace,
+            "candidate_limit": candidate_limit, "max_chars": max_chars,
+            "min_similarity": min_similarity, "current_values": current_values,
+            "exclude_conflicts": exclude_conflicts, "tags": tags or [],
+            "diversity": diversity,
+            **({"keyword_weight": keyword_weight} if keyword_weight is not None else {}),
+        })
+        return parse_context(data)
 
     def list_memories(
         self,

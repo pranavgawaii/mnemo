@@ -73,3 +73,16 @@ context = context_block(client, "Riya's city", current_values=True)
 This is a display projection, not a truth check or conflict resolution. Review
 open contradictions before handing conflicting facts to an agent. The default
 context formatter continues to use source content.
+
+## Cited context and agent tools
+
+`client.context(query, max_chars=2000)` and `await async_client.context(query)`
+use `POST /v1/context`. They return selected citations, original source text,
+current-statement flags, exact character usage and a per-candidate decision trace.
+Open conflicts are excluded by default; facts are never truncated to fit.
+The limit applies to the context string, not the full response or model tokens.
+
+`mnemo.agent.AgentMemory` exposes provider-neutral JSON Schema tools with a fixed
+namespace and budget. Writes are opt-in and never resolve conflicts automatically.
+Use a namespace-restricted key as the actual server-side access boundary.
+See the [complete guide](../docs/agent-context.md) for examples and labelled evaluation.

@@ -24,6 +24,9 @@ from .errors import (
     ValidationError,
 )
 from .models import (
+    ContextCitation,
+    ContextDecision,
+    ContextResponse,
     Contradiction,
     ContradictionList,
     Memory,
@@ -38,6 +41,9 @@ __all__ = [
     "AsyncMnemoClient",
     "AuthenticationError",
     "ConflictError",
+    "ContextCitation",
+    "ContextDecision",
+    "ContextResponse",
     "Contradiction",
     "ContradictionList",
     "ForbiddenError",

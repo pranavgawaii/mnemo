@@ -80,3 +80,45 @@ class ContradictionList:
     limit: int
     offset: int
     next_cursor: str | None = None
+
+
+@dataclass(frozen=True)
+class ContextCitation:
+    """One complete selected statement, its original source and retrieval evidence."""
+
+    citation: str
+    memory_id: uuid.UUID
+    text: str
+    source_content: str
+    used_current_statement: bool
+    similarity: float
+    relevance_score: float
+    pending_review: bool
+
+
+@dataclass(frozen=True)
+class ContextDecision:
+    memory_id: uuid.UUID
+    rank: int
+    reason: str
+    citation: str | None = None
+
+
+@dataclass(frozen=True)
+class ContextResponse:
+    """Bounded context and its selection trace; no generated answer is included.
+
+    ``used_chars`` counts the context string only, including citation markup.
+    It is not a tokenizer estimate or the size of the whole HTTP response.
+    """
+
+    query: str
+    namespace: str
+    status: str
+    context: str
+    citations: list[ContextCitation]
+    decisions: list[ContextDecision]
+    used_chars: int
+    max_chars: int
+    has_pending_review: bool
+    candidate_count: int

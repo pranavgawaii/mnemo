@@ -8,7 +8,7 @@ typed errors in ``mnemo.errors``.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 from typing import TYPE_CHECKING, Any
 
@@ -24,7 +24,7 @@ from .errors import (
 )
 
 if TYPE_CHECKING:
-    from .models import Contradiction, Memory, SearchHit
+    from .models import ContextResponse, Contradiction, Memory, SearchHit
 
 _UNSET = object()
 
@@ -92,6 +92,28 @@ def parse_search_hit(data: Any) -> SearchHit:
     return hit
 
 
+def parse_context(data: Any) -> ContextResponse:
+    from .models import ContextCitation, ContextDecision, ContextResponse
+
+    return ContextResponse(
+        query=data["query"], namespace=data["namespace"], status=data["status"],
+        context=data["context"], used_chars=int(data["used_chars"]),
+        max_chars=int(data["max_chars"]), has_pending_review=bool(data["has_pending_review"]),
+        candidate_count=int(data["candidate_count"]),
+        citations=[ContextCitation(
+            citation=item["citation"], memory_id=_uid(item["memory_id"]), text=item["text"],
+            source_content=item["source_content"],
+            used_current_statement=bool(item["used_current_statement"]),
+            similarity=float(item["similarity"]), relevance_score=float(item["relevance_score"]),
+            pending_review=bool(item["pending_review"]),
+        ) for item in data["citations"]],
+        decisions=[ContextDecision(
+            memory_id=_uid(item["memory_id"]), rank=int(item["rank"]), reason=item["reason"],
+            citation=item.get("citation"),
+        ) for item in data["decisions"]],
+    )
+
+
 def raise_for_status(
     status: int, body: dict[str, Any], request_id: str | None, retry_after: str | None = None
 ) -> None:
@@ -118,7 +140,7 @@ def raise_for_status(
             except ValueError:
                 try:
                     moment = parsedate_to_datetime(retry_after)
-                    delay = max(0.0, (moment - datetime.now(timezone.utc)).total_seconds())
+                    delay = max(0.0, (moment - datetime.now(UTC)).total_seconds())
                 except (TypeError, ValueError, OverflowError):
                     delay = None
         raise RateLimitError(
