@@ -20,7 +20,7 @@ export function MemoryWorkbench() {
       className="mx-auto w-full max-w-frame scroll-mt-24 px-4 pb-12 pt-4 sm:px-6"
     >
       <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-soft">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-[#FCFCFB] px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-[#FCFCFB] px-4 py-3 sm:px-5 sm:py-4">
           <div>
             <p className="text-[12px] font-medium text-ink">
               Browser simulation
@@ -40,7 +40,7 @@ export function MemoryWorkbench() {
             <span className="hidden sm:inline">Reset demo</span>
           </button>
         </div>
-        <div className="grid gap-3 p-4 sm:gap-5 sm:p-5 lg:grid-cols-2 lg:gap-10">
+        <div className="grid gap-2 p-3 sm:gap-5 sm:p-5 lg:grid-cols-2 lg:gap-10">
           <RecallQuery model={model} />
           <MemoryComposer model={model} />
         </div>

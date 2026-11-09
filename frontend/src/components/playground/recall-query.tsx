@@ -10,7 +10,7 @@ export function RecallQuery({ model }: { model: WorkbenchModel }) {
         fact
       </h2>
       <form
-        className="mt-4 flex gap-2"
+        className="mt-3 flex gap-2 sm:mt-4"
         onSubmit={(event) => {
           event.preventDefault();
           model.runRecall();
@@ -44,7 +44,7 @@ export function RecallQuery({ model }: { model: WorkbenchModel }) {
         id="sample-scenarios"
         aria-label="Sample scenarios"
         role="group"
-        className="mt-3 flex scroll-mt-24 flex-wrap gap-2"
+        className="mt-2 flex scroll-mt-24 flex-wrap gap-2 sm:mt-3"
       >
         <label htmlFor="sample-scenario" className="sr-only">Sample scenario</label>
         <select
@@ -70,7 +70,7 @@ export function RecallQuery({ model }: { model: WorkbenchModel }) {
           </button>
         ))}
       </div>
-      <p className="mt-2 h-9 text-[12px] leading-[18px] text-muted">
+      <p className="mt-1 h-9 text-[12px] leading-[18px] text-muted sm:mt-2">
         {model.scenario.hint}
       </p>
     </div>

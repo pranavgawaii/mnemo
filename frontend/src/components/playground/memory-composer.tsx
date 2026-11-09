@@ -6,7 +6,7 @@ export function MemoryComposer({ model }: { model: WorkbenchModel }) {
       <h2 className="text-[16px] font-medium text-ink">
         <span className="mr-2 text-[12px] text-accent-ink">2</span> Store a fact
       </h2>
-      <form onSubmit={model.handleStore} className="mt-4 flex flex-col gap-2 sm:flex-row">
+      <form onSubmit={model.handleStore} className="mt-3 flex flex-col gap-2 sm:mt-4 sm:flex-row">
         <label htmlFor="wb-store" className="sr-only">
           New memory
         </label>
