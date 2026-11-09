@@ -1,0 +1,61 @@
+{
+  "measured_at": "2026-11-08T20:38:02.028683+00:00",
+  "python": "3.14.7",
+  "platform": "macOS-27.3-arm64-arm-64bit-Mach-O",
+  "embedding_model": "all-MiniLM-L6-v2",
+  "dataset": "backend/benchmark/dataset.json",
+  "scope": "Local in-sample retrieval; not a held-out or end-to-end agent evaluation",
+  "results": [
+    {
+      "mode": "decay",
+      "queries": 50,
+      "memories": 60,
+      "k": 3,
+      "keyword_weight": 0,
+      "top1_accuracy": 0.72,
+      "topk_accuracy": 0.92,
+      "mrr": 0.8240000000000001,
+      "ndcg_at_k": 0.8302374581391931,
+      "latency_p50_ms": 8.09220800147159,
+      "latency_p95_ms": 12.07612500002142
+    },
+    {
+      "mode": "cosine",
+      "queries": 50,
+      "memories": 60,
+      "k": 3,
+      "keyword_weight": 0.0,
+      "top1_accuracy": 0.74,
+      "topk_accuracy": 0.94,
+      "mrr": 0.8413333333333334,
+      "ndcg_at_k": 0.8505931093553133,
+      "latency_p50_ms": 5.749874999310123,
+      "latency_p95_ms": 6.542708997585578
+    },
+    {
+      "mode": "hybrid",
+      "queries": 50,
+      "memories": 60,
+      "k": 3,
+      "keyword_weight": 0.25,
+      "top1_accuracy": 0.7,
+      "topk_accuracy": 0.9,
+      "mrr": 0.809,
+      "ndcg_at_k": 0.8102374581391932,
+      "latency_p50_ms": 12.343124999460997,
+      "latency_p95_ms": 19.865166003000923
+    }
+  ],
+  "dataset_sha256": "8aaca9c59cda71e061c620f9c4d363b25c8dc39029f59cbddc69c7de92334e58",
+  "scoring": {
+    "decay_half_life_days": 180.0,
+    "decay_floor": 0.7,
+    "importance_weights": [
+      0.9,
+      0.95,
+      1.0,
+      1.05,
+      1.1
+    ]
+  }
+}

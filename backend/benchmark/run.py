@@ -106,7 +106,9 @@ def search_no_decay(db, *, query: str, namespace: str, limit: int):
     ]
 
 
-def run_benchmark(db, data: dict, *, k: int = 3, no_decay: bool = False) -> dict:
+def run_benchmark(
+    db, data: dict, *, k: int = 3, no_decay: bool = False, keyword_weight: float = 0.0
+) -> dict:
     """Seed and evaluate. Returns the machine-readable score dict."""
     namespace = data["namespace"]
     id_map = seed(db, data)
@@ -114,19 +116,22 @@ def run_benchmark(db, data: dict, *, k: int = 3, no_decay: bool = False) -> dict
 
     first_ranks: list[int | None] = []
     graded_ranks: list[list[int]] = []
+    gold_counts: list[int] = []
     latencies_ms: list[float] = []
     misses: list[tuple[str, list[str]]] = []
 
     for q in data["queries"]:
         gold_uuids = {id_map[g] for g in q["gold"]}
         start = time.perf_counter()
-        hits = searcher(db, query=q["query"], namespace=namespace, limit=10)
+        search_options = {} if no_decay else {"keyword_weight": keyword_weight}
+        hits = searcher(db, query=q["query"], namespace=namespace, limit=max(10, k), **search_options)
         latencies_ms.append((time.perf_counter() - start) * 1000)
 
         rank = rank_of_gold(hits, gold_uuids)
         first_ranks.append(rank)
         graded = all_gold_ranks(hits, gold_uuids, k)
         graded_ranks.append(graded)
+        gold_counts.append(len(gold_uuids))
 
         if rank is None or rank > k:
             misses.append((q["query"], [m.content for m, *_ in hits[:k]]))
@@ -136,10 +141,11 @@ def run_benchmark(db, data: dict, *, k: int = 3, no_decay: bool = False) -> dict
         "queries": n,
         "memories": len(data["memories"]),
         "k": k,
+        "keyword_weight": 0.0 if no_decay else keyword_weight,
         "top1_accuracy": top1_accuracy(first_ranks),
         "topk_accuracy": topk_accuracy(first_ranks, k),
         "mrr": mrr(first_ranks),
-        "ndcg_at_k": ndcg_at_k(graded_ranks, k),
+        "ndcg_at_k": ndcg_at_k(graded_ranks, k, gold_counts=gold_counts),
         "latency_p50_ms": percentile(latencies_ms, 0.50),
         "latency_p95_ms": percentile(latencies_ms, 0.95),
         "_latency_mean_ms": sum(latencies_ms) / len(latencies_ms) if latencies_ms else 0.0,
@@ -186,6 +192,8 @@ def main() -> None:
         help="Rank by raw cosine similarity only (baseline comparison).",
     )
     parser.add_argument("--k", type=int, default=3, help="Top-k cutoff (default 3).")
+    parser.add_argument("--keyword-weight", type=float, default=0.0,
+                        help="Keyword boost (default 0 isolates decay versus raw cosine).")
     parser.add_argument(
         "--json", action="store_true", help="Print machine-readable scores only."
     )
@@ -196,9 +204,11 @@ def main() -> None:
     db = SessionLocal()
     try:
         db.execute(text("SELECT 1"))
-        print(f"Seeding {len(data['memories'])} memories into namespace "
-              f"'{data['namespace']}' (embedding model load may take a moment)...")
-        scores = run_benchmark(db, data, k=args.k, no_decay=args.no_decay)
+        if not args.json:
+            print(f"Seeding {len(data['memories'])} memories into namespace "
+                  f"'{data['namespace']}' (embedding model load may take a moment)...")
+        scores = run_benchmark(db, data, k=args.k, no_decay=args.no_decay,
+                               keyword_weight=args.keyword_weight)
     finally:
         db.close()
 

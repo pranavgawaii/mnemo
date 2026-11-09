@@ -97,7 +97,7 @@ def main() -> int:
         print(f"Baselines re-pinned to {baselines_path}.")
         return 0
 
-    failures = compare(scores, baselines_path)
+    failures = compare(scores, load_baselines(baselines_path))
     if not failures:
         print("gate: benchmark meets baselines")
         return 0

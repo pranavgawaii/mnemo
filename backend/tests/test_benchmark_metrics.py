@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import math
+
+import pytest
+
 from benchmark.metrics import mrr, ndcg_at_k, percentile, top1_accuracy, topk_accuracy
 
 
@@ -53,3 +57,13 @@ def test_ndcg_averages_queries_and_respects_k():
 
 def test_ndcg_empty_input():
     assert ndcg_at_k([], k=3) == 0.0
+
+
+def test_ndcg_penalizes_missing_relevant_items():
+    score = ndcg_at_k([[1]], k=3, gold_counts=[2])
+    assert score == pytest.approx(1 / (1 + 1 / math.log2(3)))
+
+
+def test_ndcg_rejects_mismatched_gold_counts():
+    with pytest.raises(ValueError, match="one total"):
+        ndcg_at_k([[1]], k=3, gold_counts=[])

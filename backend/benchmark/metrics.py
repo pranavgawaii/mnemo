@@ -44,20 +44,27 @@ def mrr(ranks: list[Rank]) -> float:
     return reciprocal / len(ranks)
 
 
-def ndcg_at_k(ranks_per_query: list[list[Rank]], k: int) -> float:
+def ndcg_at_k(
+    ranks_per_query: list[list[Rank]], k: int, *, gold_counts: list[int] | None = None
+) -> float:
     """NDCG@k with binary relevance, averaged over queries.
 
     Each query contributes the ranks of *all* its gold hits that were
-    retrieved (misses are simply absent). With binary relevance the ideal DCG
-    has ``min(len(gold), k)`` hits at the top positions.
+    retrieved. Pass the total number of relevant items in ``gold_counts`` so
+    missing hits still contribute to ideal DCG. For compatibility, omitted
+    counts assume each list includes every gold item (use None for misses).
     """
+    if k < 1:
+        raise ValueError("k must be positive")
+    if gold_counts is not None and len(gold_counts) != len(ranks_per_query):
+        raise ValueError("gold_counts must have one total per query")
     if not ranks_per_query:
         return 0.0
     total = 0.0
-    for gold_ranks in ranks_per_query:
+    for index, gold_ranks in enumerate(ranks_per_query):
         discount = [1.0 / math.log2(position + 2) for position in range(k)]
         dcg = sum(discount[rank - 1] for rank in gold_ranks if rank is not None and rank <= k)
-        ideal_hits = min(len(gold_ranks), k)
+        ideal_hits = min(gold_counts[index] if gold_counts is not None else len(gold_ranks), k)
         idcg = sum(discount[position] for position in range(ideal_hits))
         total += dcg / idcg if idcg > 0 else 0.0
     return total / len(ranks_per_query)

@@ -71,3 +71,23 @@ def test_gate_missing_baseline_keys_fail():
     )
     assert len(failures) == 5
     assert all("baseline missing" in failure for failure in failures)
+
+
+def test_gate_cli_loads_baseline_file(tmp_path, monkeypatch):
+    import json
+    import sys
+    from unittest.mock import Mock
+
+    from benchmark import gate
+
+    dataset = tmp_path / "dataset.json"
+    dataset.write_text("{}")
+    baselines = tmp_path / "baselines.json"
+    baselines.write_text(json.dumps(BASELINE))
+    monkeypatch.setattr(sys, "argv", ["gate", "--dataset", str(dataset), "--baselines", str(baselines)])
+    monkeypatch.setattr(gate, "SessionLocal", Mock())
+    monkeypatch.setattr(gate, "run_benchmark", lambda *a, **kw: {
+        "top1_accuracy": 0.8, "topk_accuracy": 0.9, "mrr": 0.85,
+        "ndcg_at_k": 0.85, "latency_p95_ms": 500,
+    })
+    assert gate.main() == 0
