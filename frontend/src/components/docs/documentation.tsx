@@ -118,8 +118,8 @@ export function AuthSection() {
             <tr>
               <td className="px-5 py-3 font-mono text-[12px]">admin</td>
               <td className="px-5 py-3">
-                All scopes, including namespace administration, keys, events and
-                webhooks.
+                Namespace administration, keys, events and webhooks. Read and
+                write scopes must be granted separately.
               </td>
             </tr>
           </tbody>

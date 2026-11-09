@@ -204,7 +204,7 @@ test("playground stores, reviews, preserves history and resets", async ({
   ).toContainText("The losing memory is inactive");
   await expect(
     page.locator('#workbench [aria-label="Context matches"] ol'),
-  ).toContainText("Pranav no longer lives in Bengaluru");
+  ).toContainText("Pranav lives in Pune");
   await expect(
     page
       .locator('#workbench [aria-label="Context matches"] ol')
@@ -581,12 +581,10 @@ for (const [scenario, existing, incoming, current] of [
     }) => {
       await page.goto("/playground");
       const scenarios = page.getByRole("group", { name: "Sample scenarios" });
-      await scenarios
-        .getByRole("button", { name: scenario, exact: true })
-        .click();
-      await expect(
-        scenarios.getByRole("button", { name: scenario, exact: true }),
-      ).toHaveAttribute("aria-pressed", "true");
+      await chooseScenario(page, scenario);
+      await expect(scenarios.getByLabel("Sample scenario", { exact: true })).toHaveValue(
+        { Location: "location", Learning: "learning", Routine: "routine" }[scenario],
+      );
       await expect(page.getByLabel("New memory")).toHaveValue(incoming);
       await expect(
         page.getByText("6 active memories · 0 open conflicts", { exact: true }),
@@ -620,12 +618,7 @@ for (const [scenario, existing, incoming, current] of [
       await expect(
         context.getByText(keepNew ? existing : incoming, { exact: true }),
       ).toHaveCount(0);
-      await scenarios
-        .getByRole("button", {
-          name: scenario === "Location" ? "Learning" : "Location",
-          exact: true,
-        })
-        .click();
+      await chooseScenario(page, scenario === "Location" ? "Learning" : "Location");
       await expect(feedback).toHaveCount(0);
       await expect(
         page.getByText("6 active memories · 0 open conflicts", { exact: true }),
@@ -644,16 +637,17 @@ test("agent integration guide exposes the adapter and model boundary without add
   ).toBeVisible();
   await expect(guide.locator("pre").first()).toBeVisible();
   await expect(guide.locator("pre").first()).toContainText(
-    "generate=your_model_call",
+    "python sdk/examples/assistant.py",
   );
-  await expect(guide.locator("details pre")).not.toBeVisible();
+  await expect(guide.getByRole("link", { name: "complete assistant guide", exact: true })).toHaveAttribute("href", /sdk\/examples$/);
+  await expect(guide.locator("details pre").first()).not.toBeVisible();
   await guide
     .getByText("Python adapter · retrieve, review, generate", { exact: true })
     .click();
-  await expect(guide.locator("details pre")).toContainText(
+  await expect(guide.locator("details pre").first()).toContainText(
     "def answer_with_memory",
   );
-  await expect(guide.locator("details pre")).toContainText(
+  await expect(guide.locator("details pre").first()).toContainText(
     "return generate(prompt)",
   );
   await expect(
@@ -1443,13 +1437,9 @@ for (const width of [320, 390, 1280]) {
       await expect(guide.locator('[aria-current="step"]')).toHaveText(
         "1Recall",
       );
-      await guide
-        .getByRole("button", { name: "Start with recall", exact: true })
-        .click();
+      await page.getByRole("button", { name: "Search", exact: true }).click();
       await expect(guide.locator('[aria-current="step"]')).toHaveText("2Store");
-      await guide
-        .getByRole("button", { name: "Use suggested change", exact: true })
-        .click();
+      await page.getByRole("button", { name: "Use a sample conflict", exact: true }).click();
       await expect(page.getByLabel("New memory")).toBeFocused();
       await page
         .getByRole("button", { name: "Store memory", exact: true })
@@ -1486,15 +1476,7 @@ for (const width of [320, 390, 1280]) {
       await expect(guide.locator('[aria-current="step"]')).toHaveText(
         "4Recall again",
       );
-      if (width < 1024) {
-        await page
-          .getByRole("button", { name: "Recall and compare", exact: true })
-          .click();
-      } else {
-        await guide
-          .getByRole("button", { name: "Recall again", exact: true })
-          .click();
-      }
+      await page.getByRole("button", { name: "Recall and compare", exact: true }).click();
       await expect(
         page.getByRole("heading", { name: "Recalled context", exact: true }),
       ).toBeFocused();
@@ -1510,16 +1492,16 @@ for (const width of [320, 390, 1280]) {
           .getByRole("button"),
       ).toHaveText(before);
       const kept = keepNew
-        ? "Pranav no longer lives in Bengaluru"
+        ? "Pranav moved from Bengaluru to Pune"
         : "Pranav lives in Bengaluru";
       const archived = keepNew
         ? "Pranav lives in Bengaluru"
-        : "Pranav no longer lives in Bengaluru";
+        : "Pranav moved from Bengaluru to Pune";
       await expect(
         comparison
           .getByRole("region", { name: "After review context", exact: true })
           .getByRole("button"),
-      ).toHaveText([kept]);
+      ).toHaveText([keepNew ? "Pranav lives in Pune" : kept]);
       expect(await frame()).toEqual(initial);
       const comparisonBounds = await comparison.boundingBox();
       const matchBounds = await matches.boundingBox();
@@ -1550,7 +1532,7 @@ for (const width of [320, 390, 1280]) {
         .click();
       await expect(comparison).toHaveCount(0);
       await expect(
-        guide.getByRole("button", { name: "Start with recall", exact: true }),
+        page.getByRole("button", { name: "Search", exact: true }),
       ).toBeVisible();
       expect(await frame()).toEqual(initial);
       expect(
@@ -1596,6 +1578,7 @@ test("a full context snapshot fits mobile and stays tied to its captured query a
 }) => {
   await page.setViewportSize({ width: 320, height: 900 });
   await page.goto("/playground");
+  await page.evaluate(() => document.fonts.ready);
   await chooseScenario(page, "Preferences");
   await page.getByRole("button", { name: "Store memory", exact: true }).click();
   await page.getByRole("button", { name: "Keep new", exact: true }).click();
@@ -1612,13 +1595,13 @@ test("a full context snapshot fits mobile and stays tied to its captured query a
       .getByRole("button"),
   ).toHaveCount(3);
   const captured = (await comparison.textContent())!;
-  const size = await comparison.boundingBox();
-  const frame = await page
-    .getByRole("region", { name: "Context matches", exact: true })
-    .boundingBox();
-  expect(size!.y + size!.height).toBeLessThanOrEqual(
-    frame!.y + frame!.height + 1,
-  );
+  // Sample both rectangles in one frame: focus-triggered smooth scrolling can
+  // move the viewport between two independent boundingBox requests.
+  const bounds = await comparison.evaluate(element => ({
+    comparison: element.getBoundingClientRect().bottom,
+    frame: element.closest('[aria-label="Context matches"]')!.getBoundingClientRect().bottom,
+  }));
+  expect(bounds.comparison).toBeLessThanOrEqual(bounds.frame + 1);
   await page.getByRole("button", { name: "+90d", exact: true }).click();
   await expect(comparison).toHaveText(captured);
   await expect(comparison).toContainText("+0 days");

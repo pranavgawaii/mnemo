@@ -43,7 +43,7 @@ export function JourneyGuide({ model }: { model: WorkbenchModel }) {
           </li>
         ))}
       </ol>
-      <div className="mt-2 flex h-[108px] flex-col justify-between gap-2 sm:h-[52px] sm:flex-row sm:items-center sm:gap-4">
+      <div className="mt-2 flex h-[88px] items-center justify-between gap-3 sm:h-[52px] sm:gap-4">
         <p
           role="status"
           aria-label="Workbench status"
@@ -51,49 +51,18 @@ export function JourneyGuide({ model }: { model: WorkbenchModel }) {
           className="min-w-0 break-words text-[13px] leading-[18px] text-accent-ink line-clamp-3 sm:line-clamp-2"
         >
           {model.notice ||
-            "Start with recall, then store the suggested change. You can also try your own inputs."}
+            "Search to recall Bengaluru, then store the suggested move to Pune. You can also enter your own facts."}
         </p>
         <div className="flex shrink-0 items-center justify-between gap-3">
-          {model.journeyStage === "recall" ? (
-            <button
-              type="button"
-              onClick={() => model.runRecall()}
-              className={actionClass}
-            >
-              Start with recall
-            </button>
-          ) : model.journeyStage === "store" ? (
-            <button
-              type="button"
-              onClick={model.tryConflict}
-              className={actionClass}
-            >
-              Use suggested change
-            </button>
-          ) : model.journeyStage === "review" ? (
-            <a href="#review" onClick={() => model.setMobilePanel("review")} className={actionClass}>
-              Review below
-            </a>
-          ) : model.journeyStage === "verify" ? (
-            <button
-              type="button"
-              onClick={model.verifyRecall}
-              className={actionClass}
-            >
+          {model.journeyStage === "verify" && !model.reviewOutcome ? (
+            <button type="button" onClick={model.verifyRecall} className={actionClass}>
               Recall again
             </button>
-          ) : (
+          ) : model.journeyStage === "complete" ? (
             <a href="#sample-scenarios" className={actionClass}>
               Try another scenario
             </a>
-          )}
-          <a
-            href="#review"
-            onClick={() => model.setMobilePanel("review")}
-            className="shrink-0 text-[12px] text-muted underline decoration-line underline-offset-4 hover:text-accent-ink"
-          >
-            Review changes ({model.openConflicts.length})
-          </a>
+          ) : null}
         </div>
       </div>
     </section>

@@ -45,7 +45,7 @@ const STAGES: Stage[] = [
     label: "Embedding",
     sub: "in-process · 384-d",
     title: "Local embedding",
-    body: "Text is turned into a 384-dimensional vector by all-MiniLM-L6-v2, running in-process. There is no embedding API and no key to manage; the model loads lazily and is cached in the process.",
+    body: "Text is turned into a 384-dimensional vector by all-MiniLM-L6-v2, running in-process. There is no embedding API and no key to manage; Docker warms the model before serving requests. Direct Python starts load it on first use unless EMBEDDING_WARMUP=true; the loaded model is cached in the process.",
     facts: [
       { k: "Model", v: "all-MiniLM-L6-v2" },
       { k: "Dimensions", v: "384" },

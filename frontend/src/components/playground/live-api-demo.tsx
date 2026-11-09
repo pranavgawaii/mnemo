@@ -5,7 +5,7 @@ import { Check, Database, LoaderCircle, RotateCcw } from "lucide-react";
 import { ExpandedView } from "@/components/ui/expanded-view";
 import { LIVE_SCENARIOS, type DemoScenarioId } from "@/lib/api/demo-scenarios";
 import { currentStatement } from "@/lib/memory/changes";
-import { useDemoAvailability } from "./use-demo-availability";
+import type { useDemoAvailability } from "./use-demo-availability";
 import type {
   DemoAction,
   DemoHit,
@@ -13,10 +13,10 @@ import type {
   LiveDemoResult,
 } from "@/lib/api/live-demo";
 
-export function LiveApiDemo() {
+export function LiveApiDemo({ availabilityState }: { availabilityState: ReturnType<typeof useDemoAvailability> }) {
   const [scenarioId, setScenarioId] = useState<DemoScenarioId>("relocation");
   const scenario = LIVE_SCENARIOS[scenarioId];
-  const { availability, setAvailability, checking, check } = useDemoAvailability();
+  const { availability, setAvailability, checking, check } = availabilityState;
   const enabled = availability?.enabled;
   const online = availability?.status === "available";
   const [result, setResult] = useState<LiveDemoResult | null>(null);
@@ -146,10 +146,15 @@ export function LiveApiDemo() {
                 Connect your local API
               </h3>
               <p className="mt-3 text-[13px] leading-relaxed text-muted">
-                Start Mnemo’s API and database, then set these server-only
-                variables in <code>frontend/.env.local</code> and restart the
-                web app.
+                This mode runs on your computer with the API and PostgreSQL.
+                The hosted website cannot reach your laptop’s localhost.
+                No public backend hosting is required.
               </p>
+              <ol className="mt-3 list-decimal space-y-2 pl-5 text-[13px] leading-relaxed text-muted">
+                <li>Start the API and database using the quickstart.</li>
+                <li>Set these server-only variables in <code>frontend/.env.local</code>.</li>
+                <li>Restart the local frontend and open <code>localhost:3005/playground</code>.</li>
+              </ol>
               <pre className="mt-4 overflow-x-auto whitespace-pre-wrap break-all rounded-lg border border-line bg-background p-3 text-[11px] leading-6">
                 <code>
                   MNEMO_DEMO_API_URL=http://127.0.0.1:8000{"\n"}

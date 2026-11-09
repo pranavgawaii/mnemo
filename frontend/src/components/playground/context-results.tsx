@@ -124,7 +124,7 @@ export function ContextResults({ model }: { model: WorkbenchModel }) {
       <div
         role="region"
         aria-label="Context matches"
-        className="mt-2 h-[228px] shrink-0 lg:mt-3 lg:h-[262px]"
+        className="mt-2 h-[248px] shrink-0 lg:mt-3 lg:h-[262px]"
       >
         {comparing && model.reviewOutcome ? (
           <RecallComparison

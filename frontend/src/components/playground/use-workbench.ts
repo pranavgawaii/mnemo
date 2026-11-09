@@ -58,7 +58,7 @@ export function useWorkbench() {
   const timeBaseline = useRef<{ before: Snapshot; time: number } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoverId, setHoverId] = useState<string | null>(null);
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState<string>(MEMORY_SCENARIOS[0].change);
   const [scenario, setScenario] = useState<MemoryScenario>(MEMORY_SCENARIOS[0]);
   const [reviewOutcome, setReviewOutcome] = useState<ReviewOutcome | null>(
     null,
@@ -401,7 +401,7 @@ export function useWorkbench() {
     setMobilePanel("context");
     setSelectedId(null);
     setHoverId(null);
-    setDraft("");
+    setDraft(MEMORY_SCENARIOS[0].change);
     setScenario(MEMORY_SCENARIOS[0]);
     setReviewOutcome(null);
     setReviewVerified(false);

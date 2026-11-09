@@ -26,8 +26,8 @@ export default function GetStartedPage() {
           In another terminal, check{" "}
           <code className="text-ink">curl http://localhost:8000/health</code>.
           The response is <code className="text-ink">{`{"status":"ok"}`}</code>.
-          The first memory request loads the local embedding model and can take
-          longer.
+          Docker loads and validates the local embedding model before serving
+          requests. The first image build downloads the model files.
         </p>
         <details className="rounded-xl border border-line bg-white px-5 py-4">
           <summary className="cursor-pointer text-[13px] font-medium text-ink">
@@ -58,19 +58,26 @@ export default function GetStartedPage() {
       <AgentIntegration />
       <DocsSection id="live-api-setup" title="Optional live API demo">
         <p>
-          The playground’s Browser demo stays offline. Its Live API tab can run
-          a fixed city-change walkthrough against your API, with actual writes,
-          backend embeddings and database reads.
+          Browser demo works immediately without a backend. To use real writes,
+          embeddings and database reads, run both the API and website on your
+          computer. No new hosting is needed; the public website cannot reach
+          your laptop’s localhost.
         </p>
         <CodeBlock
           label="Live demo configuration"
           code={`# frontend/.env.local — server-only, never NEXT_PUBLIC_\nMNEMO_DEMO_API_URL=http://127.0.0.1:8000\nMNEMO_DEMO_API_KEY=your-api-key`}
         />
         <p>
-          Start the API using the quickstart, set its key above and restart the
-          frontend. For a hosted website, the API URL must be reachable from the
-          web server. The demo returns context; it does not generate an agent
-          answer.
+          First start the API using the quickstart. Set its key above, then run
+          the frontend commands below. If it is already running, restart it to
+          load the new environment. Open the local playground and choose Live
+          API; its availability badge checks the connection and key permissions.
+        </p>
+        <CodeBlock label="Start the local website" code={"# From the repository root, in a second terminal:\ncd frontend\npnpm install --frozen-lockfile\npnpm dev\n# Open http://localhost:3005/playground"} />
+        <p>
+          The key stays on the Next.js server. This walkthrough returns context;
+          it does not call a generation model. For automatic key setup, see the{" "}
+          <a href="https://github.com/pranavgawaii/mnemo/blob/main/docs/deployment.md#connect-the-live-api-walkthrough" className="text-accent-ink underline underline-offset-4">local deployment guide</a>.
         </p>
         <p>
           Each run creates a separate namespace with synthetic facts that expire
@@ -98,8 +105,8 @@ export default function GetStartedPage() {
               "Wait for Docker's database health check. For local Python, verify DATABASE_URL, install pgvector and run alembic upgrade head.",
             ],
             [
-              "A long first request",
-              "The embedding model loads lazily. Docker downloads its files during the image build, but loading them into memory still takes time.",
+              "Model loading takes time",
+              "Docker warms the encoder during startup. Direct Python starts load it on first use unless EMBEDDING_WARMUP=true. Check API logs if startup or the first request is slow.",
             ],
           ].map(([title, body]) => (
             <details key={title} className="py-4">

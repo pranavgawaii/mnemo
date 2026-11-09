@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { useTabList } from "@/hooks/use-tabs";
 import { MemoryWorkbench } from "./memory-workbench";
+import { useDemoAvailability } from "./use-demo-availability";
 import { LiveApiDemo } from "./live-api-demo";
 
 export function PlaygroundExperience() {
+  const availabilityState = useDemoAvailability();
+  const { availability, checking } = availabilityState;
   const [mode, setMode] = useState(0);
   const tabs = useTabList({ count: 2, active: mode, onChange: setMode });
   return (
@@ -34,13 +37,23 @@ export function PlaygroundExperience() {
             </button>
           ))}
         </div>
+        <p aria-live="polite" className="flex h-[60px] items-center gap-2 text-[12px] sm:h-11 text-muted">
+          {checking ? "Checking local API availability…" : availability?.status === "available"
+            ? "Live API connected. Browser demo works offline."
+            : availability?.status === "unconfigured"
+              ? "Browser demo works offline. Live API requires local setup."
+              : "Live API unavailable. Browser demo works offline."}
+          {!checking && availability?.status !== "available" && (
+            <a href="/docs#live-api-setup" className="shrink-0 text-accent-ink underline underline-offset-4">Setup guide</a>
+          )}
+        </p>
       </div>
       <div
         id="playground-mode-panel"
         role="tabpanel"
         aria-labelledby={`demo-mode-${mode}`}
       >
-        {mode === 0 ? <MemoryWorkbench /> : <LiveApiDemo />}
+        {mode === 0 ? <MemoryWorkbench /> : <LiveApiDemo availabilityState={availabilityState} />}
       </div>
     </>
   );

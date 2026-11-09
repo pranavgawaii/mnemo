@@ -45,6 +45,7 @@ export const DOC_PAGES = [
       "Inspect the measured retrieval results, methodology and remaining evaluation gaps.",
     sections: [
       { id: "evaluation", label: "Results" },
+      { id: "workflow-evidence", label: "Additional evidence" },
       { id: "reproduce", label: "Reproduce the run" },
       { id: "next-experiments", label: "Next experiments" },
     ],

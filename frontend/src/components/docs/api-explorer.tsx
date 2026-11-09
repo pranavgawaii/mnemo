@@ -115,7 +115,7 @@ export function ApiExplorer() {
     <DocsSection
       id="api"
       title="Explore an operation"
-      intro={`${ENDPOINTS.length} operations: 24 authenticated v1 operations and three public operational endpoints. Choose a resource, then an operation.`}
+      intro={`${ENDPOINTS.length} operations: ${ENDPOINTS.filter(endpoint => endpoint.path.startsWith("/v1/")).length} authenticated v1 operations and ${ENDPOINTS.filter(endpoint => !endpoint.path.startsWith("/v1/")).length} public operational endpoints. Choose a resource, then an operation.`}
     >
       <div
         role="tablist"

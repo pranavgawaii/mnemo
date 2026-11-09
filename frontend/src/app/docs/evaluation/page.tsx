@@ -1,5 +1,6 @@
 import { DocsHeading } from "@/components/docs/docs-heading";
 import { DocsSection } from "@/components/docs/docs-section";
+import { EvaluationEvidence } from "@/components/docs/evaluation-evidence";
 import { Evaluation } from "@/components/docs/evaluation";
 import { CodeBlock } from "@/components/ui/code-block";
 import { docsMetadata } from "@/lib/docs";
@@ -15,6 +16,7 @@ export default function EvaluationPage() {
         simpler baseline wins.
       </DocsHeading>
       <Evaluation />
+      <EvaluationEvidence />
       <DocsSection
         id="reproduce"
         title="Reproduce the comparison"
@@ -36,6 +38,9 @@ export default function EvaluationPage() {
           </a>{" "}
           before drawing conclusions.
         </p>
+        <p>The following commands create temporary synthetic namespaces. Use a disposable local database/API and a read/write key in <code>MNEMO_API_KEY</code>. Lifecycle and conflict runners archive their own rows; retained history is not physically purged.</p>
+        <CodeBlock label="Run the additional evaluations" code={"# In the backend Python environment:\npip install -e ../sdk\nPYTHONPATH=. python -m benchmark.holdout --output /tmp/holdout.json\npython -m evaluation.lifecycle --output /tmp/lifecycle.json\npython -m evaluation.conflicts --output /tmp/conflicts.json"} />
+        <p>The conflict runner retains false positives and misses. Request or cleanup errors make the run incomplete and return a failing exit code; a completed measurement is not a claim of perfect accuracy. Evaluate your own prepared facts with the read-only <code>python -m evaluation.run</code> command described in the <a href={`${GITHUB_URL}/blob/main/docs/agent-context.md#evaluate-selection-on-your-own-labels`} className="text-accent-ink underline underline-offset-4">labelled context guide</a>.</p>
       </DocsSection>
       <DocsSection id="next-experiments" title="What remains to be measured">
         <ul className="list-disc space-y-2 pl-5">

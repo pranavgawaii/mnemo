@@ -10,6 +10,8 @@ import io
 import json
 import re
 import sys
+import uuid
+from dataclasses import asdict
 from pathlib import Path
 from unittest.mock import patch
 
@@ -18,6 +20,7 @@ sys.path.insert(0, str(ROOT / "backend"))
 sys.path.insert(0, str(ROOT / "sdk"))
 
 import httpx
+from app.core.context import ContextCandidate, ContextPolicy, pack_context
 from app.models.schemas import (
     MemoryCreate,
     MemoryCreateResult,
@@ -93,33 +96,23 @@ integration_calls: list[str] = []
 def integration_response(request: httpx.Request) -> httpx.Response:
     assert request.headers["X-API-Key"] == "dev-local-key-change-me"
     integration_calls.append(request.url.path)
-    if request.url.path == "/v1/contradictions":
-        assert request.method == "GET"
-        assert request.url.params["namespace"] == "demo"
-        assert request.url.params["status"] == "open"
-        assert request.url.params["limit"] == "1"
-        conflicts = []
-        if scenario == "conflict":
-            conflicts = [
-                {
-                    "id": "00000000-0000-0000-0000-000000000099",
-                    "namespace": "demo",
-                    "new_memory_id": responses["store"]["memory"]["id"],
-                    "existing_memory_id": "00000000-0000-0000-0000-000000000098",
-                    "similarity": 0.9,
-                    "reason": "Possible change",
-                    "status": "open",
-                }
-            ]
-        return httpx.Response(
-            200,
-            json={"items": conflicts, "total": len(conflicts), "limit": 1, "offset": 0},
-        )
-    assert request.method == "POST" and request.url.path == "/v1/memories/search"
-    assert json.loads(request.content)["namespace"] == "demo"
-    payload = responses["search"] if scenario == "found" else {"hits": []}
-    return httpx.Response(200, json=payload)
-
+    assert request.method == "POST" and request.url.path == "/v1/context"
+    body = json.loads(request.content)
+    assert body["namespace"] == "demo" and body["max_chars"] == 2000
+    assert body["current_values"] and body["exclude_conflicts"]
+    candidate = ContextCandidate(
+        uuid.UUID(responses["store"]["memory"]["id"]), "Pranav lives in Bengaluru", 0.9, 0.8,
+    )
+    packed = asdict(pack_context([candidate] if scenario == "found" else [], policy=ContextPolicy(max_chars=2000)))
+    packed["has_pending_review"] = scenario == "conflict"
+    if scenario == "conflict":
+        packed["status"] = "needs_review"
+    elif scenario == "budget":
+        packed["status"] = "budget_exhausted"
+    return httpx.Response(200, json={
+        **json.loads(json.dumps(packed, default=str)), "max_chars": 2000,
+        "namespace": "demo", "query": body["query"], "candidate_count": len(packed["decisions"]),
+    })
 
 def generate(prompt: str) -> str:
     generation_prompts.append(prompt)
@@ -142,6 +135,8 @@ with MnemoClient(
     assert "do not have a stored fact" in answer_with_memory(
         client, "Unknown topic?", generate
     )
+    scenario = "budget"
+    assert "Increase the context budget" in answer_with_memory(client, "Unknown topic?", generate)
     scenario = "conflict"
     assert "Review open memory conflicts" in answer_with_memory(
         client, "Where does Pranav live?", generate
@@ -149,13 +144,7 @@ with MnemoClient(
 assert len(generation_prompts) == 1, (
     "Empty results and pending review must skip generation"
 )
-assert integration_calls == [
-    "/v1/contradictions",
-    "/v1/memories/search",
-    "/v1/contradictions",
-    "/v1/memories/search",
-    "/v1/contradictions",
-]
+assert integration_calls == ["/v1/context"] * 4
 scenario = "found"
 
 

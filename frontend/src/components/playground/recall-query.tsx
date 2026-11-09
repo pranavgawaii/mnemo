@@ -46,7 +46,7 @@ export function RecallQuery({ model }: { model: WorkbenchModel }) {
         role="group"
         className="mt-2 flex scroll-mt-24 flex-wrap gap-2 sm:mt-3"
       >
-        <label htmlFor="sample-scenario" className="sr-only">Sample scenario</label>
+        <label htmlFor="sample-scenario" className="self-center text-[12px] text-muted">Sample scenario</label>
         <select
           id="sample-scenario"
           value={model.scenario.id}
@@ -54,21 +54,11 @@ export function RecallQuery({ model }: { model: WorkbenchModel }) {
             const selected = MEMORY_SCENARIOS.find(item => item.id === event.target.value);
             if (selected) model.chooseScenario(selected);
           }}
-          className="h-11 w-full rounded-lg border border-line bg-white px-3 text-[16px] text-ink sm:hidden"
+          className="h-11 w-full rounded-lg border border-line bg-white px-3 text-[16px] text-ink sm:w-auto sm:flex-1 sm:text-[13px]"
         >
           {MEMORY_SCENARIOS.map(scenario => <option key={scenario.id} value={scenario.id}>{scenario.label}</option>)}
         </select>
-        {MEMORY_SCENARIOS.map((scenario) => (
-          <button
-            type="button"
-            key={scenario.id}
-            aria-pressed={model.scenario.id === scenario.id}
-            onClick={() => model.chooseScenario(scenario)}
-            className={`hidden sm:inline-flex sm:items-center min-h-8 rounded-full border px-3 text-[12px] transition-colors ${model.scenario.id === scenario.id ? "border-accent/20 bg-accent-soft text-accent-ink" : "border-line text-muted hover:border-accent/25 hover:text-accent-ink"}`}
-          >
-            {scenario.label}
-          </button>
-        ))}
+
       </div>
       <p className="mt-1 h-9 text-[12px] leading-[18px] text-muted sm:mt-2">
         {model.scenario.hint}

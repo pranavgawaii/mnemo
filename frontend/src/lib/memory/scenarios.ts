@@ -1,19 +1,19 @@
 /** Guided inputs over the same six facts; selecting one never changes the store. */
 export const MEMORY_SCENARIOS = [
   {
-    id: "location",
-    label: "Location",
-    query: "Where does Pranav live?",
-    change: "Pranav no longer lives in Bengaluru",
-    hint: "Review a location that is no longer current.",
-    kind: "review",
-  },
-  {
     id: "relocation",
     label: "Move city",
     query: "Where does Pranav live?",
     change: "Pranav moved from Bengaluru to Pune",
     hint: "Match the old city, review the move and recall Pune.",
+    kind: "review",
+  },
+  {
+    id: "location",
+    label: "Location",
+    query: "Where does Pranav live?",
+    change: "Pranav no longer lives in Bengaluru",
+    hint: "Review a location that is no longer current.",
     kind: "review",
   },
   {

@@ -1,13 +1,14 @@
+import { GITHUB_URL } from "@/lib/site";
 import { DocsSection } from "./docs-section";
 import { CodeBlock } from "@/components/ui/code-block";
-import { AGENT_HANDOFF, AGENT_INTEGRATION } from "@/lib/api/examples";
+import { AGENT_HANDOFF, AGENT_INTEGRATION, ASSISTANT_SETUP } from "@/lib/api/examples";
 
 export function AgentIntegration() {
   return (
     <DocsSection
       id="agent-integration"
       title="4. Connect your agent"
-      intro="Search before each answer. Your app supplies confirmed facts and calls its model; Mnemo returns the context."
+      intro="Start with the complete Python assistant. Your app supplies confirmed facts; Mnemo returns bounded, cited context across sessions."
     >
       <ol className="grid gap-4 sm:grid-cols-3">
         {[
@@ -17,7 +18,7 @@ export function AgentIntegration() {
           ],
           [
             "Retrieve for the question",
-            "Search the same namespace across sessions. Decide how your app handles conflicts and empty results.",
+            "Call client.context in the same namespace. It excludes disputed facts and returns citations with an exact character budget.",
           ],
           [
             "Generate with context",
@@ -36,11 +37,19 @@ export function AgentIntegration() {
         ))}
       </ol>
       <p>
-        Copy <code>answer_with_memory</code> from the adapter below, then
-        connect it to your server-side agent. <code>your_model_call</code> is
-        your own function that accepts a prompt and returns an answer.
+        Run the terminal assistant in evidence mode first. Remember a fact,
+        ask a question, store a change, then use <code>/review</code> and
+        <code>/keep</code> to choose the current fact. Reopen the same namespace
+        to check persistence.
       </p>
-      <CodeBlock label="Connect your model" code={AGENT_HANDOFF} />
+      <CodeBlock label="Run the Python assistant" code={ASSISTANT_SETUP} />
+      <p>
+        Evidence mode prints cited facts without calling a model. The{" "}
+        <a href={`${GITHUB_URL}/tree/main/sdk/examples`} className="text-accent-ink underline underline-offset-4">
+          complete assistant guide
+        </a>{" "}
+        covers the city-change walkthrough and optional local Ollama generation.
+      </p>
       <details className="rounded-xl border border-line bg-white p-4 sm:p-5">
         <summary className="cursor-pointer text-[13px] font-medium text-ink">
           Python adapter · retrieve, review, generate
@@ -52,9 +61,11 @@ export function AgentIntegration() {
             required.
           </p>
           <CodeBlock label="Agent memory adapter" code={AGENT_INTEGRATION} />
+          <p><code>your_model_call</code> is your own function that accepts a prompt and returns an answer.</p>
+          <CodeBlock label="Connect your model" code={AGENT_HANDOFF} />
           <ul className="list-disc space-y-2 pl-5 text-[13px] leading-relaxed text-muted">
             <li>
-              Open conflict: pause generation and ask for review. This is the
+              Retrieved pending conflict: pause generation and ask for review. This is the
               adapter’s conservative policy, not an API restriction.
             </li>
             <li>
@@ -68,9 +79,11 @@ export function AgentIntegration() {
         </div>
       </details>
       <p>
-        Keep the API key on your server. Namespaces filter facts; they do not
-        isolate users’ access. The adapter pauses for any open conflict in its
-        namespace. See the{" "}
+        Keep the API key on your server. Namespace grants restrict an issued
+        key’s access through the API; a namespace name alone is not an access
+        control. This adapter pauses when retrieved candidates need review,
+        not for every conflict in the namespace. Citations identify evidence;
+        they do not prove an answer is correct. See the{" "}
         <a
           href="/docs/concepts#contradictions"
           className="text-accent-ink underline underline-offset-4"
