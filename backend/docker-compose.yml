@@ -32,8 +32,8 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      # /ready actually queries Postgres, so this fails while migrations or the
-      # embedding model are still loading and only passes once the API can serve.
+      # /ready queries Postgres. The image also warms the encoder during startup
+      # before Uvicorn starts accepting requests (EMBEDDING_WARMUP=true).
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/ready || exit 1"]
       interval: 10s
       timeout: 5s

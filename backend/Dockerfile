@@ -5,7 +5,8 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     # Cache the downloaded embedding model inside the image layer/volume.
-    HF_HOME=/models
+    HF_HOME=/models \
+    EMBEDDING_WARMUP=true
 
 WORKDIR /app
 
@@ -26,4 +27,4 @@ RUN python -c "from sentence_transformers import SentenceTransformer; \
 EXPOSE 8000
 
 # Run migrations, then start the API. `alembic upgrade head` is idempotent.
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

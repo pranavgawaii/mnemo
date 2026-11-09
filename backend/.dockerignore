@@ -1,5 +1,5 @@
 # Build context is this directory (the API). The Next.js site lives at the
-# repo root and is deployed separately.
+# frontend/ directory and is deployed separately.
 .venv
 venv
 __pycache__
@@ -11,6 +11,7 @@ __pycache__
 .git
 .github
 .env
+.env.*
 
 # Docs / tests / benchmark are not needed at runtime
 tests

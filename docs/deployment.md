@@ -1,165 +1,218 @@
 # Deploying Mnemo
 
-From laptop to production: local development, configuration reference, and the
-deployment checklist. For the API surface see [api.md](api.md); for internals
-see [architecture.md](architecture.md).
+The Python API and Next.js website run separately. Vercel hosts the website;
+the real API needs a Python/container host and PostgreSQL with pgvector.
+Deploying the website does not deploy the backend. Local development and a
+recruiter demonstration do not require paid public hosting.
 
 ## Local development
 
+With Docker and Compose installed, from the repository root:
+
 ```bash
-# 1. A Postgres with the pgvector extension (Docker one-liner).
-docker run --name mnemo-pg -e POSTGRES_USER=mnemo -e POSTGRES_PASSWORD=mnemo \
-  -e POSTGRES_DB=mnemo -p 5432:5432 -d pgvector/pgvector:pg16
-
-# 2. Backend venv + dependencies.
 cd backend
-python3.14 -m venv .venv && . .venv/bin/activate
-pip install -r requirements-api.txt
-
-# 3. Schema (migrations) and an embedding-model warm-up.
-alembic upgrade head
-
-# 4. Run the API.
-export MNEMO_API_KEY=mnemo_dev_local_secret
-uvicorn app.main:app --reload
-# open http://localhost:8000/docs - Swagger UI is generated from the app
-
-# 5. Sanity checks.
-PYTHONPATH=. python -m app.cli doctor
-make test            # hermetic suite (DB-tier tests skip without Postgres)
+docker compose up --build
 ```
 
-The `MNEMO_API_KEY` you export is the **bootstrap admin key**: it authenticates
-every request and can issue scoped keys through `POST /v1/keys`.
+This starts PostgreSQL on port 5432 and the API on port 8000, applies migrations,
+and warms the encoder before the container serves requests. The first image
+build downloads dependencies and model weights. The checked-in development key
+is for local use; replace it before exposing the API publicly.
+
+Alternatively, run Python against an existing development pgvector database:
+
+```bash
+cd backend
+python3.12 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements-api.txt
+cp .env.example .env
+# Edit DATABASE_URL and MNEMO_API_KEY in the private .env file.
+alembic upgrade head
+uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+Python 3.12+ is supported; CI runs 3.12 and 3.13. Provider `postgres://` and
+`postgresql://` URLs select the installed psycopg 3 driver automatically, preserving
+encoded credentials and query parameters. API documentation is at `/docs`.
+
+`GET /health` checks process liveness. `GET /ready` checks database connectivity,
+without running inference. `EMBEDDING_WARMUP=true` validates the encoder during
+startup before accepting requests. `/v1/demo/availability` checks read/write key
+scopes and the memory table, and reports a cold/warm encoder.
 
 ## Configuration reference
 
-All settings are environment variables (prefix-free, see
-`app/core/config.py`):
+The defaults below are generated from Python field definitions, not environment
+values. The Docker image overrides `EMBEDDING_WARMUP` to `true`. Settings are
+prefix-free environment variables; private `.env` files are supported.
 
-| Variable | Default | Meaning |
-|---|---|---|
-| `DATABASE_URL` | `postgresql+psycopg://...` | Postgres (must have pgvector) |
-| `MNEMO_API_KEY` | empty | bootstrap admin key; requests without it 401 |
-| `LOG_JSON` / `LOG_LEVEL` | `false` / `info` | structured logs, verbosity |
-| `CORS_ALLOW_ORIGINS` | `[]` | extra allowed origins for the console |
-| `MAX_BODY_BYTES` | 1 MiB | request-body cap (413 beyond) |
-| `RATE_LIMIT_ENABLED` | `false` | per-key fixed-minute window in Postgres |
-| `RATE_LIMIT_PER_MINUTE` | 120 | default budget (per-key override column) |
-| `KEYWORD_WEIGHT` | `0.25` | hybrid keyword boost multiplier |
-| `ANN_EF_SEARCH` | 40 | `hnsw.ef_search` set per search query |
-| `DEDUP_MODE` | `flag` | `flag` reports / `reject` 409s near-duplicates |
-| `DEDUP_THRESHOLD` | `0.97` | cosine threshold for near-duplicates |
-| `CONTRADICTION_LLM_PROVIDER` | empty | `openai` enables the LLM verdict hook |
-| `CONTRADICTION_LLM_*` | — | `API_KEY`, `BASE_URL`, `MODEL`, `TIMEOUT_SECONDS` |
-| `JOB_WORKER_ENABLED` | `true` | in-process outbox worker (off = cron) |
-| `WEBHOOK_TIMEOUT_SECONDS` | `5` | webhook delivery timeout |
+<!-- configuration-reference:start -->
+| Variable | Code default | Meaning |
+| --- | --- | --- |
+| `DATABASE_URL` | `"postgresql+psycopg://mnemo:mnemo@localhost:5432/mnemo"` | PostgreSQL with pgvector; provider postgres:// and postgresql:// URLs use psycopg 3 automatically. |
+| `MNEMO_API_KEY` | `"dev-local-key-change-me"` | Bootstrap operator key. Replace this development default before exposing the API. |
+| `EMBEDDING_MODEL` | `"all-MiniLM-L6-v2"` | Local sentence-transformers encoder; must match the configured dimension. |
+| `EMBEDDING_DIM` | `384` | Vector dimension; changing it also needs a database migration. |
+| `EMBEDDING_WARMUP` | `false` | Load/validate the encoder during startup. The Docker image sets this to true. |
+| `DECAY_HALF_LIFE_DAYS` | `180.0` | Age-weight half-life used by relevance ranking. |
+| `DECAY_FLOOR` | `0.7` | Minimum age multiplier. |
+| `CONTRADICTION_SIM_THRESHOLD` | `0.82` | Similarity gate for heuristic/optional model conflict checks. |
+| `KEYWORD_WEIGHT` | `0.25` | Default keyword boost; queries may override it. |
+| `ANN_EF_SEARCH` | `100` | HNSW query breadth, 1–1000; increasing it trades speed for recall. |
+| `DEDUP_MODE` | `"flag"` | flag, reject or off; flag accepts a write and reports a near duplicate. |
+| `DEDUP_THRESHOLD` | `0.97` | Near-duplicate similarity threshold. |
+| `CONTRADICTION_LLM_PROVIDER` | `""` | Empty keeps the local detector; openai enables a compatible verdict API. |
+| `CONTRADICTION_LLM_API_KEY` | `""` | Optional verdict-provider secret; never expose it through the frontend. |
+| `CONTRADICTION_LLM_BASE_URL` | `"https://api.openai.com/v1"` | Optional compatible chat-completions server. |
+| `CONTRADICTION_LLM_MODEL` | `"gpt-4o-mini"` | Optional verdict model, not an answer-generation model. |
+| `CONTRADICTION_LLM_TIMEOUT_SECONDS` | `10.0` | Verdict request timeout; failures fall back to the heuristic. |
+| `JOB_WORKER_ENABLED` | `true` | Enable the in-process outbox worker; external scheduling is required when disabled. |
+| `JOB_WORKER_INTERVAL_SECONDS` | `1.0` | Polling interval for the in-process worker. |
+| `JOB_LEASE_SECONDS` | `300` | Claim lease; must exceed the longest expected handler duration. |
+| `WEBHOOK_TIMEOUT_SECONDS` | `5.0` | Webhook delivery timeout. |
+| `LOG_JSON` | `true` | Structured JSON request logging. |
+| `LOG_LEVEL` | `"info"` | Application logging level. |
+| `CORS_ALLOW_ORIGINS` | `[]` | JSON array of explicitly allowed browser origins; empty adds no CORS middleware. |
+| `MAX_BODY_BYTES` | `1048576` | Hard HTTP request-body limit. |
+| `RATE_LIMIT_ENABLED` | `false` | Enable per-key fixed-minute counters; turn on for a public demo. |
+| `RATE_LIMIT_PER_MINUTE` | `120` | Default request budget; an issued key may set its own limit. |
+<!-- configuration-reference:end -->
 
-## Production checklist
+Run `python scripts/export-config-reference.py` from the repository root in the
+backend environment to refresh this table. CI uses `--check` to catch drift.
 
-1. **Postgres** — managed Postgres with pgvector (or self-hosted). The HNSW
-   index is created by the migrations; rebuild time is a few seconds per 100k
-   memories.
-2. **Migrations on deploy** — run `alembic upgrade head` as a release step
-   before/with the new process (CI does exactly this, so a broken revision
-   never reaches you).
-3. **API process** — `uvicorn app.main:app --workers 4` behind TLS. The app is
-   stateless apart from the DB and the outbox worker.
-4. **Job worker** — leave `JOB_WORKER_ENABLED=true` for a single deployment
-   (the thread is idle-light). For multi-replica deployments, enable the
-   worker on exactly one replica (or turn it off everywhere and cron
-   `mnemo jobs run` — the claim protocol is multi-consumer safe either way).
-5. **Rate limiting** — turn on (`RATE_LIMIT_ENABLED=true`) once traffic is
-   real; it costs one upsert per request.
-6. **CORS** — set `CORS_ALLOW_ORIGINS` to the console origin(s).
-7. **Observability** — scrape `/metrics` (Prometheus text format); ship the
-   JSON logs (`LOG_JSON=true`); monitor HTTP errors and latency; inspect failed jobs with
-   `python -m app.cli jobs stats`.
-8. **Cron** — `mnemo sweep-expired` hourly keeps namespace counts honest when
-   TTLs are used.
+## Host the backend
 
-### Vercel / monorepo notes
+Public hosting is optional. It allows visitors to try real persistence and
+retrieval without installing the backend. Your laptop's localhost cannot be
+used as the backend for a website running on Vercel.
 
-Set the Vercel project's **Root Directory** to `frontend` before the next
-repository deployment. Select the Next.js framework preset. Install and build
-commands are declared in `frontend/vercel.json`; the output directory uses the
-Next.js default (`.next`). Commands run relative to `frontend/`:
+1. Provision persistent PostgreSQL with pgvector and supply its connection string
+   as the private `DATABASE_URL`.
+2. Build `backend/Dockerfile` with `backend/` as the Docker context. Set a unique
+   private `MNEMO_API_KEY`, `RATE_LIMIT_ENABLED=true` and `EMBEDDING_WARMUP=true`.
+3. The image applies migrations, then starts Uvicorn on `0.0.0.0` using the host's
+   `PORT` or port 8000. Configure HTTPS and a `/ready` health check.
+4. Allow enough startup time and memory for the encoder. Start with one process
+   and measure RSS and latency; each additional process holds its own model.
+   A successful image build does not establish runtime capacity.
+5. Configure backups and test a restore. An export or a passing migration is not
+   evidence that recovery has been tested.
+
+The in-process worker uses PostgreSQL job leases. Multiple consumers are fenced
+by the claim protocol. For external scheduling, set `JOB_WORKER_ENABLED=false`
+and repeatedly invoke `python -m app.cli jobs run`; each invocation processes
+one runnable job. Set `JOB_LEASE_SECONDS` above the longest handler duration.
+
+Issue namespace-restricted keys for applications. The bootstrap key and older
+unrestricted keys retain deployment-wide access. Namespace grants are API
+controls, without database row-level security or tenant account provisioning.
+
+## Connect the Live API walkthrough
+
+Use a dedicated demo API/database without private application data. The public
+walkthrough creates random `web-demo-*` namespaces, so its dedicated read/write
+key intentionally has no exact namespace grant. It cannot administer keys.
+Enable rate limiting and rotate the expiring key before it expires.
+
+For local development, set the operator `MNEMO_API_KEY` in your shell, then run
+from the repository root:
+
+```bash
+python scripts/connect-live-demo.py --api-url http://127.0.0.1:8000
+```
+
+The script issues a read/write key with a 30-day expiry and 120-request/minute
+override, validates availability access, and writes only the issued key and API
+origin to ignored `frontend/.env.local` with file mode 0600. Other variables are
+preserved. If setup fails, it attempts to revoke the new key. Restart the frontend:
+
+```bash
+cd frontend
+pnpm dev
+```
+
+In another terminal, from the repository root:
+
+```bash
+python scripts/check-live-demo.py --web-url http://127.0.0.1:3005
+```
+
+This verifies all four real save/search/change/review scenarios, source
+projections and inactive history. It does not substitute simulated results.
+
+For the hosted website, add these **server-only** variables to the matching
+Vercel deployment environment and redeploy:
+
+```dotenv
+MNEMO_DEMO_API_URL=https://your-public-demo-api.example
+MNEMO_DEMO_API_KEY=your-issued-read-write-key
+```
+
+The URL must be reachable by Vercel and contain no path or embedded credentials.
+Never use `NEXT_PUBLIC_` for either value. Store them as sensitive variables.
+Preview and production variables are separate; saving variables does not change
+an existing deployment. Verify `GET /api/demo` on the new deployed URL and then
+run the same four-scenario checker against it. `available` confirms the probe;
+`unconfigured` means missing/invalid settings, while `unavailable` means an actual
+access, rate-limit, network or storage check failed.
+
+The signed demo session and synthetic facts expire after 15 minutes. Expiry
+excludes facts from active retrieval; it does not physically purge stored rows.
+Schedule `python -m app.cli sweep-expired` to mark expired rows inactive.
+
+## Vercel / monorepo notes
+
+Set Root Directory to `frontend`, select Next.js, and use `frontend/vercel.json`.
+The commands run inside that directory:
 
 ```bash
 pnpm install --frozen-lockfile
 pnpm build
 ```
 
-Set public website variables from `frontend/.env.example` in the project's
-environment settings. Local development variables belong in
-`frontend/.env.local`. The browser does not need backend credentials. For the
-optional Live API walkthrough, set server-only `MNEMO_DEMO_API_URL` and
-`MNEMO_DEMO_API_KEY` in the web project. Use a dedicated read/write API key and
-backend rate limiting. The API must be reachable from the web server; a deployed
-website cannot use a developer laptop’s localhost. See the
-[live demo setup](frontend.md#live-api-demo).
+Production output is `.next`; `.next-3005` is local development output. The
+Browser simulation remains available without a backend. Website deployment
+success alone does not establish Live API availability.
 
-`frontend/.vercelignore` excludes browser-test sources and generated test output.
-The web app reads its schema and benchmark from `frontend/public/`; it has no
-build-time dependency on the API or SDK directories. The frontend CI job runs
-from `frontend/` and caches `frontend/pnpm-lock.yaml`.
+## Python assistant and evaluation
 
-Root Directory is a Vercel project setting, not a `vercel.json` property. Changing
-files locally does not change the hosted project or deploy this checkout. See
-[Vercel's Root Directory settings](https://vercel.com/docs/builds/configure-a-build#root-directory).
+Install the SDK with `pip install -e ./sdk` from the repository root. Give the
+[complete Python assistant](../sdk/examples/README.md) a namespace-restricted
+read/write key through `MNEMO_APP_KEY`. It supports persistent facts, explicit
+review, evidence-only answers and an optional local Ollama model.
 
-## SDK quickstart
+The [agent guide](agent-context.md) describes labelled context selection. The
+query-only holdout compares retrieval policies, while the lifecycle runner checks
+review and expiry. Neither establishes generated-answer quality or load capacity.
 
-Install from the packaged distribution (`pip install mnemo-sdk`) or from the
-repo (`pip install ./sdk`). Full reference in [sdk/README.md](../sdk/README.md).
+## Operations
 
-```python
-from mnemo import MnemoClient
+From `backend/`:
 
-with MnemoClient(base_url="https://mnemo.internal", api_key="mnemo_...") as client:
-    client.add_memory("Riya lives in Pune", importance=3, tags=["people"])
-    for hit in client.search("where does Riya live").hits:
-        print(hit.memory.content, round(hit.relevance_score, 3))
+```bash
+python -m app.cli doctor
+python -m app.cli jobs stats
+python -m app.cli export --namespace demo --file backup.json
+python -m app.cli sweep-expired
 ```
 
-Async twin and the agent-pattern helpers (`remember`/`recall`/`forget`/
-`context_block`):
-
-```python
-from mnemo import AsyncMnemoClient
-
-
-async with AsyncMnemoClient(base_url="...", api_key="...") as client:
-    memory, conflicts = await client.add_memory("Riya moved to Berlin")
-    response = await client.search("Riya's city")
-```
-
-Note: the helpers are sync-flavoured today; async callers use the client
-methods directly (the async client mirrors every method).
-
-## Operational runbook (short)
-
-- **401s everywhere** — `MNEMO_API_KEY` changed or missing; the bootstrap key
-  is env-only, no rotation endpoint (rotate by redeploying).
-- **Search slow** — check HNSW exists (`\d memories`), raise `ANN_EF_SEARCH`
-  for recall/quality trade-offs, and confirm the embedding model is warm.
-- **Webhooks not arriving** — `mnemo jobs stats` (pending/failed), `doctor`
-  checks the outbox, and delivery failures are in the job's `last_error`.
-- **Duplicate flags** — shouldn't happen (unique pair index + ON CONFLICT);
-  if you see it, verify migration 0012 is applied (`doctor` reports
-  migration state).
+Scrape `/metrics`, ship JSON logs, and monitor errors, latency and failed jobs.
+There is no measured universal HNSW rebuild-time guarantee. Increasing
+`ANN_EF_SEARCH` trades additional query work for potentially better recall.
 
 ## Integration test isolation
 
-Integration tests require `MNEMO_TEST_DATABASE_URL` with a database named
-`mnemo_test_*`. They create and drop tables only in that explicitly selected
-disposable database; the normal `DATABASE_URL` is not used. A configured test
-database that cannot be reached fails collection. The default unit tier skips
-DB tests when no disposable URL is supplied.
+Set `MNEMO_TEST_DATABASE_URL` to a disposable pgvector database named
+`mnemo_test_*`. Tests create and drop its tables, never an ordinary application
+database. Database tests skip without an explicit test database; an explicitly
+configured database that is unavailable fails collection.
 
-## Worker leases
+```bash
+cd backend
+python -m pytest tests/ -q
+```
 
-Apply migration 0013 before starting the updated API or worker.
-`JOB_LEASE_SECONDS` defaults to 300 and must exceed the longest handler timeout.
-An expired lease can be reclaimed; an old worker cannot complete a reclaimed
-job. Delivery is at least once. Deduplicate `X-Mnemo-Event-ID` at the receiver.
+See [Contributing](../CONTRIBUTING.md) for schema exports, documentation contract
+checks and the complete verification workflow.

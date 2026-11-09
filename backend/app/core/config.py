@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -22,6 +22,16 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "postgresql+psycopg://mnemo:mnemo@localhost:5432/mnemo"
 
+    @field_validator("database_url")
+    @classmethod
+    def use_psycopg_driver(cls, value: str) -> str:
+        # Hosted providers commonly issue either spelling without a Python
+        # driver. Pin our installed psycopg 3 driver without touching credentials.
+        for prefix in ("postgres://", "postgresql://"):
+            if value.startswith(prefix):
+                return "postgresql+psycopg://" + value[len(prefix):]
+        return value
+
     # API
     mnemo_api_key: str = "dev-local-key-change-me"
 
@@ -29,6 +39,8 @@ class Settings(BaseSettings):
     # Vector(...) size in the Alembic migration.
     embedding_model: str = "all-MiniLM-L6-v2"
     embedding_dim: int = 384
+    # Container deployments warm the encoder before accepting traffic.
+    embedding_warmup: bool = False
 
     # Decay scoring
     decay_half_life_days: float = 180.0

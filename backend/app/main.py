@@ -20,6 +20,7 @@ from app.api.context import router as context_router
 from app.api.demo import router as demo_router
 from app.api.routes import router as api_router
 from app.core.config import settings
+from app.core.embedding import embed
 from app.core.logging_setup import configure_logging
 from app.core.metrics import registry
 from app.db.session import get_db
@@ -31,6 +32,10 @@ configure_logging()
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Start/stop the background job worker with the process."""
+    if settings.embedding_warmup:
+        # Fail startup for a missing/incompatible model instead of accepting a
+        # public demo request that cannot finish within its request deadline.
+        embed("Mnemo startup readiness")
     worker = job_worker.start_worker(
         enabled=settings.job_worker_enabled,
         interval_seconds=settings.job_worker_interval_seconds,
