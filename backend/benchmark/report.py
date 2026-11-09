@@ -37,7 +37,7 @@ def main() -> None:
         "scope": "Local in-sample retrieval; not a held-out or end-to-end agent evaluation",
         "results": rows,
     }
-    destination = Path(__file__).resolve().parents[2] / "public" / "benchmark-results.json"
+    destination = Path(__file__).resolve().parents[2] / "frontend" / "public" / "benchmark-results.json"
     destination.write_text(json.dumps(report, indent=2) + "\n")
     print(f"Saved {destination}")
 

@@ -26,10 +26,10 @@ from app.models.schemas import (
 )
 from mnemo import MnemoClient
 
-responses = json.loads((ROOT / "lib/api/example-responses.json").read_text())
+responses = json.loads((ROOT / "frontend/src/lib/api/example-responses.json").read_text())
 MemoryCreateResult.model_validate(responses["store"])
 SearchResponse.model_validate(responses["search"])
-source = (ROOT / "lib/api/examples.ts").read_text()
+source = (ROOT / "frontend/src/lib/api/examples.ts").read_text()
 
 
 def template(name: str) -> str:

@@ -1,6 +1,6 @@
 import { ArrowDownToLine } from "lucide-react";
 import { DocsSection } from "@/components/docs/docs-section";
-import report from "@/public/benchmark-results.json";
+import report from "@public/benchmark-results.json";
 
 const measuredAt = new Intl.DateTimeFormat("en", {
   dateStyle: "long",

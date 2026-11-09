@@ -11,12 +11,12 @@ import "./globals.css";
 const redaction = localFont({
   src: [
     {
-      path: "../public/fonts/Redaction35-Regular.otf",
+      path: "../../public/fonts/Redaction35-Regular.otf",
       weight: "400",
       style: "normal",
     },
     {
-      path: "../public/fonts/Redaction35-Italic.otf",
+      path: "../../public/fonts/Redaction35-Italic.otf",
       weight: "400",
       style: "italic",
     },

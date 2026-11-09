@@ -1,4 +1,4 @@
-import snapshot from "@/public/openapi.json";
+import snapshot from "@public/openapi.json";
 
 /** Schema-backed reference data. Regenerate the snapshot after API changes. */
 type Schema = {

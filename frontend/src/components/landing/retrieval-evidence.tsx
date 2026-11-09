@@ -1,5 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
-import report from "@/public/benchmark-results.json";
+import report from "@public/benchmark-results.json";
 
 const LABELS: Record<string, string> = {
   cosine: "Raw cosine baseline",

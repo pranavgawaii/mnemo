@@ -12,6 +12,6 @@ sys.path.insert(0, str(root / "backend"))
 
 from app.main import app
 
-destination = root / "public" / "openapi.json"
+destination = root / "frontend" / "public" / "openapi.json"
 destination.write_text(json.dumps(app.openapi(), indent=2) + "\n")
 print(f"Updated {destination}")
