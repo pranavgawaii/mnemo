@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 import { SiteNav } from "@/components/layout/site-nav";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { MemoryWorkbench } from "@/components/playground/memory-workbench";
+import { PlaygroundExperience } from "@/components/playground/playground-experience";
 
 export const metadata: Metadata = {
   title: "Playground | Mnemo",
   description:
-    "Recall, store and review sample memories. A browser simulation with optional scoring experiments; no backend or model requests.",
+    "Recall, store and review facts in the browser demo, or connect the optional live API walkthrough for backend embeddings and database persistence.",
   alternates: { canonical: "/playground" },
   openGraph: {
     type: "article",
     url: "/playground",
     title: "Playground | Mnemo",
     description:
-      "Recall a fact, store a change and review a possible conflict in a browser simulation. Everything runs in your browser.",
+      "Explore the browser simulation or run the optional live API walkthrough with real stored facts and retrieval scores.",
     images: [
       { url: "/og.png", width: 1200, height: 630, alt: "Mnemo playground" },
     ],
@@ -50,7 +50,7 @@ export default function PlaygroundPage() {
             className="pointer-events-none absolute -right-24 -top-36 h-[340px] w-[340px] rounded-full bg-accent/[0.07] blur-[100px]"
           />
 
-          <div className="relative z-10 mx-auto max-w-frame px-6 pb-4 pt-[96px] sm:pt-[104px]">
+          <div className="relative z-10 mx-auto max-w-frame px-6 pb-2 pt-[80px] sm:pb-4 sm:pt-[104px]">
             <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-accent-ink">
               Playground
             </span>
@@ -75,7 +75,7 @@ export default function PlaygroundPage() {
           </div>
         </section>
 
-        <MemoryWorkbench />
+        <PlaygroundExperience />
       </main>
 
       <SiteFooter />
