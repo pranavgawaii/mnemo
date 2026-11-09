@@ -56,6 +56,36 @@ export default function GetStartedPage() {
       </details>
       <QuickstartRequests />
       <AgentIntegration />
+      <DocsSection id="live-api-setup" title="Optional live API demo">
+        <p>
+          The playground’s Browser demo stays offline. Its Live API tab can run
+          a fixed city-change walkthrough against your API, with actual writes,
+          backend embeddings and database reads.
+        </p>
+        <CodeBlock
+          label="Live demo configuration"
+          code={`# frontend/.env.local — server-only, never NEXT_PUBLIC_\nMNEMO_DEMO_API_URL=http://127.0.0.1:8000\nMNEMO_DEMO_API_KEY=your-api-key`}
+        />
+        <p>
+          Start the API using the quickstart, set its key above and restart the
+          frontend. For a hosted website, the API URL must be reachable from the
+          web server. The demo returns context; it does not generate an agent
+          answer.
+        </p>
+        <p>
+          Each run creates a separate namespace with synthetic facts that expire
+          after 15 minutes. Rows can remain in history. The server permits only
+          the fixed walkthrough, keeps the key private and signs the run’s
+          record IDs. For a public deployment, use a dedicated read/write key
+          with backend rate limiting enabled.
+        </p>
+        <a
+          href="/playground"
+          className="text-accent-ink underline underline-offset-4"
+        >
+          Open the playground
+        </a>
+      </DocsSection>
       <DocsSection id="troubleshooting" title="If something goes wrong">
         <div className="divide-y divide-line rounded-xl border border-line bg-white px-5">
           {[

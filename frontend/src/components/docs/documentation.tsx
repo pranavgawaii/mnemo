@@ -207,7 +207,7 @@ export function LimitationsSection() {
         {[
           [
             "Conflict flags are heuristic",
-            "The default detector checks five nearby active, non-expired facts for English negation markers. It can miss changed names, dates and numbers, or flag similar statements with different meanings. Precision and recall are not yet benchmarked.",
+            "The default detector checks five nearby active, non-expired facts. It handles a source-matched relocation and explicit from/to changes to favourite cuisine, learning goals and running routines. These narrow rules require the same subject and recorded previous value. Other pairs use the similarity gate and English negation markers. Uncertain plans and compatible additions are not automatic replacements; other changed names, dates and numbers can be missed. Precision and recall are not yet benchmarked.",
           ],
           [
             "Long text has a shorter embedding",

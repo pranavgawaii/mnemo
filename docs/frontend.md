@@ -126,9 +126,10 @@ removed; runtime font notices remain in `public/fonts/LICENSE-OFL-1.1.txt`.
 
 ## Accuracy and maintenance
 
-Demos make no backend or model requests and persist only for the current page
-session. Similarity is a lexical/topic approximation; the API uses MiniLM
-embeddings. The browser workbench isolates the base score, excluding keyword
+The Browser demo makes no backend or model requests and persists only for the
+current page session. Its similarity is a lexical/topic approximation; the API
+uses backend embeddings (MiniLM by default). The optional Live API walkthrough
+uses the separate Next.js server proxy described below. The browser workbench isolates the base score, excluding keyword
 blending and MMR. Conflict checks mirror the default English heuristic, not an
 optional model verdict. No Claude integration or endorsement is implied.
 
@@ -146,6 +147,48 @@ from `backend/` to validate documented response fixtures and Python SDK examples
 without a running service. The live backend also exposes its own `/docs` and
 `/openapi.json` on port 8000. Benchmark figures come from the checked-in snapshot;
 they are a small in-sample retrieval comparison, not agent-quality measurements.
+
+## Live API demo
+
+The Live API tab offers four fixed examples: a city move, a cuisine preference,
+a learning goal and a running routine. Each runs save/search/change/review
+operations against a real API. It returns upstream facts, scores, status codes and request timings; it does
+not generate answers or fall back to simulated results on failure.
+
+Source-matched rules also recognize a second change from the current value
+(e.g. Bengaluru → Pune → Delhi). Archived facts are not candidates. Plans and
+compatible additions remain separate active notes; the demo does not infer
+that a possible future event has occurred.
+
+Start the backend using the repository quickstart. Set these **server-only**
+variables in `frontend/.env.local`, then restart the frontend:
+
+```dotenv
+MNEMO_DEMO_API_URL=http://127.0.0.1:8000
+MNEMO_DEMO_API_KEY=your-api-key
+```
+
+The API must be reachable by the Next.js server, including from a hosted web
+server when deployed. The proxy accepts only three named actions. A signed,
+15-minute session binds the selected example, random `web-demo-*` namespace and record IDs; callers
+cannot supply their own upstream, namespace, fact or record ID. Keys never enter
+the browser bundle or API responses. Each synthetic fact has a 15-minute expiry;
+expired/inactive rows can remain in history. For public use, enable backend rate
+limiting and use a dedicated read/write key. This remains a single-tenant API.
+The factory in `src/lib/server/demo-api.ts` is exercised separately from browser
+presentation tests. Integration verification should also run against the real
+API and pgvector, as mocked UI tests do not establish embedding behavior.
+
+With both services running, verify the complete configured walkthrough from the
+repository root:
+
+```bash
+python scripts/check-live-demo.py
+```
+
+This checks all six upstream calls, the explicit move, the returned context and
+the old row's inactive state. It uses a fresh demo namespace and never needs the
+API key on the client.
 
 ## Run and verify
 
@@ -184,3 +227,48 @@ keep the credits clear of the decorative wordmark, including at 320px.
 Optional public configuration: `NEXT_PUBLIC_GITHUB_URL` changes the repository
 links; `NEXT_PUBLIC_SITE_URL` sets the deployed canonical origin. Neither is a
 backend credential. Never expose a real API key through public environment vars.
+
+## Mobile and browser verification
+
+The composer reserves space for multiline facts; text fields use 16px type on
+small screens to avoid iOS focus zoom. Phones use a compact native scenario selector; wider screens retain the scenario
+buttons.
+Live API context stacks vertically on phones so facts and scores remain readable.
+Result frames stay reserved through loading, review and error states.
+
+`pnpm test:e2e` runs the full Chromium suite and focused mobile checks in Firefox
+and WebKit. These engines are useful compatibility evidence, not a substitute
+for testing physical iOS and Android devices. Install them with
+`pnpm exec playwright install chromium firefox webkit`.
+
+On macOS, the Firefox test project isolates its application-data root in a
+temporary directory. This avoids the bundled Firefox 157 reading a protected
+real-user Firefox directory; it does not change OS permissions. See
+[the upstream Playwright issue](https://github.com/microsoft/playwright/issues/42768).
+
+## Python ownership and generated browser data
+
+`backend/app/core/changes.py` owns the explicit update rules and current-value
+projection. The website interprets generated rule data for its offline demo;
+edit the Python source, then run:
+
+```bash
+python scripts/export-memory-rules.py
+python scripts/export-memory-rules.py --check
+```
+
+CI checks the generated snapshot and shared Python/browser fixtures. Live API
+results receive `current_statement` directly from the Python API. Source records
+remain available in the inspector and live request details. The browser copies the displayed current values; source records remain in
+inspection. The Python SDK context formatter uses original text by default and
+supports explicit opt-in current values. No projection independently verifies a claim.
+
+On phones and tablets below 1024px, Context and Review share a fixed result
+panel with keyboard-accessible tabs. Storing a conflict opens Review; verifying
+recall opens Context. Both remain side by side on desktop.
+
+The availability badge probes `/v1/demo/availability` on opening the live tab,
+on window focus, and on Check availability. It shows database/key readiness,
+a check time and cold/warm encoder state. Failed writes mark it unavailable;
+results are retained for inspection and retry. `/health` alone is not used to
+claim that the demo is available.

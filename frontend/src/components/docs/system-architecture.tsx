@@ -88,10 +88,11 @@ export function SystemArchitecture() {
         )}
       </div>
       <figcaption className="border-t border-line bg-background/60 px-4 py-4 text-[13px] leading-relaxed text-muted sm:px-5">
-        The website and playground are a separate browser simulation and do not
-        call the API. The map shows the default local encoder; optional model
-        conflict verdicts add a configured provider call. Webhook delivery is at
-        least once; the worker can be disabled for external processing.
+        The Browser demo runs offline. The optional Live API walkthrough reaches
+        the API through a separate Next.js server proxy; neither demo calls your
+        model. The map shows the default local encoder; optional model conflict
+        verdicts add a configured provider call. Webhook delivery is at least
+        once; the worker can be disabled for external processing.
       </figcaption>
       <ExpandedView
         contentKey={`${active}-${zoomed}`}

@@ -11,6 +11,7 @@ export const DOC_PAGES = [
       { id: "first-memory", label: "Store a fact" },
       { id: "first-recall", label: "Recall it" },
       { id: "agent-integration", label: "Connect your agent" },
+      { id: "live-api-setup", label: "Live API demo" },
       { id: "troubleshooting", label: "Troubleshooting" },
     ],
   },

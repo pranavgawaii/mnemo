@@ -18,14 +18,17 @@ flowchart TB
   end
   db[("PostgreSQL + pgvector<br/>memories, vectors, conflicts, audit, jobs, config")]
   receiver["Optional webhook receiver"]
+  web["Next.js website + optional live demo proxy"]
+  web -.->|fixed demo calls, server-only API key| http
   client -->|JSON/HTTP + X-API-Key| http
   memory <-->|SQLAlchemy queries and writes| db
   worker -->|poll and claim outbox jobs| db
   worker -->|signed HTTP POST, bounded retries| receiver
 ```
 
-The Next.js landing page, docs and playground are a separate browser-only
-presentation. They do not call this API. The diagram shows the default local
+The Next.js site is separate. Its browser simulation stays offline; the optional
+live walkthrough uses a server-side proxy to call this API. Neither frontend demo
+calls a generation model. The diagram shows the default local
 embedding and heuristic conflict path; a configured LLM verdict provider adds
 an optional external model call.
 
@@ -79,15 +82,18 @@ On every write (create **and** content update):
 
 1. The new memory's 5 nearest neighbours are fetched
    (`_CONTRADICTION_CANDIDATES`), ignoring itself.
-2. Pairs above the namespace's `contradiction_sim_threshold` (global default
+2. An explicit `X moved from A to B` paired with `X lives in A` qualifies for review
+   when the subject and source city match and the destination differs. This narrow
+   English rule does not require the vector gate.
+3. Other pairs above the namespace's `contradiction_sim_threshold` (global default
    `CONTRADICTION_SIM_THRESHOLD`) go through `app/core/contradiction.py`:
    a negation-marker heuristic ("no longer", "not", "used to", ...) plus
    shared-word overlap decides `is_contradiction` with a reason.
-3. **Optional LLM verdict** — `CONTRADICTION_LLM_PROVIDER=openai` asks an
+4. **Optional LLM verdict** — `CONTRADICTION_LLM_PROVIDER=openai` asks an
    OpenAI-compatible chat model (self-hosted vLLM/Ollama work) to confirm;
-   errors or timeouts fall back to the heuristic. A configured model check
+   only vector-gated pairs use the model; errors or timeouts fall back to the heuristic. A configured model check
    can add latency to a write.
-4. Flags are inserted with **`ON CONFLICT DO NOTHING`** against the unique
+5. Flags are inserted with **`ON CONFLICT DO NOTHING`** against the unique
    `uq_contradictions_pair(new_memory_id, existing_memory_id)` index, so two
    workers racing on the same memory produce exactly one row — the loser's
    insert becomes a silent no-op instead of a 500 (stress-tested in

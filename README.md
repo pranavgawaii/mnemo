@@ -1,6 +1,6 @@
 <div align="center">
 
-<h1>Mnemo</h1>
+<h1><img src="docs/assets/logo.svg" alt="" width="32" height="32" align="middle" /> Mnemo</h1>
 
 <p><strong>An inspectable memory API for AI agents.</strong></p>
 
@@ -24,7 +24,7 @@ and review possible conflicts when facts change.
 
 <p>
 <strong>Early, single-tenant prototype.</strong><br />
-The playground is a browser simulation. Run the API for real MiniLM embeddings and PostgreSQL persistence.
+The browser demo runs offline. Connect the optional Live API walkthrough for backend embeddings and PostgreSQL persistence.
 </p>
 
 </div>
@@ -37,7 +37,7 @@ The playground is a browser simulation. Run the API for real MiniLM embeddings a
 - **Inspect retrieval policy.** Vector candidates receive age and importance
   weights, a default keyword boost, and optional diversity selection. Responses
   expose the memory, similarity, final score and age.
-- **Review possible conflicts.** A default English negation heuristic flags
+- **Review possible conflicts.** English negation checks and narrow source-matched relocation/revision rules flag
   nearby statements for explicit resolution. Keeping one fact makes the other
   inactive; the row remains available for inspection.
 - **Integrate through an API.** Scoped keys, cursor pagination, export/import,
@@ -113,7 +113,7 @@ configuration variables, operational commands and integration-test setup.
 <a href="https://trymnemo.pranavx.in/docs/concepts#architecture">Explore the interactive system map and user flow</a>
 </p>
 
-The Next.js site runs separately; its demos do not send API or model requests.
+The Next.js site runs separately. Its Browser demo runs offline; the optional Live API walkthrough calls the configured API through a server proxy. Neither calls a generation model.
 The [system design](docs/architecture.md) explains process boundaries, ranking,
 conflict checks, concurrency and the data model. The
 [API reference](docs/api.md) covers operation scopes and contracts. A schema
@@ -150,9 +150,9 @@ pnpm build
 ```
 
 The frontend has five landing sections, four docs pages and an interactive
-recall/store/review playground. It works without a backend. Similarity in the
+recall/store/review playground. The Browser demo works without a backend. Similarity in that
 playground is a lexical approximation; the default view omits weak example
-matches using a documented display cutoff.
+matches using a documented display cutoff. The optional Live API mode uses the configured backend and its actual scores; see [setup](docs/frontend.md#live-api-demo).
 
 [Frontend structure and maintenance](docs/frontend.md) · [Contributing and checks](CONTRIBUTING.md)
 
@@ -174,12 +174,19 @@ docs/                    API, architecture, deployment and maintainer guides
   licenses/              third-party asset attribution
 ```
 
+The Python API also exposes read/write demo availability and source-preserving
+current-statement views. Explicit change rules live in Python; the browser's
+rule data is generated and checked in CI.
+
 ## Current boundaries
 
 - Keys have operation scopes, but are not tenant-bound. Namespaces organize
   retrieval and do not provide tenant isolation.
-- The default conflict detector is English-only and heuristic. It can miss
-  changed numbers, dates and names, or flag statements that do not conflict.
+- The default conflict detector is English-only and heuristic. Explicit from/to
+  rules cover relocation, favourite cuisine, learning goals and running routines
+  when the subject and recorded previous value match. Other changed numbers,
+  dates and names can be missed, and false positives remain possible. These
+  examples are regression coverage, not a held-out quality benchmark.
 - Soft deletion preserves a row; content updates replace text in place and do
   not create immutable versions of earlier content.
 - The default encoder truncates beyond 256 word pieces. The service does not

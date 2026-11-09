@@ -92,7 +92,12 @@ pnpm build
 
 Set public website variables from `frontend/.env.example` in the project's
 environment settings. Local development variables belong in
-`frontend/.env.local`. The browser does not need backend credentials.
+`frontend/.env.local`. The browser does not need backend credentials. For the
+optional Live API walkthrough, set server-only `MNEMO_DEMO_API_URL` and
+`MNEMO_DEMO_API_KEY` in the web project. Use a dedicated read/write API key and
+backend rate limiting. The API must be reachable from the web server; a deployed
+website cannot use a developer laptop’s localhost. See the
+[live demo setup](frontend.md#live-api-demo).
 
 `frontend/.vercelignore` excludes browser-test sources and generated test output.
 The web app reads its schema and benchmark from `frontend/public/`; it has no

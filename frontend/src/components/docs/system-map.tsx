@@ -71,7 +71,8 @@ export function SystemMap({ fit = false }: { fit?: boolean }) {
         Mnemo API. FastAPI, the memory service, local encoder and background
         worker share one Python process. The service reads and writes PostgreSQL
         and pgvector. The worker polls persisted jobs and delivers signed
-        webhooks to an optional receiver. The browser demo is separate.
+        webhooks to an optional receiver. The browser simulation is separate; an
+        optional Next.js server proxy connects the live walkthrough to the API.
       </desc>
       <defs>
         <marker
@@ -91,6 +92,14 @@ export function SystemMap({ fit = false }: { fit?: boolean }) {
         </marker>
       </defs>
       <g fontFamily="inherit">
+        <path
+          d="M28 598H8V255H38"
+          fill="none"
+          stroke="#817AB8"
+          strokeWidth="1.2"
+          strokeDasharray="2 4"
+          markerEnd={`url(#${marker})`}
+        />
         <MapNode
           x={28}
           y={22}
@@ -272,7 +281,7 @@ export function SystemMap({ fit = false }: { fit?: boolean }) {
           Next.js website + playground
         </text>
         <text x="46" y="612" fill="#5E6472" fontSize="11.5">
-          Separate browser demo · no calls to the API or your model
+          Browser demo · optional live API proxy · no model calls
         </text>
         <g fill="none" stroke="#817AB8" strokeWidth="1.4">
           <path d="M664 600H696" />

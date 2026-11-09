@@ -5,6 +5,27 @@ versions follow [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+### API availability and current values
+- Preserve URL-encoded credentials and Unix socket paths in migration configuration.
+- Verify demo storage and read/write permissions through a Python availability endpoint; report cold/warm encoder state separately.
+- Keep explicit change rules in Python and generate the browser rule data with drift checks.
+- Add source-preserving current-statement views to API responses and opt-in Python SDK context formatting.
+- Share one stable Context/Review panel on mobile and retain side-by-side desktop results.
+
+
+### Realistic changes and mobile compatibility
+- Add source-matched cuisine, learning-goal and running-routine changes to the browser and live API examples; keep explicit review before archiving.
+- Demonstrate uncertain plans and compatible details without replacing current facts.
+- Use a compact phone scenario selector, readable multiline composer and vertically stacked live results.
+- Extend mobile flow checks to Chromium, Firefox and WebKit with backend/browser rule parity fixtures.
+
+### Live retrieval and relocation review
+- Compact mobile result and review frames while preserving stable interaction heights.
+- Add an optional server-proxied live API walkthrough with actual scores, signed demo sessions and expiring synthetic facts.
+- Flag explicit city relocations using matching subjects and source cities, including below the general similarity gate.
+- Add shared relocation cases, API integration coverage and demo proxy regressions.
+- Add the repository logo and restrained icons for agent application patterns.
+
 ### Guided memory walkthrough
 - Guide recall, store, review and recall again without hiding custom inputs or ranking controls.
 - Compare captured context before and after an explicit review decision.

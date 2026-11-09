@@ -21,6 +21,20 @@ Liveness. Does not touch the database.
 {"status": "ok"}
 ```
 
+### `GET /v1/demo/availability`
+
+Authenticated with both `read` and `write` scopes. Checks the memory table
+without creating facts, and reports whether the embedding model is cached:
+
+```json
+{"status": "available", "embedding": "cold"}
+```
+
+A cold model loads on the next embedding operation; this response does not test
+model inference. Invalid keys return 401, insufficient scopes 403, rate limits
+429, and unavailable storage 503. The website probes this endpoint through its
+server, so the demo key stays private.
+
 ### `GET /ready`
 
 Readiness. Actually queries Postgres; 503 when the database is unreachable.
@@ -274,8 +288,10 @@ immutable versions of earlier content. Returns the updated memory.
 
 `status` is `open` (default) or `resolved`. Contradictions are detected on
 write: the new memory is compared against its 5 nearest neighbours
-(`CONTRADICTION_CANDIDATES`) with a negation-marker heuristic; an optional LLM
-verdict hook (`CONTRADICTION_LLM_PROVIDER=openai`) can confirm or veto.
+(`CONTRADICTION_CANDIDATES`). Exact subject/source matches for explicit from/to
+relocations and explicit source-matched cuisine, learning and running-routine
+revisions can qualify below the vector gate; other pairs use gated English
+negation checks. An optional LLM verdict hook (`CONTRADICTION_LLM_PROVIDER=openai`) can confirm or veto.
 
 ### `POST /v1/contradictions/resolve` (write)
 
@@ -374,3 +390,12 @@ curl -X POST https://mnemo.internal/v1/webhooks \
 ### `DELETE /v1/webhooks/{id}` — 204
 
 Deactivates the subscription; deliveries stop immediately.
+
+## Current-statement display views
+
+Memory responses include a read-only `current_statement`, derived in Python
+for supported, unqualified city/cuisine/learning/routine transitions. For
+`Riya moved from Bengaluru to Pune`, it is `Riya lives in Pune`. Unsupported,
+uncertain or qualified statements return `null`. The original `content` remains
+unchanged. This projection does not verify a claim, approve a conflict, or change
+which records are active. Exports retain their existing source-content contract.
