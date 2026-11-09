@@ -13,10 +13,12 @@ code. A failed case also returns nonzero, making the same command useful in CI.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
@@ -25,12 +27,17 @@ from evaluation.cases import EvaluationCase, load_cases
 from evaluation.metrics import assess, summarize
 
 
-def evaluate(client: Any, cases: list[EvaluationCase], *, min_recall: float = 1.0) -> dict[str, Any]:
+def evaluate(
+    client: Any, cases: list[EvaluationCase], *, min_recall: float = 1.0,
+    min_precision: float = 1.0,
+) -> dict[str, Any]:
     """Use a sync MnemoClient-shaped object; transport injection keeps tests offline."""
     if not cases:
         raise ValueError("At least one evaluation case is required.")
     if not math.isfinite(min_recall) or not 0 <= min_recall <= 1:
         raise ValueError("min_recall must be finite and between 0 and 1.")
+    if not math.isfinite(min_precision) or not 0 <= min_precision <= 1:
+        raise ValueError("min_precision must be finite and between 0 and 1.")
     from dataclasses import asdict
 
     assessments = []
@@ -43,8 +50,9 @@ def evaluate(client: Any, cases: list[EvaluationCase], *, min_recall: float = 1.
         raw = asdict(response)
         # SDK models carry UUID values; normalize once to the wire representation.
         raw = json.loads(json.dumps(raw, default=str))
-        assessments.append(assess(case, raw, min_recall=min_recall))
-    return {"format_version": 1, "selection_only": True, "min_recall": min_recall,
+        assessments.append(assess(case, raw, min_recall=min_recall, min_precision=min_precision))
+    return {"format_version": 2, "selection_only": True, "min_recall": min_recall,
+            "min_precision": min_precision, "measured_at": datetime.now(timezone.utc).isoformat(),
             **summarize(assessments)}
 
 
@@ -54,6 +62,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--base-url", default="http://localhost:8000")
     parser.add_argument("--output", type=Path, required=True, help="Report destination; source text is omitted.")
     parser.add_argument("--min-recall", type=float, default=1.0)
+    parser.add_argument("--min-precision", type=float, default=1.0)
     parser.add_argument("--timeout", type=float, default=60.0)
     return parser
 
@@ -83,7 +92,8 @@ def main(argv: list[str] | None = None) -> int:
         if args.output.resolve() == args.cases.resolve():
             raise ValueError("The report must not overwrite the case file.")
         with MnemoClient(base_url=args.base_url, api_key=key, timeout=args.timeout) as client:
-            report = evaluate(client, cases, min_recall=args.min_recall)
+            report = evaluate(client, cases, min_recall=args.min_recall, min_precision=args.min_precision)
+        report["cases_sha256"] = hashlib.sha256(args.cases.read_bytes()).hexdigest()
         args.output.write_text(json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     except (OSError, ValueError, KeyError, TypeError, MnemoError, httpx.HTTPError) as exc:
         # SDK errors can contain arbitrary server-provided text; don't echo it.

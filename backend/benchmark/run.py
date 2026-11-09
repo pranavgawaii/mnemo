@@ -119,6 +119,8 @@ def run_benchmark(
     gold_counts: list[int] = []
     latencies_ms: list[float] = []
     misses: list[tuple[str, list[str]]] = []
+    query_results: list[dict] = []
+    fixture_ids = {value: key for key, value in id_map.items()}
 
     for q in data["queries"]:
         gold_uuids = {id_map[g] for g in q["gold"]}
@@ -132,6 +134,10 @@ def run_benchmark(
         graded = all_gold_ranks(hits, gold_uuids, k)
         graded_ranks.append(graded)
         gold_counts.append(len(gold_uuids))
+        query_results.append({
+            "query": q["query"], "gold": q["gold"], "first_gold_rank": rank,
+            "top_ids": [fixture_ids[str(memory.id)] for memory, *_ in hits[:k]],
+        })
 
         if rank is None or rank > k:
             misses.append((q["query"], [m.content for m, *_ in hits[:k]]))
@@ -150,6 +156,7 @@ def run_benchmark(
         "latency_p95_ms": percentile(latencies_ms, 0.95),
         "_latency_mean_ms": sum(latencies_ms) / len(latencies_ms) if latencies_ms else 0.0,
         "misses": misses,
+        "_query_results": query_results,
     }
 
 

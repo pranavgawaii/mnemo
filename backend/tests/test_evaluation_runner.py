@@ -87,7 +87,7 @@ def test_cli_writes_complete_report_and_returns_failure_for_a_missed_label(tmp_p
     assert main(["--cases", str(source), "--output", str(output)]) == 1
     report = json.loads(output.read_text())
     assert report["failed"] == 1 and report["micro_recall"] == 0
-    assert report["format_version"] == 1
+    assert report["format_version"] == 2
 
 
 def test_cli_does_not_overwrite_its_labels(tmp_path, monkeypatch):

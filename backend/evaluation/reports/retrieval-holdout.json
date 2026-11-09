@@ -1,0 +1,1144 @@
+{
+  "format_version": 1,
+  "measured_at": "2026-11-09T17:13:14.168038+00:00",
+  "scope": "Query-only holdout: new manually labelled questions over the existing synthetic 60-memory corpus. Not unseen entities, an independent dataset or an agent-answer benchmark. Do not tune ranking on this set.",
+  "python": "3.14.7",
+  "platform": "macOS-27.3-arm64-arm-64bit-Mach-O",
+  "embedding_model": "all-MiniLM-L6-v2",
+  "corpus_sha256": "8aaca9c59cda71e061c620f9c4d363b25c8dc39029f59cbddc69c7de92334e58",
+  "queries_sha256": "67675b259872d8436ccca33771e443e7b42e45a2bdf73dca0d99cc0b5d39305c",
+  "scoring": {
+    "decay_half_life_days": 180.0,
+    "decay_floor": 0.7
+  },
+  "results": [
+    {
+      "mode": "cosine",
+      "queries": 30,
+      "memories": 60,
+      "k": 3,
+      "keyword_weight": 0.0,
+      "top1_accuracy": 0.9333333333333333,
+      "topk_accuracy": 1.0,
+      "mrr": 0.961111111111111,
+      "ndcg_at_k": 0.9710309917857153,
+      "latency_p50_ms": 15.059417004522402,
+      "latency_p95_ms": 24.160624998330604,
+      "misses": [],
+      "query_results": [
+        {
+          "query": "Which language would Pranav normally reach for to implement a new backend?",
+          "gold": [
+            "m02"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m02",
+            "m01",
+            "m22"
+          ]
+        },
+        {
+          "query": "Are the side projects connected to separate databases or one shared database?",
+          "gold": [
+            "m04"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m04",
+            "m50",
+            "m06"
+          ]
+        },
+        {
+          "query": "On which evening is the weekly laptop backup scheduled?",
+          "gold": [
+            "m05"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m05",
+            "m15",
+            "m56"
+          ]
+        },
+        {
+          "query": "How much memory does the little computer hosting his home services have?",
+          "gold": [
+            "m06"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m06",
+            "m21",
+            "m19"
+          ]
+        },
+        {
+          "query": "Should sugar be added when making Pranav a coffee?",
+          "gold": [
+            "m08"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m08",
+            "m10",
+            "m09"
+          ]
+        },
+        {
+          "query": "Which nut must be kept out of Pranav's food?",
+          "gold": [
+            "m09"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m09",
+            "m10",
+            "m42"
+          ]
+        },
+        {
+          "query": "What is Meera studying and in which city?",
+          "gold": [
+            "m11"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m11",
+            "m51",
+            "m41"
+          ]
+        },
+        {
+          "query": "Name the person responsible for coaching Pranav's running.",
+          "gold": [
+            "m12"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m12",
+            "m33",
+            "m01"
+          ]
+        },
+        {
+          "query": "Who is the designer who helps review the appearance of Pranav's projects?",
+          "gold": [
+            "m14"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m14",
+            "m01",
+            "m22"
+          ]
+        },
+        {
+          "query": "What response-time threshold is the Auren classifier trying to meet at the 95th percentile?",
+          "gold": [
+            "m18"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m18",
+            "m16",
+            "m48"
+          ]
+        },
+        {
+          "query": "Which editing program does Pranav use as his primary coding environment?",
+          "gold": [
+            "m22"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m22",
+            "m01",
+            "m02"
+          ]
+        },
+        {
+          "query": "Which Bengaluru neighbourhood is Pranav's home in?",
+          "gold": [
+            "m26"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m26",
+            "m51",
+            "m52"
+          ]
+        },
+        {
+          "query": "How does he get to the co-working space and roughly how many minutes does it take?",
+          "gold": [
+            "m27"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m27",
+            "m31",
+            "m36"
+          ]
+        },
+        {
+          "query": "Give the month and year when Pranav needs to renew his passport.",
+          "gold": [
+            "m29"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m29",
+            "m45",
+            "m58"
+          ]
+        },
+        {
+          "query": "Should I book Pranav an aisle seat or a seat beside the window on a long flight?",
+          "gold": [
+            "m30"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m30",
+            "m56",
+            "m34"
+          ]
+        },
+        {
+          "query": "Which knee did Pranav hurt while playing football?",
+          "gold": [
+            "m32"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m32",
+            "m33",
+            "m12"
+          ]
+        },
+        {
+          "query": "What activity did the physiotherapist suggest as a replacement for running?",
+          "gold": [
+            "m33"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m33",
+            "m31",
+            "m12"
+          ]
+        },
+        {
+          "query": "What AWS-style region identifier is used for Pranav's own stored data?",
+          "gold": [
+            "m37"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m37",
+            "m41",
+            "m04"
+          ]
+        },
+        {
+          "query": "Where does Pranav put secret credentials instead of committing them to source control?",
+          "gold": [
+            "m39"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m39",
+            "m23",
+            "m37"
+          ]
+        },
+        {
+          "query": "What time of day should I offer Pranav an appointment?",
+          "gold": [
+            "m56"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m56",
+            "m34",
+            "m15"
+          ]
+        },
+        {
+          "query": "When during the working week should meetings be avoided to protect his focus time?",
+          "gold": [
+            "m57"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m57",
+            "m56",
+            "m13"
+          ]
+        },
+        {
+          "query": "In which month does the recurring family holiday to Goa happen?",
+          "gold": [
+            "m58"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m58",
+            "m45",
+            "m56"
+          ]
+        },
+        {
+          "query": "How frequently does Pranav help out at the animal shelter?",
+          "gold": [
+            "m59"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m59",
+            "m34",
+            "m31"
+          ]
+        },
+        {
+          "query": "Which communication channel should carry an urgent incident notification to Pranav?",
+          "gold": [
+            "m60"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m60",
+            "m51",
+            "m44"
+          ]
+        },
+        {
+          "query": "Which economical Claude model is used for document classification in Auren?",
+          "gold": [
+            "m17"
+          ],
+          "first_gold_rank": 2,
+          "top_ids": [
+            "m16",
+            "m17",
+            "m49"
+          ]
+        },
+        {
+          "query": "Which programming language powers the currently running search service?",
+          "gold": [
+            "m54"
+          ],
+          "first_gold_rank": 3,
+          "top_ids": [
+            "m53",
+            "m02",
+            "m54"
+          ]
+        },
+        {
+          "query": "What is the name of the embedding encoder and the length of each resulting vector?",
+          "gold": [
+            "m49"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m49",
+            "m19",
+            "m20"
+          ]
+        },
+        {
+          "query": "In which quarter does Pranav conduct the yearly laptop security check?",
+          "gold": [
+            "m38"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m38",
+            "m05",
+            "m21"
+          ]
+        },
+        {
+          "query": "Would Pranav rather receive a written message or a phone call?",
+          "gold": [
+            "m44"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m44",
+            "m60",
+            "m26"
+          ]
+        },
+        {
+          "query": "What instrument and playing technique does Pranav practise?",
+          "gold": [
+            "m43"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m43",
+            "m33",
+            "m51"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "decay",
+      "queries": 30,
+      "memories": 60,
+      "k": 3,
+      "keyword_weight": 0.0,
+      "top1_accuracy": 0.9333333333333333,
+      "topk_accuracy": 1.0,
+      "mrr": 0.9666666666666667,
+      "ndcg_at_k": 0.9753953169047639,
+      "latency_p50_ms": 26.154083003348205,
+      "latency_p95_ms": 52.98712499643443,
+      "misses": [],
+      "query_results": [
+        {
+          "query": "Which language would Pranav normally reach for to implement a new backend?",
+          "gold": [
+            "m02"
+          ],
+          "first_gold_rank": 2,
+          "top_ids": [
+            "m01",
+            "m02",
+            "m41"
+          ]
+        },
+        {
+          "query": "Are the side projects connected to separate databases or one shared database?",
+          "gold": [
+            "m04"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m04",
+            "m50",
+            "m41"
+          ]
+        },
+        {
+          "query": "On which evening is the weekly laptop backup scheduled?",
+          "gold": [
+            "m05"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m05",
+            "m15",
+            "m56"
+          ]
+        },
+        {
+          "query": "How much memory does the little computer hosting his home services have?",
+          "gold": [
+            "m06"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m06",
+            "m19",
+            "m21"
+          ]
+        },
+        {
+          "query": "Should sugar be added when making Pranav a coffee?",
+          "gold": [
+            "m08"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m08",
+            "m10",
+            "m09"
+          ]
+        },
+        {
+          "query": "Which nut must be kept out of Pranav's food?",
+          "gold": [
+            "m09"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m09",
+            "m10",
+            "m42"
+          ]
+        },
+        {
+          "query": "What is Meera studying and in which city?",
+          "gold": [
+            "m11"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m11",
+            "m51",
+            "m41"
+          ]
+        },
+        {
+          "query": "Name the person responsible for coaching Pranav's running.",
+          "gold": [
+            "m12"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m12",
+            "m33",
+            "m01"
+          ]
+        },
+        {
+          "query": "Who is the designer who helps review the appearance of Pranav's projects?",
+          "gold": [
+            "m14"
+          ],
+          "first_gold_rank": 2,
+          "top_ids": [
+            "m01",
+            "m14",
+            "m41"
+          ]
+        },
+        {
+          "query": "What response-time threshold is the Auren classifier trying to meet at the 95th percentile?",
+          "gold": [
+            "m18"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m18",
+            "m16",
+            "m48"
+          ]
+        },
+        {
+          "query": "Which editing program does Pranav use as his primary coding environment?",
+          "gold": [
+            "m22"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m22",
+            "m01",
+            "m02"
+          ]
+        },
+        {
+          "query": "Which Bengaluru neighbourhood is Pranav's home in?",
+          "gold": [
+            "m26"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m26",
+            "m51",
+            "m52"
+          ]
+        },
+        {
+          "query": "How does he get to the co-working space and roughly how many minutes does it take?",
+          "gold": [
+            "m27"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m27",
+            "m57",
+            "m31"
+          ]
+        },
+        {
+          "query": "Give the month and year when Pranav needs to renew his passport.",
+          "gold": [
+            "m29"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m29",
+            "m45",
+            "m52"
+          ]
+        },
+        {
+          "query": "Should I book Pranav an aisle seat or a seat beside the window on a long flight?",
+          "gold": [
+            "m30"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m30",
+            "m33",
+            "m56"
+          ]
+        },
+        {
+          "query": "Which knee did Pranav hurt while playing football?",
+          "gold": [
+            "m32"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m32",
+            "m33",
+            "m12"
+          ]
+        },
+        {
+          "query": "What activity did the physiotherapist suggest as a replacement for running?",
+          "gold": [
+            "m33"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m33",
+            "m12",
+            "m31"
+          ]
+        },
+        {
+          "query": "What AWS-style region identifier is used for Pranav's own stored data?",
+          "gold": [
+            "m37"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m37",
+            "m41",
+            "m04"
+          ]
+        },
+        {
+          "query": "Where does Pranav put secret credentials instead of committing them to source control?",
+          "gold": [
+            "m39"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m39",
+            "m37",
+            "m01"
+          ]
+        },
+        {
+          "query": "What time of day should I offer Pranav an appointment?",
+          "gold": [
+            "m56"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m56",
+            "m57",
+            "m33"
+          ]
+        },
+        {
+          "query": "When during the working week should meetings be avoided to protect his focus time?",
+          "gold": [
+            "m57"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m57",
+            "m56",
+            "m13"
+          ]
+        },
+        {
+          "query": "In which month does the recurring family holiday to Goa happen?",
+          "gold": [
+            "m58"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m58",
+            "m45",
+            "m56"
+          ]
+        },
+        {
+          "query": "How frequently does Pranav help out at the animal shelter?",
+          "gold": [
+            "m59"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m59",
+            "m33",
+            "m03"
+          ]
+        },
+        {
+          "query": "Which communication channel should carry an urgent incident notification to Pranav?",
+          "gold": [
+            "m60"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m60",
+            "m41",
+            "m37"
+          ]
+        },
+        {
+          "query": "Which economical Claude model is used for document classification in Auren?",
+          "gold": [
+            "m17"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m17",
+            "m16",
+            "m49"
+          ]
+        },
+        {
+          "query": "Which programming language powers the currently running search service?",
+          "gold": [
+            "m54"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m54",
+            "m53",
+            "m02"
+          ]
+        },
+        {
+          "query": "What is the name of the embedding encoder and the length of each resulting vector?",
+          "gold": [
+            "m49"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m49",
+            "m19",
+            "m20"
+          ]
+        },
+        {
+          "query": "In which quarter does Pranav conduct the yearly laptop security check?",
+          "gold": [
+            "m38"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m38",
+            "m05",
+            "m29"
+          ]
+        },
+        {
+          "query": "Would Pranav rather receive a written message or a phone call?",
+          "gold": [
+            "m44"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m44",
+            "m60",
+            "m37"
+          ]
+        },
+        {
+          "query": "What instrument and playing technique does Pranav practise?",
+          "gold": [
+            "m43"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m43",
+            "m33",
+            "m01"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "hybrid",
+      "queries": 30,
+      "memories": 60,
+      "k": 3,
+      "keyword_weight": 0.25,
+      "top1_accuracy": 0.9333333333333333,
+      "topk_accuracy": 1.0,
+      "mrr": 0.9666666666666667,
+      "ndcg_at_k": 0.9753953169047639,
+      "latency_p50_ms": 24.090124999929685,
+      "latency_p95_ms": 81.82533399667591,
+      "misses": [],
+      "query_results": [
+        {
+          "query": "Which language would Pranav normally reach for to implement a new backend?",
+          "gold": [
+            "m02"
+          ],
+          "first_gold_rank": 2,
+          "top_ids": [
+            "m01",
+            "m02",
+            "m41"
+          ]
+        },
+        {
+          "query": "Are the side projects connected to separate databases or one shared database?",
+          "gold": [
+            "m04"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m04",
+            "m50",
+            "m41"
+          ]
+        },
+        {
+          "query": "On which evening is the weekly laptop backup scheduled?",
+          "gold": [
+            "m05"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m05",
+            "m15",
+            "m56"
+          ]
+        },
+        {
+          "query": "How much memory does the little computer hosting his home services have?",
+          "gold": [
+            "m06"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m06",
+            "m19",
+            "m21"
+          ]
+        },
+        {
+          "query": "Should sugar be added when making Pranav a coffee?",
+          "gold": [
+            "m08"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m08",
+            "m10",
+            "m09"
+          ]
+        },
+        {
+          "query": "Which nut must be kept out of Pranav's food?",
+          "gold": [
+            "m09"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m09",
+            "m10",
+            "m42"
+          ]
+        },
+        {
+          "query": "What is Meera studying and in which city?",
+          "gold": [
+            "m11"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m11",
+            "m51",
+            "m41"
+          ]
+        },
+        {
+          "query": "Name the person responsible for coaching Pranav's running.",
+          "gold": [
+            "m12"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m12",
+            "m33",
+            "m01"
+          ]
+        },
+        {
+          "query": "Who is the designer who helps review the appearance of Pranav's projects?",
+          "gold": [
+            "m14"
+          ],
+          "first_gold_rank": 2,
+          "top_ids": [
+            "m01",
+            "m14",
+            "m41"
+          ]
+        },
+        {
+          "query": "What response-time threshold is the Auren classifier trying to meet at the 95th percentile?",
+          "gold": [
+            "m18"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m18",
+            "m16",
+            "m48"
+          ]
+        },
+        {
+          "query": "Which editing program does Pranav use as his primary coding environment?",
+          "gold": [
+            "m22"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m22",
+            "m01",
+            "m02"
+          ]
+        },
+        {
+          "query": "Which Bengaluru neighbourhood is Pranav's home in?",
+          "gold": [
+            "m26"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m26",
+            "m51",
+            "m52"
+          ]
+        },
+        {
+          "query": "How does he get to the co-working space and roughly how many minutes does it take?",
+          "gold": [
+            "m27"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m27",
+            "m57",
+            "m31"
+          ]
+        },
+        {
+          "query": "Give the month and year when Pranav needs to renew his passport.",
+          "gold": [
+            "m29"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m29",
+            "m45",
+            "m52"
+          ]
+        },
+        {
+          "query": "Should I book Pranav an aisle seat or a seat beside the window on a long flight?",
+          "gold": [
+            "m30"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m30",
+            "m33",
+            "m56"
+          ]
+        },
+        {
+          "query": "Which knee did Pranav hurt while playing football?",
+          "gold": [
+            "m32"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m32",
+            "m33",
+            "m12"
+          ]
+        },
+        {
+          "query": "What activity did the physiotherapist suggest as a replacement for running?",
+          "gold": [
+            "m33"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m33",
+            "m12",
+            "m31"
+          ]
+        },
+        {
+          "query": "What AWS-style region identifier is used for Pranav's own stored data?",
+          "gold": [
+            "m37"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m37",
+            "m41",
+            "m04"
+          ]
+        },
+        {
+          "query": "Where does Pranav put secret credentials instead of committing them to source control?",
+          "gold": [
+            "m39"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m39",
+            "m37",
+            "m01"
+          ]
+        },
+        {
+          "query": "What time of day should I offer Pranav an appointment?",
+          "gold": [
+            "m56"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m56",
+            "m57",
+            "m33"
+          ]
+        },
+        {
+          "query": "When during the working week should meetings be avoided to protect his focus time?",
+          "gold": [
+            "m57"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m57",
+            "m56",
+            "m13"
+          ]
+        },
+        {
+          "query": "In which month does the recurring family holiday to Goa happen?",
+          "gold": [
+            "m58"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m58",
+            "m45",
+            "m56"
+          ]
+        },
+        {
+          "query": "How frequently does Pranav help out at the animal shelter?",
+          "gold": [
+            "m59"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m59",
+            "m33",
+            "m03"
+          ]
+        },
+        {
+          "query": "Which communication channel should carry an urgent incident notification to Pranav?",
+          "gold": [
+            "m60"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m60",
+            "m41",
+            "m37"
+          ]
+        },
+        {
+          "query": "Which economical Claude model is used for document classification in Auren?",
+          "gold": [
+            "m17"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m17",
+            "m16",
+            "m49"
+          ]
+        },
+        {
+          "query": "Which programming language powers the currently running search service?",
+          "gold": [
+            "m54"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m54",
+            "m53",
+            "m02"
+          ]
+        },
+        {
+          "query": "What is the name of the embedding encoder and the length of each resulting vector?",
+          "gold": [
+            "m49"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m49",
+            "m19",
+            "m20"
+          ]
+        },
+        {
+          "query": "In which quarter does Pranav conduct the yearly laptop security check?",
+          "gold": [
+            "m38"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m38",
+            "m05",
+            "m29"
+          ]
+        },
+        {
+          "query": "Would Pranav rather receive a written message or a phone call?",
+          "gold": [
+            "m44"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m44",
+            "m60",
+            "m37"
+          ]
+        },
+        {
+          "query": "What instrument and playing technique does Pranav practise?",
+          "gold": [
+            "m43"
+          ],
+          "first_gold_rank": 1,
+          "top_ids": [
+            "m43",
+            "m33",
+            "m01"
+          ]
+        }
+      ]
+    }
+  ]
+}

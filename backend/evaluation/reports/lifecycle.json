@@ -1,0 +1,190 @@
+{
+  "format_version": 1,
+  "measured_at": "2026-11-09T17:11:01.084438+00:00",
+  "scope": "Authored synthetic lifecycle regressions; not held-out conflict accuracy or generated-answer quality.",
+  "min_similarity": -1,
+  "scenarios": 7,
+  "checks": 27,
+  "passed": 27,
+  "failed": 0,
+  "cleanup_errors": 0,
+  "results": [
+    {
+      "case_id": "city:initial",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "city:pending",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "city:reviewed",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "city:history",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "case_id": "cuisine:initial",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "cuisine:pending",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "cuisine:reviewed",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "cuisine:history",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "case_id": "learning:initial",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "learning:pending",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "learning:reviewed",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "learning:history",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "case_id": "routine:initial",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "routine:pending",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "routine:reviewed",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "routine:history",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "case_id": "keep-original:initial",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "keep-original:pending",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "keep-original:reviewed",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "keep-original:history",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "case_id": "second-move:initial",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "second-move:pending",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "second-move:reviewed",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "second-move:history",
+      "passed": true,
+      "errors": []
+    },
+    {
+      "case_id": "second-move:second-pending",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "second-move:second-reviewed",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    },
+    {
+      "case_id": "expiry:excluded",
+      "passed": true,
+      "errors": [],
+      "forbidden_hits": 0,
+      "status_matches": true
+    }
+  ]
+}

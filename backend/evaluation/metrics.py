@@ -107,9 +107,14 @@ def _context_contract(case: EvaluationCase, response: dict[str, Any]) -> list[st
     return errors
 
 
-def assess(case: EvaluationCase, response: dict[str, Any], *, min_recall: float = 1.0) -> Assessment:
+def assess(
+    case: EvaluationCase, response: dict[str, Any], *, min_recall: float = 1.0,
+    min_precision: float | None = None,
+) -> Assessment:
     if not math.isfinite(min_recall) or not 0 <= min_recall <= 1:
         raise ValueError("min_recall must be finite and between 0 and 1.")
+    if min_precision is not None and (not math.isfinite(min_precision) or not 0 <= min_precision <= 1):
+        raise ValueError("min_precision must be finite and between 0 and 1.")
     contract_errors = _context_contract(case, response)
     citations = response.get("citations")
     selected = tuple(str(item.get("memory_id")) for item in citations if isinstance(item, dict)) if isinstance(citations, list) else ()
@@ -128,6 +133,8 @@ def assess(case: EvaluationCase, response: dict[str, Any], *, min_recall: float 
     passed = not contract_errors and not forbidden and matches is not False and empty_label_ok
     if recall is not None:
         passed = passed and recall >= min_recall
+    if precision is not None and min_precision is not None:
+        passed = passed and precision >= min_precision
     return Assessment(
         case_id=case.id, selected_ids=selected, relevant_selected=relevant,
         expected_count=len(expected) if expected is not None else None,

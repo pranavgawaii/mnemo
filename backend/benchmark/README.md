@@ -42,3 +42,29 @@ unseen cases before claiming a quality improvement.
 
 For the regression gate and individual policy options, inspect `gate.py` and
 `run.py`; `PYTHONPATH=. python benchmark/run.py --help` lists the runner arguments.
+
+## Query-only holdout
+
+`holdout-queries.json` freezes 30 additional manually labelled questions, disjoint
+from the original 50 questions, over the same 60 synthetic memories. It does not
+hold out entities or the memory corpus. The policies are fixed in advance and
+this runner does not tune weights or overwrite gate baselines.
+
+```bash
+PYTHONPATH=. python -m benchmark.holdout --output /tmp/mnemo-holdout.json
+```
+
+The runner uses a fresh UUID namespace and removes its own synthetic rows in a
+finally block. It never clears the ordinary benchmark or application namespaces.
+The report records dataset hashes, settings, local timings, every query's gold
+rank and top IDs, and misses. Inspect the
+[saved run](../evaluation/reports/retrieval-holdout.json) alongside the original
+comparison; an easier query set is not evidence of an improvement in the system.
+
+For state changes, run `python -m evaluation.lifecycle --output /tmp/lifecycle.json`
+against a disposable development/demo API with `MNEMO_API_KEY` set. It performs
+27 checks across seven authored scenarios: four update types, keeping the old
+fact, a second move, history preservation and TTL exclusion. It creates expiring
+synthetic facts in fresh namespaces and soft-deletes them afterwards. Its context
+threshold is -1 to isolate lifecycle checks from semantic quality. This is a
+workflow regression suite, not a held-out contradiction benchmark or model test.
