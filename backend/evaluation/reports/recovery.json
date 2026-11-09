@@ -1,0 +1,44 @@
+{
+  "format_version": 1,
+  "measured_at": "2026-11-09T18:28:06.575868+00:00",
+  "scope": "Local synthetic full-database pg_dump/pg_restore drill; not a production backup or RPO/RTO guarantee.",
+  "migration_backfill_verified": true,
+  "rows_match": true,
+  "reviewed_state_preserved": true,
+  "expired_job_lease_recovered": true,
+  "tables": {
+    "memories": {
+      "rows": 3,
+      "sha256": "6c9eac378ca0427628599ff44df70c9e2e219f3a9fd7bb1a8036231a7cfddb24"
+    },
+    "contradictions": {
+      "rows": 1,
+      "sha256": "2718b016649c365bb3383ad737dd403ac6296c5c5dedad1f8fd6934946445b68"
+    },
+    "audit_log": {
+      "rows": 4,
+      "sha256": "165f781b563ce9a9f92b8e5f4e301758981648f51e6e9465e3ed7adaf59ae8f2"
+    },
+    "jobs": {
+      "rows": 1,
+      "sha256": "d65a012126f6ea67b195c84d4f4904d0053d40747185c6a479a8468e8cedba4d"
+    },
+    "api_keys": {
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "namespaces": {
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "webhooks": {
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "rate_limit_counters": {
+      "rows": 0,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "cleanup": "Temporary dump and both generated databases removed on successful return."
+}

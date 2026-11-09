@@ -9,6 +9,7 @@ import httpx
 from examples.assistant import EvidenceAnswerer, MemoryAssistant, run_demo
 from mnemo import MnemoClient
 
+from evaluation.conflicts import run_challenges
 from evaluation.lifecycle import run_suite
 from tests.conftest import requires_db
 
@@ -56,3 +57,18 @@ def test_demo_refuses_an_existing_namespace_without_changing_it(client, namespac
         with raises(ValueError, match="empty namespace"):
             run_demo(MemoryAssistant(api, namespace, EvidenceAnswerer()))
     assert client.get(f"/v1/memories/{uuid.UUID(original['id'])}").json()["content"] == original["content"]
+
+
+@requires_db
+def test_conflict_challenges_measure_real_writes_including_unsupported_changes(client):
+    with MnemoClient(base_url="http://testserver", api_key=client.headers["X-API-Key"], transport=sdk_transport(client)) as api:
+        report = run_challenges(api)
+    assert report["complete"], report["results"]
+    assert report["completed"] == report["cases"] == 24
+    assert report["request_errors"] == report["cleanup_errors"] == 0
+    assert report["true_positive"] + report["false_negative"] == 12
+    assert report["true_negative"] + report["false_positive"] == 12
+    assert report["by_category"]["explicit-change"]["true_positive"] == 5
+    # This set is now development regression data, not an unseen accuracy test.
+    assert report["false_negative"] == report["false_positive"] == 0
+    assert "Rohan lives" not in json.dumps(report)

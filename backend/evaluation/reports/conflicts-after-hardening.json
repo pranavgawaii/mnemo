@@ -1,0 +1,262 @@
+{
+  "format_version": 1,
+  "measured_at": "2026-11-09T18:27:50.894509+00:00",
+  "scope": "Authored synthetic development regressions. These cases informed rule changes; not independently annotated, held-out conflict accuracy or generated-answer quality.",
+  "fixture_role": "development_regression",
+  "cases_sha256": "c9cdf5327d957c25ff8c4d3fc407bbbe6b15c910dff5792ec4798ccd5001f3bf",
+  "cases": 24,
+  "complete": true,
+  "request_errors": 0,
+  "cleanup_errors": 0,
+  "completed": 24,
+  "true_positive": 12,
+  "false_positive": 0,
+  "false_negative": 0,
+  "true_negative": 12,
+  "precision": 1.0,
+  "recall": 1.0,
+  "by_category": {
+    "agreeing-negatives": {
+      "completed": 2,
+      "true_positive": 0,
+      "false_positive": 0,
+      "false_negative": 0,
+      "true_negative": 2,
+      "precision": null,
+      "recall": null
+    },
+    "compatible-detail": {
+      "completed": 4,
+      "true_positive": 0,
+      "false_positive": 0,
+      "false_negative": 0,
+      "true_negative": 4,
+      "precision": null,
+      "recall": null
+    },
+    "different-source": {
+      "completed": 2,
+      "true_positive": 0,
+      "false_positive": 0,
+      "false_negative": 0,
+      "true_negative": 2,
+      "precision": null,
+      "recall": null
+    },
+    "different-subject": {
+      "completed": 2,
+      "true_positive": 0,
+      "false_positive": 0,
+      "false_negative": 0,
+      "true_negative": 2,
+      "precision": null,
+      "recall": null
+    },
+    "explicit-change": {
+      "completed": 5,
+      "true_positive": 5,
+      "false_positive": 0,
+      "false_negative": 0,
+      "true_negative": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "future-or-uncertain": {
+      "completed": 2,
+      "true_positive": 0,
+      "false_positive": 0,
+      "false_negative": 0,
+      "true_negative": 2,
+      "precision": null,
+      "recall": null
+    },
+    "negation": {
+      "completed": 2,
+      "true_positive": 2,
+      "false_positive": 0,
+      "false_negative": 0,
+      "true_negative": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "unsupported-change": {
+      "completed": 5,
+      "true_positive": 5,
+      "false_positive": 0,
+      "false_negative": 0,
+      "true_negative": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    }
+  },
+  "results": [
+    {
+      "case_id": "city-explicit",
+      "category": "explicit-change",
+      "expected": true,
+      "flagged": true,
+      "error": null
+    },
+    {
+      "case_id": "city-second",
+      "category": "explicit-change",
+      "expected": true,
+      "flagged": true,
+      "error": null
+    },
+    {
+      "case_id": "cuisine",
+      "category": "explicit-change",
+      "expected": true,
+      "flagged": true,
+      "error": null
+    },
+    {
+      "case_id": "learning",
+      "category": "explicit-change",
+      "expected": true,
+      "flagged": true,
+      "error": null
+    },
+    {
+      "case_id": "routine",
+      "category": "explicit-change",
+      "expected": true,
+      "flagged": true,
+      "error": null
+    },
+    {
+      "case_id": "negated-job",
+      "category": "negation",
+      "expected": true,
+      "flagged": true,
+      "error": null
+    },
+    {
+      "case_id": "negated-food",
+      "category": "negation",
+      "expected": true,
+      "flagged": true,
+      "error": null
+    },
+    {
+      "case_id": "implicit-city",
+      "category": "unsupported-change",
+      "expected": true,
+      "flagged": true,
+      "error": null
+    },
+    {
+      "case_id": "implicit-city-paraphrase",
+      "category": "unsupported-change",
+      "expected": true,
+      "flagged": true,
+      "error": null
+    },
+    {
+      "case_id": "numeric-budget",
+      "category": "unsupported-change",
+      "expected": true,
+      "flagged": true,
+      "error": null
+    },
+    {
+      "case_id": "numeric-time",
+      "category": "unsupported-change",
+      "expected": true,
+      "flagged": true,
+      "error": null
+    },
+    {
+      "case_id": "implicit-employer",
+      "category": "unsupported-change",
+      "expected": true,
+      "flagged": true,
+      "error": null
+    },
+    {
+      "case_id": "possible-move",
+      "category": "future-or-uncertain",
+      "expected": false,
+      "flagged": false,
+      "error": null
+    },
+    {
+      "case_id": "planned-move",
+      "category": "future-or-uncertain",
+      "expected": false,
+      "flagged": false,
+      "error": null
+    },
+    {
+      "case_id": "different-person",
+      "category": "different-subject",
+      "expected": false,
+      "flagged": false,
+      "error": null
+    },
+    {
+      "case_id": "different-learner",
+      "category": "different-subject",
+      "expected": false,
+      "flagged": false,
+      "error": null
+    },
+    {
+      "case_id": "wrong-source-city",
+      "category": "different-source",
+      "expected": false,
+      "flagged": false,
+      "error": null
+    },
+    {
+      "case_id": "wrong-source-cuisine",
+      "category": "different-source",
+      "expected": false,
+      "flagged": false,
+      "error": null
+    },
+    {
+      "case_id": "compatible-cuisine",
+      "category": "compatible-detail",
+      "expected": false,
+      "flagged": false,
+      "error": null
+    },
+    {
+      "case_id": "compatible-learning",
+      "category": "compatible-detail",
+      "expected": false,
+      "flagged": false,
+      "error": null
+    },
+    {
+      "case_id": "agreeing-negatives",
+      "category": "agreeing-negatives",
+      "expected": false,
+      "flagged": false,
+      "error": null
+    },
+    {
+      "case_id": "agreeing-employment",
+      "category": "agreeing-negatives",
+      "expected": false,
+      "flagged": false,
+      "error": null
+    },
+    {
+      "case_id": "same-fact",
+      "category": "compatible-detail",
+      "expected": false,
+      "flagged": false,
+      "error": null
+    },
+    {
+      "case_id": "visit",
+      "category": "compatible-detail",
+      "expected": false,
+      "flagged": false,
+      "error": null
+    }
+  ]
+}

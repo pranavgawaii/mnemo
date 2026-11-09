@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "measured_at": "2026-11-09T18:27:56.883539+00:00",
+  "scope": "Warm local SDK/HTTP context sample with synthetic data; not production capacity, cold-start latency or broad answer quality.",
+  "python": "3.14.7",
+  "platform": "macOS-27.3-arm64-arm-64bit-Mach-O",
+  "corpus_size": 200,
+  "concurrency": 4,
+  "warmup_requests": 3,
+  "requests": 120,
+  "completed": 120,
+  "successful_context_checks": 120,
+  "errors": {},
+  "setup_error": null,
+  "cleanup_errors": 0,
+  "elapsed_seconds": 1.8537061249953695,
+  "successful_requests_per_second": 64.73518017873505,
+  "latency_including_failures_ms": {
+    "p50": 58.73699999938253,
+    "p95": 80.85124999342952,
+    "max": 102.19725000206381
+  },
+  "passed": true
+}

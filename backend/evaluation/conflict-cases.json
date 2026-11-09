@@ -1,0 +1,30 @@
+{
+  "format_version": 1,
+  "scope": "Authored synthetic conflict challenges through real API writes and candidate selection. Includes supported updates, compatible facts and deliberately unsupported paraphrases. Not independently annotated or held out from development; not generated-answer quality.",
+  "cases": [
+    {"id":"city-explicit","category":"explicit-change","existing":"Rohan lives in Chennai","incoming":"Rohan moved from Chennai to Kochi","conflict":true},
+    {"id":"city-second","category":"explicit-change","existing":"Leena lives in Jaipur","incoming":"Leena moved from Jaipur to Surat","conflict":true},
+    {"id":"cuisine","category":"explicit-change","existing":"Tara's favourite cuisine is Italian","incoming":"Tara's favourite cuisine changed from Italian to Korean","conflict":true},
+    {"id":"learning","category":"explicit-change","existing":"Kabir is learning Java on weekends","incoming":"Kabir switched from learning Java on weekends to learning Python on weekends","conflict":true},
+    {"id":"routine","category":"explicit-change","existing":"Sana runs 4 kilometres twice a week","incoming":"Sana changed running routine from 4 kilometres twice a week to 6 kilometres three times a week","conflict":true},
+    {"id":"negated-job","category":"negation","existing":"Nikhil works at Acme","incoming":"Nikhil no longer works at Acme","conflict":true},
+    {"id":"negated-food","category":"negation","existing":"Aditi eats dairy products","incoming":"Aditi does not eat dairy products","conflict":true},
+    {"id":"implicit-city","category":"unsupported-change","existing":"Rohan lives in Chennai","incoming":"Rohan lives in Kochi now","conflict":true},
+    {"id":"implicit-city-paraphrase","category":"unsupported-change","existing":"Leena lives in Jaipur","incoming":"Leena relocated to Surat","conflict":true},
+    {"id":"numeric-budget","category":"unsupported-change","existing":"Tara's monthly grocery budget is 4000 rupees","incoming":"Tara's monthly grocery budget is now 6000 rupees","conflict":true},
+    {"id":"numeric-time","category":"unsupported-change","existing":"Kabir starts work at 9 AM","incoming":"Kabir now starts work at 10 AM","conflict":true},
+    {"id":"implicit-employer","category":"unsupported-change","existing":"Sana's employer is Acme","incoming":"Sana's employer is now Northwind","conflict":true},
+    {"id":"possible-move","category":"future-or-uncertain","existing":"Rohan lives in Chennai","incoming":"Rohan might move from Chennai to Kochi next year","conflict":false},
+    {"id":"planned-move","category":"future-or-uncertain","existing":"Leena lives in Jaipur","incoming":"Leena plans to move from Jaipur to Surat","conflict":false},
+    {"id":"different-person","category":"different-subject","existing":"Rohan lives in Chennai","incoming":"Arjun moved from Chennai to Kochi","conflict":false},
+    {"id":"different-learner","category":"different-subject","existing":"Kabir is learning Java on weekends","incoming":"Dev switched from learning Java on weekends to learning Python on weekends","conflict":false},
+    {"id":"wrong-source-city","category":"different-source","existing":"Rohan lives in Chennai","incoming":"Rohan moved from Delhi to Kochi","conflict":false},
+    {"id":"wrong-source-cuisine","category":"different-source","existing":"Tara's favourite cuisine is Italian","incoming":"Tara's favourite cuisine changed from Thai to Korean","conflict":false},
+    {"id":"compatible-cuisine","category":"compatible-detail","existing":"Tara's favourite cuisine is Italian","incoming":"Tara also likes Korean food","conflict":false},
+    {"id":"compatible-learning","category":"compatible-detail","existing":"Kabir is learning Java on weekends","incoming":"Kabir also enjoys cycling on weekends","conflict":false},
+    {"id":"agreeing-negatives","category":"agreeing-negatives","existing":"Aditi never eats dairy products","incoming":"Aditi does not eat dairy products","conflict":false},
+    {"id":"agreeing-employment","category":"agreeing-negatives","existing":"Nikhil no longer works at Acme","incoming":"Nikhil does not work at Acme","conflict":false},
+    {"id":"same-fact","category":"compatible-detail","existing":"Leena lives in Jaipur","incoming":"Leena lives in Jaipur","conflict":false},
+    {"id":"visit","category":"compatible-detail","existing":"Rohan lives in Chennai","incoming":"Rohan visited Kochi last weekend","conflict":false}
+  ]
+}

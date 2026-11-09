@@ -68,3 +68,37 @@ fact, a second move, history preservation and TTL exclusion. It creates expiring
 synthetic facts in fresh namespaces and soft-deletes them afterwards. Its context
 threshold is -1 to isolate lifecycle checks from semantic quality. This is a
 workflow regression suite, not a held-out contradiction benchmark or model test.
+
+## Authored conflict challenges
+
+With the SDK installed and a local disposable API running, from `backend/`:
+
+```bash
+python -m evaluation.conflicts --output /tmp/conflicts.json
+```
+
+Set `MNEMO_API_KEY` to a read/write key for that API. Use default
+`DEDUP_MODE=flag`; a reject policy turns duplicate writes into request errors.
+The frozen [24-pair fixture](../evaluation/conflict-cases.json) includes 12
+labelled conflicts and 12 compatible, unrelated or uncertain pairs. It tests
+actual API writes, local embeddings, pgvector candidates and conflict flags.
+Each pair uses an isolated namespace. Facts expire in 30 minutes and are
+soft-deleted after inspection; history, audit events and jobs may remain.
+
+The [saved report](../evaluation/reports/conflicts.json) records 7 true positives,
+0 false positives, 5 false negatives and 12 true negatives: 100% flag precision
+on just 7 flags, but only 58.3% recall over 12 conflicts. The five misses are
+implicit city/employer changes and numeric updates. These are deliberately
+reported limitations; no detector rules were tuned to make this set pass.
+
+API failures are excluded from the confusion matrix and make the run incomplete.
+Cleanup failures also return a nonzero exit code. A completed measurement can
+contain false positives and misses; exit 0 does not mean perfect quality. Tests
+exercise both real writes and failure accounting. These authored, synthetic
+labels are not independent annotation, an unseen-entity holdout or an end-to-end
+answer evaluation. Use independent data before making general accuracy claims.
+
+Saved backend reports are canonical. Run
+`python scripts/export-evaluation-reports.py` from the repository root to publish
+them to the website. CI uses `--check` to reject stale public copies. Publishing
+reports never reruns a measurement or changes the original ranking baselines.
