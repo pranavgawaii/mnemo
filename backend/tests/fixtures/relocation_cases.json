@@ -1,0 +1,92 @@
+[
+  {
+    "name": "explicit city move",
+    "new": "Pranav moved from Bengaluru to Pune",
+    "old": "Pranav lives in Bengaluru",
+    "expected": true
+  },
+  {
+    "name": "reversed write order",
+    "new": "Pranav lives in Bengaluru",
+    "old": "Pranav moved from Bengaluru to Pune",
+    "expected": true
+  },
+  {
+    "name": "case and whitespace",
+    "new": "  PRANAV  has moved from BENGALURU to PUNE. ",
+    "old": "Pranav lives in Bengaluru!",
+    "expected": true
+  },
+  {
+    "name": "multiword cities",
+    "new": "Riya moved from New York to San Francisco",
+    "old": "Riya is based in New York",
+    "expected": true
+  },
+  {
+    "name": "different subject",
+    "new": "Riya moved from Bengaluru to Pune",
+    "old": "Pranav lives in Bengaluru",
+    "expected": false
+  },
+  {
+    "name": "different source city",
+    "new": "Pranav moved from Delhi to Pune",
+    "old": "Pranav lives in Bengaluru",
+    "expected": false
+  },
+  {
+    "name": "same city",
+    "new": "Pranav moved from Bengaluru to Bengaluru",
+    "old": "Pranav lives in Bengaluru",
+    "expected": false
+  },
+  {
+    "name": "destination already recorded",
+    "new": "Pranav moved from Bengaluru to Pune",
+    "old": "Pranav lives in Pune",
+    "expected": false
+  },
+  {
+    "name": "no source specified",
+    "new": "Pranav moved to Pune",
+    "old": "Pranav lives in Bengaluru",
+    "expected": false
+  },
+  {
+    "name": "hypothetical",
+    "new": "If Pranav moved from Bengaluru to Pune",
+    "old": "Pranav lives in Bengaluru",
+    "expected": false
+  },
+  {
+    "name": "historical qualifier",
+    "new": "Pranav moved from Bengaluru to Pune last year",
+    "old": "Pranav lives in Bengaluru",
+    "expected": false
+  },
+  {
+    "name": "agreeing negation",
+    "new": "Pranav has not moved from Bengaluru to Pune",
+    "old": "Pranav lives in Bengaluru",
+    "expected": false
+  },
+  {
+    "name": "second move uses current city",
+    "new": "Pranav moved from Pune to Delhi",
+    "old": "Pranav moved from Bengaluru to Pune",
+    "expected": true
+  },
+  {
+    "name": "stale source in second move",
+    "new": "Pranav moved from Bengaluru to Delhi",
+    "old": "Pranav moved from Bengaluru to Pune",
+    "expected": false
+  },
+  {
+    "name": "matching destination in second move",
+    "new": "Pranav moved from Mumbai to Pune",
+    "old": "Pranav moved from Bengaluru to Pune",
+    "expected": false
+  }
+]

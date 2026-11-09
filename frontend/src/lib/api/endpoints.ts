@@ -56,7 +56,7 @@ export type Endpoint = {
   summary: string;
   description: string;
   resource: Resource;
-  scope: "public" | "read" | "write" | "admin";
+  scope: "public" | "read" | "write" | "admin" | "read + write";
   sends: Field[];
   gets: Field[];
   status: string;
@@ -106,6 +106,7 @@ function fields(schema: Schema, location: string): Field[] {
   }));
 }
 function resource(path: string): Resource {
+  if (path.startsWith("/v1/demo/")) return "operations";
   if (path.startsWith("/v1/memories")) return "memories";
   if (path.startsWith("/v1/contradictions")) return "conflicts";
   if (path.startsWith("/v1/namespaces")) return "namespaces";
@@ -113,6 +114,7 @@ function resource(path: string): Resource {
   return path.startsWith("/v1/") ? "events" : "operations";
 }
 function scope(path: string, method: string): Endpoint["scope"] {
+  if (path === "/v1/demo/availability") return "read + write";
   if (!path.startsWith("/v1/")) return "public";
   if (/^\/v1\/(namespaces|keys|events|webhooks)(\/|$)/.test(path))
     return "admin";
@@ -128,7 +130,7 @@ const NOTES: Record<string, string> = {
   "GET /v1/memories":
     "Returns active, non-expired memories. Pass next_cursor back as cursor for the next keyset page, or use offset pagination. Tags use ANY-match.",
   "GET /v1/memories/{memory_id}":
-    "Returns the memory row directly, including inactive history. An optional namespace mismatch returns 404.",
+    "Returns the memory row directly, including inactive history. current_statement is a read-only display projection for supported changes; content retains the original source. An optional namespace mismatch returns 404.",
   "PATCH /v1/memories/{memory_id}":
     "Supply at least one of content, importance, tags, metadata or expires_at. Explicit expires_at=null clears TTL. Content edits replace text in place; prior text versions are not retained.",
   "DELETE /v1/memories/{memory_id}":
@@ -141,6 +143,8 @@ const NOTES: Record<string, string> = {
     "Signing secrets are returned once. Delivery is at least once, with up to five attempts by default. Verify X-Mnemo-Signature and deduplicate X-Mnemo-Event-ID.",
   "GET /metrics":
     "Prometheus text exposition, not JSON. Public, like the liveness and readiness probes.",
+  "GET /v1/demo/availability":
+    "Checks the memory table and both key scopes without creating facts. A cold encoder loads on first embedding use. This probe does not run inference. Authentication, scope, rate-limit and storage failures return 401, 403, 429 and 503 respectively.",
 };
 
 export const ENDPOINTS: Endpoint[] = Object.entries(document.paths).flatMap(

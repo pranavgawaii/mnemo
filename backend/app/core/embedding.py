@@ -61,3 +61,8 @@ def cosine_similarity(a: list[float], b: list[float]) -> float:
     if denom == 0.0:
         return 0.0
     return float(np.dot(va, vb) / denom)
+
+
+def is_model_loaded() -> bool:
+    """Report cached encoder readiness without triggering a download or load."""
+    return bool(_load_model.cache_info().currsize)

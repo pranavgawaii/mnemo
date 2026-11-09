@@ -1587,6 +1587,56 @@
         }
       }
     },
+    "/v1/demo/availability": {
+      "get": {
+        "tags": [
+          "demo"
+        ],
+        "summary": "Availability",
+        "description": "Check key scopes and the memory table without writing or loading a model.\n\nA cold encoder is reported explicitly; this probe does not promise that an\nembedding operation will succeed or measure its latency.",
+        "operationId": "availability_v1_demo_availability_get",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoAvailability"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/metrics": {
       "get": {
         "tags": [
@@ -2276,6 +2326,30 @@
         "title": "ContradictionOut",
         "description": "A flagged contradiction, with both sides inlined."
       },
+      "DemoAvailability": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "available",
+            "title": "Status"
+          },
+          "embedding": {
+            "type": "string",
+            "enum": [
+              "cold",
+              "warm"
+            ],
+            "title": "Embedding"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "embedding"
+        ],
+        "title": "DemoAvailability",
+        "description": "Storage/key readiness; cold does not trigger an embedding model load."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2604,6 +2678,19 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "current_statement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Statement",
+            "description": "Display projection only; content retains the complete source record.",
+            "readOnly": true
           }
         },
         "type": "object",
@@ -2614,7 +2701,8 @@
           "importance",
           "is_active",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "current_statement"
         ],
         "title": "MemoryOut",
         "description": "A memory as returned by the API."

@@ -20,6 +20,7 @@ from app.models.schemas import (
     BulkMemoryResultItem,
     ContradictionList,
     ContradictionOut,
+    DemoAvailability,
     MemoryCreateResult,
     MemoryList,
     MemoryOut,
@@ -34,6 +35,7 @@ from app.models.schemas import (
 )
 
 CONTRACTS: dict[str, type[BaseModel]] = {
+    "DemoAvailability": DemoAvailability,
     "MemoryOut": MemoryOut,
     "MemoryCreateResult": MemoryCreateResult,
     "MemoryList": MemoryList,
@@ -57,6 +59,7 @@ CONTRACTS: dict[str, type[BaseModel]] = {
 }
 
 EXPECTED_FIELDS: dict[str, set[str]] = {
+    "DemoAvailability": {"status", "embedding"},
     "MemoryOut": {"id", "namespace", "content", "importance", "is_active", "tags", "meta", "expires_at", "created_at", "updated_at"},
     "MemoryCreateResult": {"memory", "contradictions", "deduplicated_of"},
     "MemoryList": {"items", "total", "limit", "offset", "next_cursor"},
@@ -117,6 +120,7 @@ def test_memory_metadata_uses_json_alias():
     # FastAPI serializes with by_alias=True, so clients see "metadata".
     assert MemoryOut.model_fields["meta"].serialization_alias == "metadata"
     assert ApiKeyCreated.model_fields["key"].is_required()
+    assert set(MemoryOut.model_computed_fields) == {"current_statement"}
 
 
 # --------------------------------------------------------------------------- #
@@ -132,6 +136,7 @@ MEMORY_KEYS = sorted(
         "id",
         "namespace",
         "content",
+        "current_statement",
         "importance",
         "is_active",
         "tags",

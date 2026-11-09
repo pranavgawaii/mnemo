@@ -1,0 +1,170 @@
+[
+  {
+    "name": "cuisine forward",
+    "new": "Riya's favourite cuisine changed from Thai to Japanese",
+    "old": "Riya's favourite cuisine is Thai",
+    "expected": true
+  },
+  {
+    "name": "cuisine reverse",
+    "new": "Riya's favourite cuisine is Thai",
+    "old": "Riya's favourite cuisine changed from Thai to Japanese",
+    "expected": true
+  },
+  {
+    "name": "cuisine different person",
+    "new": "Omar's favourite cuisine changed from Thai to Japanese",
+    "old": "Riya's favourite cuisine is Thai",
+    "expected": false
+  },
+  {
+    "name": "cuisine wrong previous value",
+    "new": "Riya's favourite cuisine changed from Thai to Japanese",
+    "old": "Riya's favourite cuisine is Italian",
+    "expected": false
+  },
+  {
+    "name": "cuisine unchanged",
+    "new": "Riya's favourite cuisine changed from Thai to Thai",
+    "old": "Riya's favourite cuisine is Thai",
+    "expected": false
+  },
+  {
+    "name": "cuisine future",
+    "new": "Riya's favourite cuisine changed from Thai to Japanese next year",
+    "old": "Riya's favourite cuisine is Thai",
+    "expected": false
+  },
+  {
+    "name": "cuisine whitespace",
+    "new": "  RIYA'S FAVOURITE CUISINE CHANGED FROM THAI TO JAPANESE! ",
+    "old": "Riya's favourite cuisine is Thai.",
+    "expected": true
+  },
+  {
+    "name": "learning forward",
+    "new": "Riya switched from learning Rust on weekends to learning Go on weekends",
+    "old": "Riya is learning Rust on weekends",
+    "expected": true
+  },
+  {
+    "name": "learning reverse",
+    "new": "Riya is learning Rust on weekends",
+    "old": "Riya switched from learning Rust on weekends to learning Go on weekends",
+    "expected": true
+  },
+  {
+    "name": "learning different person",
+    "new": "Omar switched from learning Rust on weekends to learning Go on weekends",
+    "old": "Riya is learning Rust on weekends",
+    "expected": false
+  },
+  {
+    "name": "learning wrong previous value",
+    "new": "Riya switched from learning Rust on weekends to learning Go on weekends",
+    "old": "Riya is learning Python on weekends",
+    "expected": false
+  },
+  {
+    "name": "learning unchanged",
+    "new": "Riya switched from learning Rust on weekends to learning Rust on weekends",
+    "old": "Riya is learning Rust on weekends",
+    "expected": false
+  },
+  {
+    "name": "learning future",
+    "new": "Riya switched from learning Rust on weekends to learning Go on weekends next year",
+    "old": "Riya is learning Rust on weekends",
+    "expected": false
+  },
+  {
+    "name": "learning whitespace",
+    "new": "  RIYA SWITCHED FROM LEARNING RUST ON WEEKENDS TO LEARNING GO ON WEEKENDS! ",
+    "old": "Riya is learning Rust on weekends.",
+    "expected": true
+  },
+  {
+    "name": "routine forward",
+    "new": "Riya changed running routine from 5 kilometres three mornings a week to 3 kilometres twice a week",
+    "old": "Riya runs 5 kilometres three mornings a week",
+    "expected": true
+  },
+  {
+    "name": "routine reverse",
+    "new": "Riya runs 5 kilometres three mornings a week",
+    "old": "Riya changed running routine from 5 kilometres three mornings a week to 3 kilometres twice a week",
+    "expected": true
+  },
+  {
+    "name": "routine different person",
+    "new": "Omar changed running routine from 5 kilometres three mornings a week to 3 kilometres twice a week",
+    "old": "Riya runs 5 kilometres three mornings a week",
+    "expected": false
+  },
+  {
+    "name": "routine wrong previous value",
+    "new": "Riya changed running routine from 5 kilometres three mornings a week to 3 kilometres twice a week",
+    "old": "Riya runs 10 kilometres three mornings a week",
+    "expected": false
+  },
+  {
+    "name": "routine unchanged",
+    "new": "Riya changed running routine from 5 kilometres three mornings a week to 5 kilometres three mornings a week",
+    "old": "Riya runs 5 kilometres three mornings a week",
+    "expected": false
+  },
+  {
+    "name": "routine future",
+    "new": "Riya changed running routine from 5 kilometres three mornings a week to 3 kilometres twice a week next year",
+    "old": "Riya runs 5 kilometres three mornings a week",
+    "expected": false
+  },
+  {
+    "name": "routine whitespace",
+    "new": "  RIYA CHANGED RUNNING ROUTINE FROM 5 KILOMETRES THREE MORNINGS A WEEK TO 3 KILOMETRES TWICE A WEEK! ",
+    "old": "Riya runs 5 kilometres three mornings a week.",
+    "expected": true
+  },
+  {
+    "name": "compatible preference",
+    "new": "Riya likes Japanese food too",
+    "old": "Riya's favourite cuisine is Thai",
+    "expected": false
+  },
+  {
+    "name": "uncertain learning",
+    "new": "Riya might switch from learning Rust on weekends to learning Go on weekends",
+    "old": "Riya is learning Rust on weekends",
+    "expected": false
+  },
+  {
+    "name": "unsupported date",
+    "new": "Riya changed the meeting from Monday to Tuesday",
+    "old": "Riya has a meeting on Monday",
+    "expected": false
+  },
+  {
+    "name": "second cuisine change",
+    "new": "Riya's favourite cuisine changed from Japanese to Italian",
+    "old": "Riya's favourite cuisine changed from Thai to Japanese",
+    "expected": true
+  },
+  {
+    "name": "stale cuisine source",
+    "new": "Riya's favourite cuisine changed from Thai to Italian",
+    "old": "Riya's favourite cuisine changed from Thai to Japanese",
+    "expected": false
+  },
+  {
+    "name": "second learning change",
+    "new": "Riya switched from learning Go on weekends to learning Python on weekends",
+    "old": "Riya switched from learning Rust on weekends to learning Go on weekends",
+    "expected": true
+  },
+  {
+    "name": "second routine change",
+    "new": "Riya changed running routine from 3 kilometres twice a week to 2 kilometres daily",
+    "old": "Riya changed running routine from 5 kilometres three mornings a week to 3 kilometres twice a week",
+    "expected": true
+  }
+]

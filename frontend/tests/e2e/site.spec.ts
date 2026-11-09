@@ -117,7 +117,8 @@ test("API reference exposes corrected PATCH fields, pagination and public metric
         ).length,
       0,
     ),
-  ).toBe(27);
+  ).toBe(28);
+  expect(schema.paths["/v1/demo/availability"].get).toBeDefined();
 });
 
 test("API tabs support keyboard navigation", async ({ page }) => {

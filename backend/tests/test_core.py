@@ -155,3 +155,48 @@ def test_llm_check_not_called_below_gate():
     v = check_contradiction("a", "b", similarity=0.1, llm_check=counting)
     assert v.is_contradiction is False
     assert calls["n"] == 0
+
+
+def test_explicit_relocations_match_shared_browser_cases():
+    import json
+    from pathlib import Path
+
+    cases = json.loads((Path(__file__).parent / "fixtures/relocation_cases.json").read_text())
+    for case in cases:
+        verdict = check_contradiction(case["new"], case["old"], similarity=0.1)
+        assert verdict.is_contradiction is case["expected"], case["name"]
+        if case["expected"]:
+            assert "Explicit relocation" in verdict.reason
+
+
+def test_low_similarity_relocation_does_not_trigger_a_model_call():
+    def unexpected(*args):
+        raise AssertionError("An explicit source/subject match needs no model call.")
+
+    result = check_contradiction(
+        "Pranav moved from Bengaluru to Pune", "Pranav lives in Bengaluru", 0.1,
+        llm_check=unexpected,
+    )
+    assert result.is_contradiction
+
+
+def test_explicit_revisions_match_shared_browser_cases():
+    import json
+    from pathlib import Path
+
+    cases = json.loads((Path(__file__).parent / "fixtures/revision_cases.json").read_text())
+    for case in cases:
+        verdict = check_contradiction(case["new"], case["old"], similarity=0.1)
+        assert verdict.is_contradiction is case["expected"], case["name"]
+        if case["expected"]:
+            assert "revision" in verdict.reason and "review required" in verdict.reason
+
+
+def test_model_verdict_can_veto_a_supported_revision_above_the_gate():
+    verdict = check_contradiction(
+        "Riya's favourite cuisine changed from Thai to Japanese",
+        "Riya's favourite cuisine is Thai", 0.95,
+        llm_check=lambda *_: (False, "Needs clarification."),
+    )
+    assert not verdict.is_contradiction
+    assert verdict.reason == "Needs clarification."

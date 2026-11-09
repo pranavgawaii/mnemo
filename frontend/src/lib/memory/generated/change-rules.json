@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "qualifiers": "(?:\\b(if|when|might|may|maybe|could|would|plans|planning|considering|last|next|ago|before|after|yesterday|tomorrow|not|never|no|possibly|probably|or)\\b|n't\\b)",
+  "rules": [
+    {
+      "key": "relocation",
+      "change": "^([a-z][a-z' -]{0,59}?) (?:has )?moved from ([a-z][a-z' -]{0,59}?) to ([a-z][a-z' -]{0,59}?)$",
+      "fact": "^([a-z][a-z' -]{0,59}?) (?:lives|resides|is based) in ([a-z][a-z' -]{0,59}?)$",
+      "template": "{subject} lives in {value}",
+      "reason": "Explicit relocation: same subject moved from the recorded city to a different city; review required."
+    },
+    {
+      "key": "cuisine",
+      "change": "^([a-z][a-z' -]{0,59}?)'s favou?rite cuisine changed from ([a-z0-9][a-z0-9' -]{0,99}?) to ([a-z0-9][a-z0-9' -]{0,99}?)$",
+      "fact": "^([a-z][a-z' -]{0,59}?)'s favou?rite cuisine is ([a-z0-9][a-z0-9' -]{0,99}?)$",
+      "template": "{subject}'s favourite cuisine is {value}",
+      "reason": "Explicit favourite cuisine revision: same subject and recorded previous value; review required."
+    },
+    {
+      "key": "learning",
+      "change": "^([a-z][a-z' -]{0,59}?) switched from learning ([a-z0-9][a-z0-9' -]{0,99}?) to learning ([a-z0-9][a-z0-9' -]{0,99}?)$",
+      "fact": "^([a-z][a-z' -]{0,59}?) is learning ([a-z0-9][a-z0-9' -]{0,99}?)$",
+      "template": "{subject} is learning {value}",
+      "reason": "Explicit learning goal revision: same subject and recorded previous value; review required."
+    },
+    {
+      "key": "routine",
+      "change": "^([a-z][a-z' -]{0,59}?) changed running routine from ([a-z0-9][a-z0-9' -]{0,99}?) to ([a-z0-9][a-z0-9' -]{0,99}?)$",
+      "fact": "^([a-z][a-z' -]{0,59}?) runs ([a-z0-9][a-z0-9' -]{0,99}?)$",
+      "template": "{subject} runs {value}",
+      "reason": "Explicit running routine revision: same subject and recorded previous value; review required."
+    }
+  ]
+}

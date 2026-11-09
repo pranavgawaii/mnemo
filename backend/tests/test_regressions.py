@@ -193,3 +193,101 @@ def test_ann_setting_is_applied_without_rolling_back(client):
     with SessionLocal() as db:
         memory_service._tune_ann(db)
         assert int(db.scalar(text("SHOW hnsw.ef_search"))) == settings.ann_ef_search
+
+
+@requires_db
+def test_explicit_city_move_is_reviewed_and_recalled_with_real_embeddings(client, namespace):
+    initial = client.post("/v1/memories", json={
+        "namespace": namespace, "content": "Demo user lives in Bengaluru", "importance": 3,
+    })
+    assert initial.status_code == 201
+    previous = initial.json()["memory"]
+    changed = client.post("/v1/memories", json={
+        "namespace": namespace, "content": "Demo user moved from Bengaluru to Pune", "importance": 3,
+    })
+    assert changed.status_code == 201
+    data = changed.json()
+    conflict = next(c for c in data["contradictions"] if c["existing_memory"]["id"] == previous["id"])
+    assert "Explicit relocation" in conflict["reason"]
+    assert client.get(f"/v1/memories/{previous['id']}").json()["is_active"]
+    resolved = client.post("/v1/contradictions/resolve", json={
+        "contradiction_id": conflict["id"], "winner_memory_id": data["memory"]["id"],
+    })
+    assert resolved.status_code == 200
+    hits = client.post("/v1/memories/search", json={
+        "namespace": namespace, "query": "Where does Demo user live?", "limit": 3,
+    }).json()["hits"]
+    assert [hit["memory"]["content"] for hit in hits] == ["Demo user moved from Bengaluru to Pune"]
+    assert client.get(f"/v1/memories/{previous['id']}").json()["is_active"] is False
+
+
+@pytest.mark.parametrize("old,new,query,followup", [
+    ("Demo user lives in Bengaluru", "Demo user moved from Bengaluru to Pune",
+     "Where does Demo user live?", "Demo user moved from Pune to Delhi"),
+    ("Demo user's favourite cuisine is Thai",
+     "Demo user's favourite cuisine changed from Thai to Japanese",
+     "What is Demo user's favourite cuisine?",
+     "Demo user's favourite cuisine changed from Japanese to Italian"),
+    ("Demo user is learning Rust on weekends",
+     "Demo user switched from learning Rust on weekends to learning Go on weekends",
+     "What is Demo user learning?",
+     "Demo user switched from learning Go on weekends to learning Python on weekends"),
+    ("Demo user runs 5 kilometres three mornings a week",
+     "Demo user changed running routine from 5 kilometres three mornings a week "
+     "to 3 kilometres twice a week", "How often does Demo user run?",
+     "Demo user changed running routine from 3 kilometres twice a week to 2 kilometres daily"),
+])
+@requires_db
+def test_source_matched_revisions_preserve_review_history(client, namespace, old, new, query, followup):
+    previous = client.post("/v1/memories", json={
+        "namespace": namespace, "content": old,
+    }).json()["memory"]
+    changed = client.post("/v1/memories", json={
+        "namespace": namespace, "content": new,
+    })
+    assert changed.status_code == 201
+    data = changed.json()
+    conflict = next(c for c in data["contradictions"] if c["existing_memory"]["id"] == previous["id"])
+    assert "Explicit" in conflict["reason"] and "review required" in conflict["reason"]
+    assert client.get(f"/v1/memories/{previous['id']}").json()["is_active"] is True
+    assert client.post("/v1/contradictions/resolve", json={
+        "contradiction_id": conflict["id"], "winner_memory_id": data["memory"]["id"],
+    }).status_code == 200
+    hits = client.post("/v1/memories/search", json={
+        "namespace": namespace, "query": query,
+    }).json()["hits"]
+    assert [hit["memory"]["content"] for hit in hits] == [new]
+    assert client.get(f"/v1/memories/{previous['id']}").json()["is_active"] is False
+    next_change = client.post("/v1/memories", json={
+        "namespace": namespace, "content": followup,
+    }).json()
+    next_conflict = next(c for c in next_change["contradictions"]
+                         if c["existing_memory"]["id"] == data["memory"]["id"])
+    assert all(c["existing_memory"]["id"] != previous["id"]
+               for c in next_change["contradictions"])
+    assert client.post("/v1/contradictions/resolve", json={
+        "contradiction_id": next_conflict["id"],
+        "winner_memory_id": next_change["memory"]["id"],
+    }).status_code == 200
+    hits = client.post("/v1/memories/search", json={
+        "namespace": namespace, "query": query,
+    }).json()["hits"]
+    assert [hit["memory"]["content"] for hit in hits] == [followup]
+    assert client.get(f"/v1/memories/{data['memory']['id']}").json()["is_active"] is False
+
+
+@pytest.mark.parametrize("old,new", [
+    ("Demo user lives in Bengaluru", "Demo user might move from Bengaluru to Pune next year"),
+    ("Demo user's favourite cuisine is Thai", "Demo user likes Japanese food too"),
+])
+@requires_db
+def test_compatible_details_and_future_plans_do_not_replace_current_facts(client, namespace, old, new):
+    previous = client.post("/v1/memories", json={
+        "namespace": namespace, "content": old,
+    }).json()["memory"]
+    result = client.post("/v1/memories", json={
+        "namespace": namespace, "content": new,
+    })
+    assert result.status_code == 201
+    assert result.json()["contradictions"] == []
+    assert client.get(f"/v1/memories/{previous['id']}").json()["is_active"] is True

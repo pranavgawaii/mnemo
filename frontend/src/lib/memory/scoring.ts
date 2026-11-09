@@ -8,10 +8,13 @@
  *
  *   - `backend/app/core/config.py`        (defaults / thresholds)
  *   - `backend/app/core/decay.py`         (decay + importance + relevance)
- *   - `backend/app/core/contradiction.py` (similarity gate + negation heuristic)
+ *   - `backend/app/core/contradiction.py` (explicit relocation + gated negation)
  *
  * Anything that cannot be derived from the repository is not here.
  */
+
+import { explicitRelocation, RELOCATION_REASON } from "./relocation";
+import { explicitRevision } from "./revisions";
 
 // --------------------------------------------------------------------------- //
 // Configuration (backend/app/core/config.py)
@@ -41,7 +44,7 @@ export const LIST_LIMIT_MAX = 100;
 export function decayFactor(
   ageDays: number,
   halfLifeDays: number = DECAY_HALF_LIFE_DAYS,
-  floor: number = DECAY_FLOOR
+  floor: number = DECAY_FLOOR,
 ): number {
   if (halfLifeDays <= 0) throw new Error("half_life_days must be positive");
   const age = Math.max(0, ageDays);
@@ -62,10 +65,12 @@ export function relevanceScore(
   similarity: number,
   ageDays: number,
   importance: number,
-  halfLifeDays: number = DECAY_HALF_LIFE_DAYS
+  halfLifeDays: number = DECAY_HALF_LIFE_DAYS,
 ): number {
   return (
-    similarity * decayFactor(ageDays, halfLifeDays) * importanceWeight(importance)
+    similarity *
+    decayFactor(ageDays, halfLifeDays) *
+    importanceWeight(importance)
   );
 }
 
@@ -105,19 +110,27 @@ export function negationMarkers(text: string): Set<string> {
   const lowered = text.toLowerCase();
   const found = new Set<string>();
   for (const marker of NEGATION_MARKERS) {
-    const pattern = new RegExp(`(?<![a-z])${marker}${marker === "ex-" ? "" : "(?![a-z])"}`);
-    if (pattern.test(lowered) || (marker === "n't" && /[a-z]+n't\b/.test(lowered))) found.add(marker);
+    const pattern = new RegExp(
+      `(?<![a-z])${marker}${marker === "ex-" ? "" : "(?![a-z])"}`,
+    );
+    if (
+      pattern.test(lowered) ||
+      (marker === "n't" && /[a-z]+n't\b/.test(lowered))
+    )
+      found.add(marker);
   }
   return found;
 }
 
 /** Meaningful lowercased tokens, dropping negation markers and short words. */
 export function contentWords(text: string): Set<string> {
-  const tokens = text.toLowerCase().match(/[a-z0-9']+|no longer|used to|no more/g) ?? [];
+  const tokens =
+    text.toLowerCase().match(/[a-z0-9']+|no longer|used to|no more/g) ?? [];
   return new Set(
     tokens.filter(
-      (t) => !(NEGATION_MARKERS as readonly string[]).includes(t) && t.length > 2
-    )
+      (t) =>
+        !(NEGATION_MARKERS as readonly string[]).includes(t) && t.length > 2,
+    ),
   );
 }
 
@@ -130,7 +143,8 @@ export interface ContradictionVerdict {
 /**
  * Decide whether `newContent` contradicts `existingContent`.
  *
- * Stage 1 is a similarity gate; stage 2 is the negation-marker heuristic. The
+ * An exact from/to relocation can qualify directly. Other pairs use the
+ * similarity gate and negation-marker heuristic. The
  * backend also has an optional `llm_check` slot that runs between the two, but
  * it is unused by default and therefore not simulated here.
  */
@@ -138,8 +152,13 @@ export function checkContradiction(
   newContent: string,
   existingContent: string,
   similarity: number,
-  simThreshold: number = CONTRADICTION_SIM_THRESHOLD
+  simThreshold: number = CONTRADICTION_SIM_THRESHOLD,
 ): ContradictionVerdict {
+  if (explicitRelocation(newContent, existingContent)) {
+    return { isContradiction: true, similarity, reason: RELOCATION_REASON };
+  }
+  const revision = explicitRevision(newContent, existingContent);
+  if (revision) return { isContradiction: true, similarity, reason: revision };
   if (similarity < simThreshold) {
     return {
       isContradiction: false,
@@ -151,10 +170,12 @@ export function checkContradiction(
   const newNeg = negationMarkers(newContent);
   const oldNeg = negationMarkers(existingContent);
   const onlyOneSide = new Set(
-    [...newNeg].filter((m) => !oldNeg.has(m)).concat([...oldNeg].filter((m) => !newNeg.has(m)))
+    [...newNeg]
+      .filter((m) => !oldNeg.has(m))
+      .concat([...oldNeg].filter((m) => !newNeg.has(m))),
   );
 
-  if ((newNeg.size > 0) === (oldNeg.size > 0)) {
+  if (newNeg.size > 0 === oldNeg.size > 0) {
     return {
       isContradiction: false,
       similarity,
@@ -163,7 +184,7 @@ export function checkContradiction(
   }
 
   const shared = [...contentWords(newContent)].filter((t) =>
-    contentWords(existingContent).has(t)
+    contentWords(existingContent).has(t),
   );
   if (shared.length === 0) {
     return {

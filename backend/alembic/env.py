@@ -15,7 +15,9 @@ from app.models import models  # noqa: F401
 
 config = context.config
 # Inject the real DB URL from settings (overrides the placeholder in alembic.ini).
-config.set_main_option("sqlalchemy.url", settings.database_url)
+# ConfigParser interpolates percent signs; URL-encoded credentials and Unix
+# socket paths must survive that layer unchanged when read back by Alembic.
+config.set_main_option("sqlalchemy.url", settings.database_url.replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

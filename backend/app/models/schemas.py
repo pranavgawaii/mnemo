@@ -17,11 +17,21 @@ from pydantic import (
     ConfigDict,
     Field,
     StringConstraints,
+    computed_field,
     model_validator,
 )
 
+from app.core.changes import current_statement
+
 # A tag is a short identifier; strip whitespace so "work " == "work".
 Tag = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=64)]
+
+
+class DemoAvailability(BaseModel):
+    """Storage/key readiness; cold does not trigger an embedding model load."""
+
+    status: Literal["available"]
+    embedding: Literal["cold", "warm"]
 
 
 # --------------------------------------------------------------------------- #
@@ -66,6 +76,12 @@ class MemoryOut(BaseModel):
     expires_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def current_statement(self) -> str | None:
+        """Display projection only; content retains the complete source record."""
+        return current_statement(self.content)
 
 
 class MemoryUpdate(BaseModel):

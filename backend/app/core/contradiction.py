@@ -1,6 +1,12 @@
 """Contradiction detection between memories.
 
-Two-stage design:
+The default checks use two forms of evidence:
+
+An explicit "X moved from A to B" can flag a recorded "X lives in A"
+independently of vector similarity. The subject and source city must match.
+The narrow rules in ``relocation.py`` and ``revisions.py`` also cover explicit
+from/to changes to favourite cuisine, learning goals and running routines when
+the subject and full previous value match. All flags still need review.
 
 1. **Vector similarity gate.** Two memories only *can* contradict if they talk
    about the same thing. We require cosine similarity above
@@ -13,9 +19,8 @@ Two-stage design:
 
 A pluggable ``llm_check`` callable slot lets a real LLM verdict (e.g. a hosted
 classification model) be swapped in later without touching call sites. When
-provided, it takes precedence over the heuristic for the final verdict, but the
-similarity gate still runs first so we never spend an LLM call on unrelated
-memories.
+provided, it takes precedence for pairs above the similarity gate. A lower-score
+explicit source-matched change uses the deterministic rule without making an LLM call.
 
 Contradictions are *flagged*, never auto-resolved. Resolution is an explicit,
 human-driven action.
@@ -28,6 +33,8 @@ from dataclasses import dataclass
 from typing import Callable, Optional
 
 from app.core.config import settings
+from app.core.relocation import RELOCATION_REASON, explicit_relocation
+from app.core.revisions import explicit_revision
 
 # Words/phrases that flip or negate a statement's polarity. Kept deliberately
 # small and high-precision; the LLM slot is the path to real nuance.
@@ -144,8 +151,10 @@ def check_contradiction(
     """
     threshold = settings.contradiction_sim_threshold if sim_threshold is None else sim_threshold
 
-    # Stage 1: similarity gate.
-    if similarity < threshold:
+    relocation = explicit_relocation(new_content, existing_content)
+    revision = explicit_revision(new_content, existing_content)
+    # Exact subject/source evidence can qualify a relocation below this gate.
+    if similarity < threshold and not relocation and not revision:
         return ContradictionVerdict(
             is_contradiction=False,
             similarity=similarity,
@@ -153,7 +162,7 @@ def check_contradiction(
         )
 
     # Stage 2a: optional LLM verdict takes precedence when it has an opinion.
-    if llm_check is not None:
+    if llm_check is not None and similarity >= threshold:
         verdict = llm_check(new_content, existing_content, similarity)
         if verdict is not None:
             is_contra, reason = verdict
@@ -162,6 +171,11 @@ def check_contradiction(
                 similarity=similarity,
                 reason=reason,
             )
+
+    if relocation:
+        return ContradictionVerdict(True, similarity, RELOCATION_REASON)
+    if revision:
+        return ContradictionVerdict(True, similarity, revision)
 
     # Stage 2b: negation-marker heuristic.
     is_contra, reason = _heuristic_verdict(new_content, existing_content, similarity)

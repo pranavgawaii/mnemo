@@ -1,0 +1,82 @@
+[
+  {
+    "name": "city",
+    "content": "Pranav moved from Bengaluru to Pune",
+    "expected": "Pranav lives in Pune"
+  },
+  {
+    "name": "second city",
+    "content": "Pranav moved from Pune to Delhi",
+    "expected": "Pranav lives in Delhi"
+  },
+  {
+    "name": "cuisine",
+    "content": "Pranav's favourite cuisine changed from Thai to Japanese",
+    "expected": "Pranav's favourite cuisine is Japanese"
+  },
+  {
+    "name": "learning",
+    "content": "Pranav switched from learning Rust on weekends to learning Go on weekends",
+    "expected": "Pranav is learning Go on weekends"
+  },
+  {
+    "name": "routine",
+    "content": "Pranav changed running routine from 5 kilometres three mornings a week to 3 kilometres twice a week",
+    "expected": "Pranav runs 3 kilometres twice a week"
+  },
+  {
+    "name": "whitespace",
+    "content": "  Riya  has moved from New York to San Francisco!  ",
+    "expected": "Riya lives in San Francisco"
+  },
+  {
+    "name": "plain fact",
+    "content": "Pranav lives in Bengaluru",
+    "expected": null
+  },
+  {
+    "name": "future",
+    "content": "Pranav might move from Bengaluru to Pune next year",
+    "expected": null
+  },
+  {
+    "name": "qualified move",
+    "content": "Pranav moved from Bengaluru to Pune last year",
+    "expected": null
+  },
+  {
+    "name": "negated move",
+    "content": "Pranav has not moved from Bengaluru to Pune",
+    "expected": null
+  },
+  {
+    "name": "negative subject",
+    "content": "Pranav hasn't moved from Bengaluru to Pune",
+    "expected": null
+  },
+  {
+    "name": "uncertain cuisine",
+    "content": "Pranav's favourite cuisine changed from Thai to Japanese or Italian",
+    "expected": null
+  },
+  {
+    "name": "compatible detail",
+    "content": "Pranav likes Japanese food too",
+    "expected": null
+  },
+  {
+    "name": "no-op",
+    "content": "Pranav moved from Pune to Pune",
+    "expected": null
+  },
+  {
+    "name": "unknown text",
+    "content": "A meeting date changed from Monday to Tuesday",
+    "expected": null
+  },
+  {
+    "name": "unsupported script",
+    "content": "Pranav moved from Pune to \u6771\u4eac",
+    "expected": null
+  }
+]
