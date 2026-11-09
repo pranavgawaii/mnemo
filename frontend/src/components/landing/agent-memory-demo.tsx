@@ -5,6 +5,7 @@ import { ArrowRight, Bot, Check, RotateCcw } from "lucide-react";
 import { LogoMark } from "@/components/layout/logo";
 import { useMemoryStore } from "@/hooks/use-memory-store";
 import { initialPlaygroundState } from "@/lib/memory/simulation";
+import { AgentUseCases } from "./agent-use-cases";
 
 function exampleStore() {
   const seed = initialPlaygroundState();
@@ -76,6 +77,7 @@ export function AgentMemoryDemo() {
             Your app supplies confirmed facts. Follow one across sessions,
             introduce a change and choose which fact stays active.
           </p>
+          <AgentUseCases />
           <ol className="mt-7 space-y-3">
             {STAGES.map((label, index) => (
               <li

@@ -71,7 +71,7 @@ export function JourneyGuide({ model }: { model: WorkbenchModel }) {
               Use suggested change
             </button>
           ) : model.journeyStage === "review" ? (
-            <a href="#review" className={actionClass}>
+            <a href="#review" onClick={() => model.setMobilePanel("review")} className={actionClass}>
               Review below
             </a>
           ) : model.journeyStage === "verify" ? (
@@ -89,6 +89,7 @@ export function JourneyGuide({ model }: { model: WorkbenchModel }) {
           )}
           <a
             href="#review"
+            onClick={() => model.setMobilePanel("review")}
             className="shrink-0 text-[12px] text-muted underline decoration-line underline-offset-4 hover:text-accent-ink"
           >
             Review changes ({model.openConflicts.length})

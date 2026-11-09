@@ -1,3 +1,4 @@
+import { chooseScenario, showResults } from "./helpers";
 import { expect, test } from "@playwright/test";
 
 const docs = [
@@ -536,21 +537,24 @@ test("GitHub icon has a name on hover and keyboard focus without a duplicate Doc
   await expect(github).toBeFocused();
 });
 
-for (const [scenario, existing, incoming] of [
+for (const [scenario, existing, incoming, current] of [
   [
     "Location",
     "Pranav lives in Bengaluru",
+    "Pranav no longer lives in Bengaluru",
     "Pranav no longer lives in Bengaluru",
   ],
   [
     "Learning",
     "Pranav is learning Rust on weekends",
-    "Pranav is no longer learning Rust on weekends",
+    "Pranav switched from learning Rust on weekends to learning Go on weekends",
+    "Pranav is learning Go on weekends",
   ],
   [
     "Routine",
     "Pranav runs 5 kilometres three mornings a week",
-    "Pranav no longer runs 5 kilometres three mornings a week",
+    "Pranav changed running routine from 5 kilometres three mornings a week to 3 kilometres twice a week",
+    "Pranav runs 3 kilometres twice a week",
   ],
 ] as const) {
   for (const keepNew of [true, false]) {
@@ -594,7 +598,7 @@ for (const [scenario, existing, incoming] of [
       const context = page.locator(
         '#workbench [aria-label="Context matches"] ol',
       );
-      await expect(context).toContainText(keepNew ? incoming : existing);
+      await expect(context).toContainText(keepNew ? current : existing);
       await expect(
         context.getByText(keepNew ? existing : incoming, { exact: true }),
       ).toHaveCount(0);
@@ -693,10 +697,7 @@ test("retrieval summary follows empty results, review and reset without duplicat
     .fill("How does quantum entanglement work?");
   await page.getByLabel("Recall query").press("Enter");
   await expect(visual.getByText("0 returned", { exact: true })).toBeVisible();
-  await page
-    .getByRole("group", { name: "Sample scenarios" })
-    .getByRole("button", { name: "Location", exact: true })
-    .click();
+  await chooseScenario(page, "Location");
   await page.getByRole("button", { name: "Store memory", exact: true }).click();
   await expect(
     visual.getByText("7 active facts", { exact: true }),
@@ -932,10 +933,7 @@ for (const width of [320, 390, 1280]) {
         .locator("#workbench")
         .evaluate((element) => element.getBoundingClientRect().height);
     const initial = await height();
-    await page
-      .getByRole("group", { name: "Sample scenarios" })
-      .getByRole("button", { name: "Preferences", exact: true })
-      .click();
+    await chooseScenario(page, "Preferences");
     expect(await height()).toBeCloseTo(initial, 0);
     await page
       .getByRole("button", { name: "Store memory", exact: true })
@@ -999,10 +997,7 @@ test("retrieval trace supports keyboard stages, inspection and reduced-motion re
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/playground");
-  await page
-    .getByRole("group", { name: "Sample scenarios" })
-    .getByRole("button", { name: "Preferences", exact: true })
-    .click();
+  await chooseScenario(page, "Preferences");
   await page
     .getByRole("button", { name: "Inspect Query stage", exact: true })
     .click();
@@ -1225,7 +1220,7 @@ test("ranking feedback explains a real promotion and compares unchanged orders h
   page,
 }) => {
   await page.goto("/playground");
-  await page.getByRole("button", { name: "Preferences", exact: true }).click();
+  await chooseScenario(page, "Preferences");
   const context = page.getByRole("region", {
     name: "Context matches",
     exact: true,
@@ -1262,7 +1257,7 @@ test("handoff copies exactly the visible context without repeating the facts", a
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/playground");
-  await page.getByRole("button", { name: "Preferences", exact: true }).click();
+  await chooseScenario(page, "Preferences");
   const facts = await page
     .getByRole("region", { name: "Context matches", exact: true })
     .locator("ol li button > span:nth-child(2) > span:first-child")
@@ -1448,6 +1443,7 @@ for (const width of [320, 390, 1280]) {
         name: "Context matches",
         exact: true,
       });
+      await showResults(page, "Context");
       const before = await matches
         .getByRole("button")
         .evaluateAll((elements) =>
@@ -1462,6 +1458,7 @@ for (const width of [320, 390, 1280]) {
         .getByRole("region", { name: "Retrieval controls", exact: true })
         .boundingBox();
       expect(bounds!.y).toBeLessThan(controls!.y);
+      await showResults(page, "Review");
       await page
         .getByRole("button", {
           name: keepNew ? "Keep new" : "Keep existing",
@@ -1581,7 +1578,7 @@ test("a full context snapshot fits mobile and stays tied to its captured query a
 }) => {
   await page.setViewportSize({ width: 320, height: 900 });
   await page.goto("/playground");
-  await page.getByRole("button", { name: "Preferences", exact: true }).click();
+  await chooseScenario(page, "Preferences");
   await page.getByRole("button", { name: "Store memory", exact: true }).click();
   await page.getByRole("button", { name: "Keep new", exact: true }).click();
   await page

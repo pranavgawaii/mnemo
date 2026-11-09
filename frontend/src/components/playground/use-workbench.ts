@@ -49,6 +49,7 @@ export function useWorkbench() {
   const [mode, setRankingMode] = useState<Mode>("relevance");
   const [timeOffset, setAgeOffset] = useState(0);
   const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [mobilePanel, setMobilePanel] = useState<"context" | "review">("context");
   type Snapshot = { id: string; rank: number; score: number }[];
   const [rankingUpdate, setRankingUpdate] = useState<{
     before: Snapshot;
@@ -220,6 +221,7 @@ export function useWorkbench() {
       setNotice("Enter a question to recall a memory.");
       return;
     }
+    setMobilePanel("context");
     if (example !== undefined) setQuery(nextQuery);
     setActiveQuery(nextQuery);
     if (reviewOutcome && nextQuery !== reviewOutcome.recall.query) {
@@ -278,6 +280,7 @@ export function useWorkbench() {
       return;
     }
     const result = add(draft.trim(), 3);
+    setMobilePanel(result.contradictions.length || openConflicts.length ? "review" : "context");
     setRankingUpdate(null);
     setReviewOutcome(null);
     setReviewVerified(false);
@@ -287,7 +290,11 @@ export function useWorkbench() {
         : "verify",
     );
     setNotice(
-      `Stored a memory. ${result.contradictions.length} possible ${result.contradictions.length === 1 ? "conflict" : "conflicts"} flagged.`,
+      !result.contradictions.length && draft.trim() === scenario.change && scenario.kind !== "review"
+        ? scenario.kind === "uncertain"
+          ? "Saved as an unconfirmed note. The Bengaluru residence stays active; ask for confirmation before treating the plan as a move."
+          : "Saved alongside existing facts. Liking another cuisine does not replace a favourite or dietary restrictions."
+        : `Stored a memory. ${result.contradictions.length} possible ${result.contradictions.length === 1 ? "conflict" : "conflicts"} flagged.`,
     );
     setDraft("");
     setSelectedId(result.memory.id);
@@ -300,11 +307,13 @@ export function useWorkbench() {
   }
   function verifyRecall() {
     runRecall(activeQuery);
-    const target = document.getElementById("context-title");
-    if (target) {
-      target.focus({ preventScroll: true });
-      scrollToElement(target);
-    }
+    window.requestAnimationFrame(() => {
+      const target = document.getElementById("context-title");
+      if (target) {
+        target.focus({ preventScroll: true });
+        scrollToElement(target);
+      }
+    });
   }
   function tryConflict() {
     setDraft(scenario.change);
@@ -321,7 +330,9 @@ export function useWorkbench() {
     setReviewVerified(false);
     setJourneyStage("store");
     setNotice(
-      `${next.label} scenario ready. Store the suggested change, then review both facts.`,
+      next.kind === "review"
+        ? `${next.label} scenario ready. Store the suggested change, then review both facts.`
+        : `${next.label} scenario ready. Store the note, then recall. No replacement is expected.`,
     );
   }
   function keep(contradictionId: string, winnerId: string) {
@@ -332,6 +343,7 @@ export function useWorkbench() {
     const loser = candidates.find((memory) => memory.id !== winnerId);
     if (!winner || !loser) return;
     const resolved = resolve(contradictionId, winnerId);
+    setMobilePanel("review");
     const activeIds = new Set(
       resolved.memories
         .filter((memory) => memory.is_active)
@@ -386,6 +398,7 @@ export function useWorkbench() {
     setRankingUpdate(null);
     timeBaseline.current = null;
     setInspectorOpen(false);
+    setMobilePanel("context");
     setSelectedId(null);
     setHoverId(null);
     setDraft("");
@@ -415,6 +428,8 @@ export function useWorkbench() {
     rankingUpdate,
     rankChanges,
     inspectorOpen,
+    mobilePanel,
+    setMobilePanel,
     setInspectorOpen,
     inspectMemory,
     selectedId,

@@ -10,12 +10,14 @@ export function ConflictCard({
   compact?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-[#FDE68A] bg-[#FFFCF4] p-4">
+    <div
+      className={`rounded-xl border border-[#FDE68A] bg-[#FFFCF4] ${compact ? "p-3 sm:p-4" : "p-4"}`}
+    >
       <p className="mb-3 text-[12px] font-medium text-[#92400E]">
         Both facts are active until you choose.
       </p>
       <p
-        className={`break-words text-[14px] leading-relaxed text-ink ${compact ? "line-clamp-3" : ""}`}
+        className={`break-words ${compact ? "text-[13px] leading-[18px] line-clamp-2 sm:text-[14px] sm:leading-relaxed sm:line-clamp-3" : "text-[14px] leading-relaxed"} text-ink`}
       >
         <span className="mr-2 font-mono text-[10px] uppercase tracking-wider text-[#92400E]">
           New
@@ -23,7 +25,7 @@ export function ConflictCard({
         {conflict.new_memory.content}
       </p>
       <p
-        className={`mt-3 break-words text-[14px] leading-relaxed text-muted ${compact ? "line-clamp-3" : ""}`}
+        className={`mt-3 break-words ${compact ? "text-[13px] leading-[18px] line-clamp-2 sm:text-[14px] sm:leading-relaxed sm:line-clamp-3" : "text-[14px] leading-relaxed"} text-muted`}
       >
         <span className="mr-2 font-mono text-[10px] uppercase tracking-wider">
           Existing

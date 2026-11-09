@@ -8,6 +8,8 @@ import {
   NEGATION_MARKERS,
   checkContradiction,
 } from "@/lib/memory/scoring";
+import { explicitRelocation } from "@/lib/memory/relocation";
+import { explicitRevision } from "@/lib/memory/revisions";
 
 export function ContradictionExplainer({
   index,
@@ -22,6 +24,9 @@ export function ContradictionExplainer({
 
   const verdict = checkContradiction(incoming, existing, similarity);
   const gatePassed = similarity >= CONTRADICTION_SIM_THRESHOLD;
+  const relocation = explicitRelocation(incoming, existing);
+  const revision = explicitRevision(incoming, existing);
+  const explicit = relocation || Boolean(revision);
 
   return (
     <DocsSection
@@ -135,23 +140,34 @@ export function ContradictionExplainer({
               {verdict.isContradiction ? "flagged" : "not flagged"}
             </span>
             <span className="font-mono text-[10.5px] text-faint">
-              gate {gatePassed ? "passed" : "failed"}
+              {relocation
+                ? "explicit move"
+                : revision ? "explicit revision"
+                : `gate ${gatePassed ? "passed" : "failed"}`}
             </span>
           </div>
 
           <div className="mt-5 flex flex-col gap-2.5">
-            <StageRow index="1" label="Similarity gate" ok={gatePassed}>
-              {gatePassed
-                ? `similarity ${similarity.toFixed(2)} ≥ ${CONTRADICTION_SIM_THRESHOLD}`
-                : `similarity ${similarity.toFixed(2)} < ${CONTRADICTION_SIM_THRESHOLD}, stops here`}
+            <StageRow
+              index="1"
+              label={relocation ? "Explicit relocation" : revision ? "Explicit revision" : "Similarity gate"}
+              ok={explicit || gatePassed}
+            >
+              {relocation
+                ? "Same subject and old city; a different destination qualifies for review independently of similarity."
+                : revision
+                  ? "Same subject, attribute and previous value; a different value qualifies for review."
+                : gatePassed
+                  ? `similarity ${similarity.toFixed(2)} ≥ ${CONTRADICTION_SIM_THRESHOLD}`
+                  : `similarity ${similarity.toFixed(2)} < ${CONTRADICTION_SIM_THRESHOLD}, stops here`}
             </StageRow>
             <StageRow
               index="2"
-              label="Negation check"
+              label={explicit ? "Review evidence" : "Negation check"}
               ok={verdict.isContradiction}
-              muted={!gatePassed}
+              muted={!gatePassed && !explicit}
             >
-              {gatePassed
+              {gatePassed || explicit
                 ? verdict.reason
                 : "not reached: the gate already rejected this pair"}
             </StageRow>

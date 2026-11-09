@@ -1,4 +1,5 @@
 import type { ReviewOutcome } from "@/lib/memory/scenarios";
+import { currentStatement } from "@/lib/memory/changes";
 
 export function RecallComparison({
   outcome,
@@ -19,9 +20,9 @@ export function RecallComparison({
               onClick={() => onInspect(fact.id)}
               aria-haspopup="dialog"
               aria-label={`Inspect ${before ? "before" : "after"} review fact: ${fact.content}`}
-              className={`h-14 w-full rounded-lg border px-2.5 py-2 text-left text-[12px] leading-[18px] transition-colors hover:border-accent/30 ${before ? "border-line bg-background/40 text-muted" : "border-accent/20 bg-accent-soft/20 text-ink"}`}
+              className={`h-12 w-full lg:h-14 rounded-lg border px-2.5 py-1 lg:py-2 text-left text-[12px] leading-[18px] transition-colors hover:border-accent/30 ${before ? "border-line bg-background/40 text-muted" : "border-accent/20 bg-accent-soft/20 text-ink"}`}
             >
-              <span className="break-words line-clamp-2">{fact.content}</span>
+              <span className="break-words line-clamp-2">{before ? fact.content : currentStatement(fact.content) ?? fact.content}</span>
             </button>
           </li>
         ))}
@@ -34,7 +35,7 @@ export function RecallComparison({
   return (
     <div role="region" aria-label="Context before and after review">
       <p className="mb-2 text-[11px] leading-4 text-muted">
-        Captured at review ·{" "}
+        Captured at review · current values shown after review ·{" "}
         {recall.mode === "relevance" ? "base relevance" : "similarity only"} · +
         {recall.timeOffset} days
       </p>

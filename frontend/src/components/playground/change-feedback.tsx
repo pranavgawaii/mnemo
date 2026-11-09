@@ -1,5 +1,6 @@
 import { Check } from "lucide-react";
 import type { ReviewOutcome } from "@/lib/memory/scenarios";
+import { currentStatement } from "@/lib/memory/changes";
 
 export function ChangeFeedback({
   outcome,
@@ -30,7 +31,10 @@ export function ChangeFeedback({
       </h3>
       {summaryOnly ? (
         <div className="mt-4 space-y-4 text-[13px] leading-relaxed">
-          <p className="text-ink">Your choice is applied.</p>
+          <div>
+            <p className="text-[12px] text-muted">Selected current value</p>
+            <p className="mt-1 break-words text-ink line-clamp-2" title={outcome.kept}>{currentStatement(outcome.kept) ?? outcome.kept}</p>
+          </div>
           <dl className="grid grid-cols-2 gap-4 border-y border-accent/10 py-4">
             <div>
               <dt className="text-[12px] text-muted">Kept active</dt>
@@ -53,7 +57,7 @@ export function ChangeFeedback({
       ) : (
         <>
           <div
-            className={`mt-3 grid gap-4 ${compact ? "grid-cols-2" : "sm:grid-cols-2"}`}
+            className={`grid gap-4 ${compact ? "mt-2 grid-cols-2 sm:mt-3" : "mt-3 sm:grid-cols-2"}`}
           >
             <div>
               <h4 className="text-[12px] font-medium text-muted">
@@ -81,9 +85,9 @@ export function ChangeFeedback({
               <p
                 className={`mt-2 break-words text-[13px] leading-relaxed text-ink ${compact ? "line-clamp-2" : ""}`}
               >
-                {outcome.kept}
+                {currentStatement(outcome.kept) ?? outcome.kept}
               </p>
-              <p className="mt-3 text-[11px] text-muted">
+              <p className={`${compact ? "mt-2 sm:mt-3" : "mt-3"} text-[11px] text-muted`}>
                 Moved to inactive history
               </p>
               <p
@@ -97,7 +101,7 @@ export function ChangeFeedback({
             <button
               type="button"
               onClick={onRecall}
-              className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-accent/20 bg-white px-3 text-[12px] font-medium text-accent-ink transition-colors hover:bg-accent-soft/40"
+              className="mt-2 inline-flex min-h-10 w-full items-center justify-center rounded-lg border border-accent/20 bg-white px-3 text-[12px] font-medium text-accent-ink transition-colors hover:bg-accent-soft/40 sm:mt-3"
             >
               Recall and compare
             </button>

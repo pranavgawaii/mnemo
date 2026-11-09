@@ -12,14 +12,14 @@ export function ReviewPanel({ model }: { model: WorkbenchModel }) {
     <section
       id="review"
       aria-labelledby="review-title"
-      className="flex h-[500px] min-w-0 scroll-mt-24 flex-col border-t border-line p-5 sm:p-6 lg:border-l"
+      className="flex h-[420px] min-w-0 scroll-mt-24 flex-col border-t border-line p-4 sm:h-[460px] sm:p-6 lg:h-[500px] lg:border-l"
     >
       <div className="shrink-0">
         <h2 id="review-title" className="text-[17px] font-medium text-ink">
           <span className="mr-2 text-[13px] text-accent-ink">3</span> Review a
           change
         </h2>
-        <p className="mt-1 h-10 text-[13px] leading-5 text-muted">
+        <p className="mt-1 h-5 text-[12px] sm:h-10 sm:text-[13px] leading-5 text-muted">
           You choose which fact stays active.
         </p>
       </div>
@@ -56,11 +56,11 @@ export function ReviewPanel({ model }: { model: WorkbenchModel }) {
             <p className="text-[15px] font-medium text-ink">
               No change waiting for review
             </p>
-            <p className="mt-3 max-w-sm text-[14px] leading-relaxed text-muted">
+            <p className="mt-2 max-w-sm text-[13px] sm:mt-3 sm:text-[14px] leading-relaxed text-muted">
               Choose a scenario and store its suggested change. Both facts stay
               active until you decide.
             </p>
-            <p className="mt-4 text-[12px] leading-relaxed text-muted">
+            <p className="mt-3 text-[11px] sm:mt-4 sm:text-[12px] leading-relaxed text-muted">
               Keeping one fact moves the other to inactive history. It remains
               inspectable here.
             </p>

@@ -3,6 +3,7 @@ import { ArrowRight, ArrowUpRight, Check, Copy, SearchX } from "lucide-react";
 import type { WorkbenchModel } from "./use-workbench";
 import { DEMO_MATCH_THRESHOLD, recallMatches } from "./recall-matches";
 import { RecallComparison } from "./recall-comparison";
+import { currentStatement } from "@/lib/memory/changes";
 
 export function CopyContext({
   model,
@@ -12,7 +13,7 @@ export function CopyContext({
   text?: boolean;
 }) {
   const context = recallMatches(model.ranked)
-    .map((row) => row.memory.content)
+    .map((row) => currentStatement(row.memory.content) ?? row.memory.content)
     .join("\n");
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
@@ -70,9 +71,9 @@ export function ContextResults({ model }: { model: WorkbenchModel }) {
   return (
     <section
       aria-labelledby="context-title"
-      className="flex h-[500px] min-w-0 flex-col border-t border-line p-5 sm:p-6"
+      className="flex h-[420px] min-w-0 flex-col border-t border-line p-4 sm:h-[460px] sm:p-6 lg:h-[500px]"
     >
-      <div className="flex h-11 shrink-0 items-start justify-between gap-3">
+      <div className="flex h-10 shrink-0 lg:h-11 items-start justify-between gap-3">
         <div>
           <h2
             id="context-title"
@@ -91,17 +92,17 @@ export function ContextResults({ model }: { model: WorkbenchModel }) {
             ) : (
               <>
                 {matches.length}{" "}
-                {matches.length === 1 ? "example match" : "example matches"} ·
-                select to inspect
+                {matches.length === 1 ? "demo match" : "demo matches"} · inspect
+                a fact
               </>
             )}
           </p>
         </div>
         <CopyContext model={model} />
       </div>
-      <div className="mt-2 flex h-10 shrink-0 items-center gap-3">
+      <div className="mt-2 flex h-9 shrink-0 lg:h-10 items-center gap-3">
         <p
-          className="min-w-0 flex-1 break-words text-[13px] leading-5 text-muted line-clamp-2"
+          className="min-w-0 flex-1 break-words text-[12px] leading-[18px] text-muted line-clamp-2 lg:text-[13px] lg:leading-5"
           title={model.activeQuery}
         >
           For “{model.activeQuery}”
@@ -123,7 +124,7 @@ export function ContextResults({ model }: { model: WorkbenchModel }) {
       <div
         role="region"
         aria-label="Context matches"
-        className="mt-3 h-[262px] shrink-0"
+        className="mt-2 h-[228px] shrink-0 lg:mt-3 lg:h-[262px]"
       >
         {comparing && model.reviewOutcome ? (
           <RecallComparison
@@ -148,16 +149,16 @@ export function ContextResults({ model }: { model: WorkbenchModel }) {
                       aria-pressed={model.selectedId === row.memory.id}
                       aria-haspopup="dialog"
                       onClick={() => model.inspectMemory(row.memory.id)}
-                      className="flex h-20 w-full items-start gap-3 rounded-xl p-3 text-left transition-colors hover:bg-accent-soft/30"
+                      className="flex h-[68px] w-full items-start gap-2 rounded-xl p-2 lg:h-20 lg:gap-3 lg:p-3 text-left transition-colors hover:bg-accent-soft/30"
                     >
                       <span className="mt-0.5 font-mono text-[12px] text-muted">
                         0{index + 1}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block break-words text-[14px] leading-5 line-clamp-2">
-                          {row.memory.content}
+                        <span className="block break-words text-[13px] leading-[18px] line-clamp-2 lg:text-[14px] lg:leading-5">
+                          {currentStatement(row.memory.content) ?? row.memory.content}
                         </span>
-                        <span className="mt-1 flex items-center gap-2 font-mono text-[12px] tabular-nums text-muted">
+                        <span className="mt-0.5 flex items-center gap-2 font-mono text-[11px] lg:mt-1 lg:text-[12px] tabular-nums text-muted">
                           {(model.mode === "relevance"
                             ? row.relevance
                             : row.similarity
@@ -184,7 +185,7 @@ export function ContextResults({ model }: { model: WorkbenchModel }) {
               })}
             </ol>
             {matches.length < 3 && (
-              <p className="mt-6 max-w-sm text-[13px] leading-relaxed text-muted">
+              <p className="mt-3 max-w-sm text-[12px] lg:mt-6 lg:text-[13px] leading-relaxed text-muted">
                 Only{" "}
                 {matches.length === 1 ? "one fact clears" : "two facts clear"}{" "}
                 the demo cutoff. Try Preferences to compare several matches.
@@ -204,10 +205,9 @@ export function ContextResults({ model }: { model: WorkbenchModel }) {
           </div>
         )}
       </div>
-      <p className="mt-3 text-[12px] leading-[18px] text-muted">
-        Demo: up to 3 lexical matches at similarity ≥{" "}
-        {DEMO_MATCH_THRESHOLD.toFixed(2)}. API retrieval uses MiniLM and its own
-        ranking policy.
+      <p className="mt-2 text-[11px] leading-4 text-muted lg:mt-3 lg:text-[12px] lg:leading-[18px]">
+        Lexical demo · up to 3 matches (≥ {DEMO_MATCH_THRESHOLD.toFixed(2)}).
+        Live API uses backend embeddings.
       </p>
     </section>
   );

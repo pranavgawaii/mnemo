@@ -1,6 +1,7 @@
 import { ExpandedView } from "@/components/ui/expanded-view";
 import { recallMatches } from "./recall-matches";
 import type { WorkbenchModel } from "./use-workbench";
+import { currentStatement } from "@/lib/memory/changes";
 
 export function MemoryInspector({ model }: { model: WorkbenchModel }) {
   const selected =
@@ -49,7 +50,15 @@ export function MemoryInspector({ model }: { model: WorkbenchModel }) {
             </select>
           </div>
         </div>
-        <p className="mt-5 break-words rounded-xl border border-line bg-background/60 p-5 text-[16px] leading-relaxed text-ink">
+        {selected && currentStatement(selected.content) && (
+          <div className="mt-5 rounded-xl border border-accent/20 bg-accent-soft/20 p-4">
+            <h3 className="text-[12px] text-muted">{selected.is_active ? "Current-value view" : "Historical value"}</h3>
+            <p className="mt-2 break-words text-[16px] leading-relaxed">{currentStatement(selected.content)}</p>
+            <p className="mt-2 text-[12px] text-muted">A display projection of the source record, not a verification of the claim.</p>
+          </div>
+        )}
+        <h3 className="mt-5 text-[12px] text-muted">Stored source record</h3>
+        <p className="mt-2 break-words rounded-xl border border-line bg-background/60 p-5 text-[16px] leading-relaxed text-ink">
           {selected?.content ?? "No fact selected."}
         </p>
         {row ? (
