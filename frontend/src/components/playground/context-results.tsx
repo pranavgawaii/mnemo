@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, ArrowUpRight, Check, Copy, SearchX } from "lucide-react";
 import type { WorkbenchModel } from "./use-workbench";
 import { DEMO_MATCH_THRESHOLD, recallMatches } from "./recall-matches";
+import { RecallComparison } from "./recall-comparison";
 
 export function CopyContext({
   model,
@@ -53,6 +54,19 @@ export function CopyContext({
 
 export function ContextResults({ model }: { model: WorkbenchModel }) {
   const matches = recallMatches(model.ranked);
+  const [showCurrent, setShowCurrent] = useState(false);
+  useEffect(() => setShowCurrent(false), [model.reviewOutcome]);
+  const comparisonAvailable = Boolean(
+    model.reviewOutcome && model.reviewVerified,
+  );
+  const comparing = comparisonAvailable && !showCurrent;
+  const snapshot = model.reviewOutcome?.recall;
+  const sameContext =
+    snapshot &&
+    snapshot.before.length === snapshot.after.length &&
+    snapshot.before.every(
+      (fact, index) => fact.id === snapshot.after[index].id,
+    );
   return (
     <section
       aria-labelledby="context-title"
@@ -60,29 +74,63 @@ export function ContextResults({ model }: { model: WorkbenchModel }) {
     >
       <div className="flex h-11 shrink-0 items-start justify-between gap-3">
         <div>
-          <h2 id="context-title" className="text-[17px] font-medium text-ink">
+          <h2
+            id="context-title"
+            tabIndex={-1}
+            className="scroll-mt-24 text-[17px] font-medium text-ink"
+          >
             Recalled context
           </h2>
           <p className="text-[12px] text-muted">
-            {matches.length}{" "}
-            {matches.length === 1 ? "example match" : "example matches"} ·
-            select to inspect
+            {comparing && model.reviewOutcome ? (
+              sameContext ? (
+                "Returned context unchanged"
+              ) : (
+                `${model.reviewOutcome.recall.before.length} → ${model.reviewOutcome.recall.after.length} matches at review`
+              )
+            ) : (
+              <>
+                {matches.length}{" "}
+                {matches.length === 1 ? "example match" : "example matches"} ·
+                select to inspect
+              </>
+            )}
           </p>
         </div>
         <CopyContext model={model} />
       </div>
-      <p
-        className="mt-2 h-10 shrink-0 break-words text-[13px] leading-5 text-muted line-clamp-2"
-        title={model.activeQuery}
-      >
-        For “{model.activeQuery}”
-      </p>
+      <div className="mt-2 flex h-10 shrink-0 items-center gap-3">
+        <p
+          className="min-w-0 flex-1 break-words text-[13px] leading-5 text-muted line-clamp-2"
+          title={model.activeQuery}
+        >
+          For “{model.activeQuery}”
+        </p>
+        {comparisonAvailable && (
+          <button
+            type="button"
+            aria-pressed={comparing}
+            aria-label={
+              comparing ? "Show current context" : "Show review comparison"
+            }
+            onClick={() => setShowCurrent(!showCurrent)}
+            className="h-9 shrink-0 rounded-lg border border-line px-2 text-[11px] text-accent-ink hover:bg-accent-soft/30"
+          >
+            {comparing ? "Current context" : "Before / after"}
+          </button>
+        )}
+      </div>
       <div
         role="region"
         aria-label="Context matches"
         className="mt-3 h-[262px] shrink-0"
       >
-        {matches.length ? (
+        {comparing && model.reviewOutcome ? (
+          <RecallComparison
+            outcome={model.reviewOutcome}
+            onInspect={model.inspectMemory}
+          />
+        ) : matches.length ? (
           <>
             <ol className="space-y-2">
               {matches.map((row, index) => {

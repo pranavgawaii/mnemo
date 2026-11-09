@@ -73,8 +73,8 @@ export function AgentMemoryDemo() {
             The context stays.
           </h2>
           <p className="mt-5 max-w-[390px] text-[14px] leading-[1.8] text-muted">
-            A user changes where they live. See how an agent recalls the old
-            fact, flags the change and lets you decide what stays.
+            Your app supplies confirmed facts. Follow one across sessions,
+            introduce a change and choose which fact stays active.
           </p>
           <ol className="mt-7 space-y-3">
             {STAGES.map((label, index) => (

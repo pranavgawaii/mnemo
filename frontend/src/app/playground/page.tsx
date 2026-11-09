@@ -68,8 +68,8 @@ export default function PlaygroundPage() {
               </h1>
 
               <p className="max-w-[430px] text-balance text-[13.5px] leading-[1.7] text-muted lg:text-right">
-                Pick a scenario, store a change and see what recall keeps. Six
-                sample facts, with every review under your control.
+                Recall a sample fact, store a change and choose what stays.
+                Recall again to see the difference.
               </p>
             </div>
           </div>

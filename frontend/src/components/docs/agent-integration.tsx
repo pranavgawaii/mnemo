@@ -7,21 +7,21 @@ export function AgentIntegration() {
     <DocsSection
       id="agent-integration"
       title="4. Connect your agent"
-      intro="Retrieve context before generating an answer. Mnemo handles memory; the model you already use handles the reply."
+      intro="Search before each answer. Your app supplies confirmed facts and calls its model; Mnemo returns the context."
     >
       <ol className="grid gap-4 sm:grid-cols-3">
         {[
           [
             "Save confirmed facts",
-            "Use add_memory after the user confirms a fact. Do not store every generated answer as truth.",
+            "Call add_memory when the user confirms a fact, rather than saving every model reply.",
           ],
           [
             "Retrieve for the question",
-            "Search the same namespace. Handle empty results and open conflicts before calling your model.",
+            "Search the same namespace across sessions. Decide how your app handles conflicts and empty results.",
           ],
           [
             "Generate with context",
-            "Pass retrieved text as data to your model. Keep its system instructions separate from memory content.",
+            "Give your model the retrieved facts as data, separate from its system instructions.",
           ],
         ].map(([title, body], index) => (
           <li key={title} className="border-t border-line pt-3">
@@ -35,36 +35,42 @@ export function AgentIntegration() {
           </li>
         ))}
       </ol>
+      <p>
+        Copy <code>answer_with_memory</code> from the adapter below, then
+        connect it to your server-side agent. <code>your_model_call</code> is
+        your own function that accepts a prompt and returns an answer.
+      </p>
+      <CodeBlock label="Connect your model" code={AGENT_HANDOFF} />
       <details className="rounded-xl border border-line bg-white p-4 sm:p-5">
         <summary className="cursor-pointer text-[13px] font-medium text-ink">
           Python adapter · retrieve, review, generate
         </summary>
         <div className="mt-4 space-y-4">
           <p>
-            Install the SDK from the Python quickstart above. Copy this function
-            into your server-side agent code. It accepts a generation function,
-            so it does not require a particular model SDK.
+            Install the Python SDK from the quickstart above. This adapter uses
+            your existing model function, with no provider-specific SDK
+            required.
           </p>
           <CodeBlock label="Agent memory adapter" code={AGENT_INTEGRATION} />
-          <p>
-            Supply your existing model function as <code>your_model_call</code>.
-            It receives a prompt string and returns the generated answer. That
-            function belongs to your application; it is not a Mnemo SDK method.
-          </p>
-          <CodeBlock label="Connect your model" code={AGENT_HANDOFF} />
+          <ul className="list-disc space-y-2 pl-5 text-[13px] leading-relaxed text-muted">
+            <li>
+              Open conflict: pause generation and ask for review. This is the
+              adapter’s conservative policy, not an API restriction.
+            </li>
+            <li>
+              No hits: return a no-context message without calling the model.
+            </li>
+            <li>
+              Hits returned: ask the model to use relevant evidence and abstain
+              if it cannot answer. Evaluate this behavior with your own model.
+            </li>
+          </ul>
         </div>
       </details>
       <p>
-        This example pauses generation if any conflict is open in the client’s
-        namespace. That is an application policy, not a search API restriction.
-        An empty result skips generation; unrelated hits ask the model to say it
-        lacks evidence. This prompt does not guarantee grounded answers—evaluate
-        your model’s responses on your own questions.
-      </p>
-      <p>
-        Keep the API key on your server. Reuse the same namespace across
-        sessions; namespaces filter facts and do not provide per-user access
-        isolation. For explicit winner selection, see the{" "}
+        Keep the API key on your server. Namespaces filter facts; they do not
+        isolate users’ access. The adapter pauses for any open conflict in its
+        namespace. See the{" "}
         <a
           href="/docs/concepts#contradictions"
           className="text-accent-ink underline underline-offset-4"

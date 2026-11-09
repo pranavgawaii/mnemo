@@ -29,7 +29,16 @@ export function ReviewPanel({ model }: { model: WorkbenchModel }) {
         className="mt-3 min-h-0 flex-1"
       >
         {model.reviewOutcome ? (
-          <ChangeFeedback outcome={model.reviewOutcome} compact />
+          <ChangeFeedback
+            outcome={model.reviewOutcome}
+            compact
+            summaryOnly={model.reviewVerified}
+            onRecall={
+              !model.reviewVerified && !model.openConflicts.length
+                ? model.verifyRecall
+                : undefined
+            }
+          />
         ) : conflict ? (
           <>
             <p className="mb-3 text-[12px] text-muted">

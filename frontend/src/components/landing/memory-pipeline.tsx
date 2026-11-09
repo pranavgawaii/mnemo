@@ -21,7 +21,7 @@ const STEPS = [
   {
     icon: GitCompareArrows,
     title: "Review the change",
-    text: "Inspect a possible conflict and choose what stays active. The other fact remains in history.",
+    text: "Review a possible conflict and choose what stays active. The other row remains inspectable.",
     detail: "Potential conflict · explicit resolution",
   },
 ];

@@ -11,6 +11,7 @@ import { ReviewPanel } from "./review-panel";
 import { RankingFeedback } from "./ranking-feedback";
 import { MemoryInspector } from "./memory-inspector";
 import { useWorkbench } from "./use-workbench";
+import { JourneyGuide } from "./journey-guide";
 
 export function MemoryWorkbench() {
   const model = useWorkbench();
@@ -46,29 +47,13 @@ export function MemoryWorkbench() {
           <RecallQuery model={model} />
           <MemoryComposer model={model} />
         </div>
-        <div className="flex h-[96px] flex-col justify-between gap-1 border-t border-hairline px-5 py-2 sm:h-[52px] sm:flex-row sm:items-center sm:gap-4 sm:px-6">
-          <p
-            role="status"
-            aria-label="Workbench status"
-            aria-live="polite"
-            className="min-w-0 break-words text-[13px] leading-[18px] text-accent-ink line-clamp-3 sm:line-clamp-2"
-          >
-            {model.notice ||
-              "Choose a scenario, or search a question of your own."}
-          </p>
-          <a
-            href="#review"
-            className="shrink-0 text-[12px] font-medium text-accent-ink underline decoration-accent/25 underline-offset-4"
-          >
-            Review changes ({model.openConflicts.length})
-          </a>
-        </div>
-        <RetrievalControls model={model} />
-        <RankingFeedback model={model} />
+        <JourneyGuide model={model} />
         <div className="grid lg:grid-cols-[1.05fr_0.95fr]">
           <ContextResults model={model} />
           <ReviewPanel model={model} />
         </div>
+        <RetrievalControls model={model} />
+        <RankingFeedback model={model} />
         <RetrievalTrace key={model.resetVersion} model={model} />
       </div>
       <MemoryInspector model={model} />

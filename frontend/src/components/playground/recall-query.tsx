@@ -41,9 +41,10 @@ export function RecallQuery({ model }: { model: WorkbenchModel }) {
         </button>
       </form>
       <div
+        id="sample-scenarios"
         aria-label="Sample scenarios"
         role="group"
-        className="mt-3 flex flex-wrap gap-2"
+        className="mt-3 flex scroll-mt-24 flex-wrap gap-2"
       >
         {MEMORY_SCENARIOS.map((scenario) => (
           <button

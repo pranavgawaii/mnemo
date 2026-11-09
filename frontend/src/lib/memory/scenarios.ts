@@ -37,4 +37,11 @@ export interface ReviewOutcome {
   incoming: string;
   kept: string;
   archived: string;
+  recall: {
+    query: string;
+    mode: "relevance" | "similarity";
+    timeOffset: number;
+    before: { id: string; content: string }[];
+    after: { id: string; content: string }[];
+  };
 }

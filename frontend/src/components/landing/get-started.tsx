@@ -15,8 +15,8 @@ export function GetStarted() {
             Start with one fact.
           </h2>
           <p className="mt-5 max-w-[370px] text-[14px] leading-[1.8] text-muted">
-            Run Mnemo locally, then send this request. The guide takes you from
-            your first fact to passing context into your agent.
+            Run Mnemo locally and store a confirmed fact. Follow the guide to
+            retrieve it as context for your agent.
           </p>
           <a
             href="/docs#quickstart"

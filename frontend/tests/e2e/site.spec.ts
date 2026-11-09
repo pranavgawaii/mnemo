@@ -182,12 +182,12 @@ test("playground stores, reviews, preserves history and resets", async ({
   await expect(
     page.getByRole("status", { name: "Workbench status" }),
   ).toContainText("The losing memory is inactive");
-  await expect(page.locator("#workbench ol")).toContainText(
-    "Pranav no longer lives in Bengaluru",
-  );
+  await expect(
+    page.locator('#workbench [aria-label="Context matches"] ol'),
+  ).toContainText("Pranav no longer lives in Bengaluru");
   await expect(
     page
-      .locator("#workbench ol")
+      .locator('#workbench [aria-label="Context matches"] ol')
       .getByText("Pranav lives in Bengaluru", { exact: true }),
   ).toHaveCount(0);
   await page.getByRole("button", { name: /Open review & history/ }).click();
@@ -441,9 +441,11 @@ test("playground explains scores and gives a useful empty state", async ({
   page,
 }) => {
   await page.goto("/playground");
-  await expect(page.locator("#workbench ol > li")).toHaveCount(1);
+  await expect(
+    page.locator('#workbench [aria-label="Context matches"] ol > li'),
+  ).toHaveCount(1);
   const result = page
-    .locator("#workbench ol")
+    .locator('#workbench [aria-label="Context matches"] ol')
     .getByRole("button", { name: /Pranav lives in Bengaluru/ });
   await result.click();
   await expect(result).toHaveAttribute("aria-pressed", "true");
@@ -466,9 +468,9 @@ test("playground explains scores and gives a useful empty state", async ({
     .getByLabel("New memory")
     .fill("Quantum entanglement connects these particles");
   await page.getByRole("button", { name: "Store memory", exact: true }).click();
-  await expect(page.locator("#workbench ol")).toContainText(
-    "Quantum entanglement connects these particles",
-  );
+  await expect(
+    page.locator('#workbench [aria-label="Context matches"] ol'),
+  ).toContainText("Quantum entanglement connects these particles");
 });
 
 test("whitespace cannot create a fake empty memory", async ({ page }) => {
@@ -588,7 +590,9 @@ for (const [scenario, existing, incoming] of [
       await expect(feedback.locator("p.line-through")).toHaveText(
         keepNew ? existing : incoming,
       );
-      const context = page.locator("#workbench ol");
+      const context = page.locator(
+        '#workbench [aria-label="Context matches"] ol',
+      );
       await expect(context).toContainText(keepNew ? incoming : existing);
       await expect(
         context.getByText(keepNew ? existing : incoming, { exact: true }),
@@ -615,17 +619,19 @@ test("agent integration guide exposes the adapter and model boundary without add
   await expect(
     guide.getByRole("heading", { name: "4. Connect your agent", exact: true }),
   ).toBeVisible();
+  await expect(guide.locator("pre").first()).toBeVisible();
+  await expect(guide.locator("pre").first()).toContainText(
+    "generate=your_model_call",
+  );
+  await expect(guide.locator("details pre")).not.toBeVisible();
   await guide
     .getByText("Python adapter · retrieve, review, generate", { exact: true })
     .click();
-  await expect(guide.locator("pre").first()).toContainText(
+  await expect(guide.locator("details pre")).toContainText(
     "def answer_with_memory",
   );
-  await expect(guide.locator("pre").first()).toContainText(
+  await expect(guide.locator("details pre")).toContainText(
     "return generate(prompt)",
-  );
-  await expect(guide.locator("pre").last()).toContainText(
-    "generate=your_model_call",
   );
   await expect(
     page
@@ -1400,4 +1406,213 @@ test("API operations have an expanded reading surface with examples and complete
   await expect(
     page.getByRole("button", { name: "Expand operation", exact: true }),
   ).toBeFocused();
+});
+
+for (const width of [320, 390, 1280]) {
+  for (const keepNew of [true, false]) {
+    test(`guided flow compares captured recall and preserves its frame at ${width}px keeping ${keepNew ? "new" : "existing"}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.goto("/playground");
+      await page.evaluate(() => document.fonts.ready);
+      const guide = page.getByRole("region", {
+        name: "Guided memory flow",
+        exact: true,
+      });
+      const frame = () =>
+        page
+          .locator("#workbench")
+          .evaluate((el) => el.getBoundingClientRect().height);
+      const initial = await frame();
+      await expect(guide.locator('[aria-current="step"]')).toHaveText(
+        "1Recall",
+      );
+      await guide
+        .getByRole("button", { name: "Start with recall", exact: true })
+        .click();
+      await expect(guide.locator('[aria-current="step"]')).toHaveText("2Store");
+      await guide
+        .getByRole("button", { name: "Use suggested change", exact: true })
+        .click();
+      await expect(page.getByLabel("New memory")).toBeFocused();
+      await page
+        .getByRole("button", { name: "Store memory", exact: true })
+        .click();
+      await expect(guide.locator('[aria-current="step"]')).toHaveText(
+        "3Review",
+      );
+      const matches = page.getByRole("region", {
+        name: "Context matches",
+        exact: true,
+      });
+      const before = await matches
+        .getByRole("button")
+        .evaluateAll((elements) =>
+          elements.map((el) =>
+            el.getAttribute("aria-label")!.replace("Inspect fact: ", ""),
+          ),
+        );
+      const bounds = await page
+        .getByRole("region", { name: "Recalled context", exact: true })
+        .boundingBox();
+      const controls = await page
+        .getByRole("region", { name: "Retrieval controls", exact: true })
+        .boundingBox();
+      expect(bounds!.y).toBeLessThan(controls!.y);
+      await page
+        .getByRole("button", {
+          name: keepNew ? "Keep new" : "Keep existing",
+          exact: true,
+        })
+        .click();
+      await expect(guide.locator('[aria-current="step"]')).toHaveText(
+        "4Recall again",
+      );
+      if (width < 1024) {
+        await page
+          .getByRole("button", { name: "Recall and compare", exact: true })
+          .click();
+      } else {
+        await guide
+          .getByRole("button", { name: "Recall again", exact: true })
+          .click();
+      }
+      await expect(
+        page.getByRole("heading", { name: "Recalled context", exact: true }),
+      ).toBeFocused();
+      await expect(guide.getByRole("status")).toContainText("Recall complete");
+      const comparison = page.getByRole("region", {
+        name: "Context before and after review",
+        exact: true,
+      });
+      await expect(comparison).toBeVisible();
+      await expect(
+        comparison
+          .getByRole("region", { name: "Before review context", exact: true })
+          .getByRole("button"),
+      ).toHaveText(before);
+      const kept = keepNew
+        ? "Pranav no longer lives in Bengaluru"
+        : "Pranav lives in Bengaluru";
+      const archived = keepNew
+        ? "Pranav lives in Bengaluru"
+        : "Pranav no longer lives in Bengaluru";
+      await expect(
+        comparison
+          .getByRole("region", { name: "After review context", exact: true })
+          .getByRole("button"),
+      ).toHaveText([kept]);
+      expect(await frame()).toEqual(initial);
+      const comparisonBounds = await comparison.boundingBox();
+      const matchBounds = await matches.boundingBox();
+      expect(
+        comparisonBounds!.y + comparisonBounds!.height,
+      ).toBeLessThanOrEqual(matchBounds!.y + matchBounds!.height + 1);
+      await page
+        .getByRole("button", { name: "Show current context", exact: true })
+        .click();
+      await expect(
+        matches.getByRole("button", {
+          name: `Inspect fact: ${kept}`,
+          exact: true,
+        }),
+      ).toBeVisible();
+      await expect(
+        matches.getByRole("button", {
+          name: `Inspect fact: ${archived}`,
+          exact: true,
+        }),
+      ).toHaveCount(0);
+      await page
+        .getByRole("button", { name: "Show review comparison", exact: true })
+        .click();
+      await expect(comparison).toBeVisible();
+      await page
+        .getByRole("button", { name: "Reset demo", exact: true })
+        .click();
+      await expect(comparison).toHaveCount(0);
+      await expect(
+        guide.getByRole("button", { name: "Start with recall", exact: true }),
+      ).toBeVisible();
+      expect(await frame()).toEqual(initial);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth - innerWidth,
+        ),
+      ).toBeLessThanOrEqual(1);
+    });
+  }
+}
+
+test("a non-conflicting fact completes the guide without inventing a review comparison", async ({
+  page,
+}) => {
+  await page.goto("/playground");
+  await page.getByLabel("Recall query").fill("What editor does Pranav use?");
+  await page.getByLabel("Recall query").press("Enter");
+  await page.getByLabel("New memory").fill("Pranav uses Neovim");
+  await page.getByRole("button", { name: "Store memory", exact: true }).click();
+  await expect(
+    page.getByRole("status", { name: "Workbench status" }),
+  ).toContainText("0 possible conflicts");
+  await page.getByRole("button", { name: "Recall again", exact: true }).click();
+  await expect(
+    page.getByRole("status", { name: "Workbench status" }),
+  ).toContainText("Inspect the returned context");
+  await expect(
+    page.getByRole("region", {
+      name: "Context before and after review",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", {
+      name: "Inspect fact: Pranav uses Neovim",
+      exact: true,
+    }),
+  ).toBeVisible();
+});
+
+test("a full context snapshot fits mobile and stays tied to its captured query and settings", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.goto("/playground");
+  await page.getByRole("button", { name: "Preferences", exact: true }).click();
+  await page.getByRole("button", { name: "Store memory", exact: true }).click();
+  await page.getByRole("button", { name: "Keep new", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Recall and compare", exact: true })
+    .click();
+  const comparison = page.getByRole("region", {
+    name: "Context before and after review",
+    exact: true,
+  });
+  await expect(
+    comparison
+      .getByRole("region", { name: "Before review context", exact: true })
+      .getByRole("button"),
+  ).toHaveCount(3);
+  const captured = (await comparison.textContent())!;
+  const size = await comparison.boundingBox();
+  const frame = await page
+    .getByRole("region", { name: "Context matches", exact: true })
+    .boundingBox();
+  expect(size!.y + size!.height).toBeLessThanOrEqual(
+    frame!.y + frame!.height + 1,
+  );
+  await page.getByRole("button", { name: "+90d", exact: true }).click();
+  await expect(comparison).toHaveText(captured);
+  await expect(comparison).toContainText("+0 days");
+  await expect(
+    page.getByRole("region", { name: "Recalled context", exact: true }),
+  ).toContainText("Returned context unchanged");
+  await page.getByLabel("Recall query").fill("A topic without a stored fact");
+  await page.getByLabel("Recall query").press("Enter");
+  await expect(comparison).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Recall and compare", exact: true }),
+  ).toHaveCount(0);
 });

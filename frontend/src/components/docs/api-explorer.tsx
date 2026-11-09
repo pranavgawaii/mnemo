@@ -250,8 +250,8 @@ export function ApiExplorer() {
         >
           downloadable OpenAPI schema
         </a>
-        . The live API also serves its own schema and interactive reference at
-        port 8000.
+        . Your locally running API also serves its schema and interactive
+        reference at port 8000.
       </p>
     </DocsSection>
   );

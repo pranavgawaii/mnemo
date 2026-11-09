@@ -18,6 +18,15 @@ import {
   type ReviewOutcome,
 } from "@/lib/memory/scenarios";
 import type { LogEntry, Method, Mode, Row } from "./types";
+import { recallMatches } from "./recall-matches";
+import { scrollToElement } from "@/lib/scroll";
+
+export type JourneyStage =
+  | "recall"
+  | "store"
+  | "review"
+  | "verify"
+  | "complete";
 
 export const AGE_PRESETS = [
   { label: "Now", value: 0 },
@@ -58,6 +67,8 @@ export function useWorkbench() {
   const [traceRun, setTraceRun] = useState(0);
   const [resetVersion, setResetVersion] = useState(0);
   const [notice, setNotice] = useState("");
+  const [journeyStage, setJourneyStage] = useState<JourneyStage>("recall");
+  const [reviewVerified, setReviewVerified] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const logSeq = useRef(1);
   const timers = useRef<number[]>([]);
@@ -211,12 +222,36 @@ export function useWorkbench() {
     }
     if (example !== undefined) setQuery(nextQuery);
     setActiveQuery(nextQuery);
+    if (reviewOutcome && nextQuery !== reviewOutcome.recall.query) {
+      setReviewOutcome(null);
+    }
+    const verifying = journeyStage === "verify" || journeyStage === "complete";
+    setJourneyStage(
+      openConflicts.length
+        ? "review"
+        : verifying && nextQuery === activeQuery
+          ? "complete"
+          : "store",
+    );
+    setReviewVerified(
+      Boolean(
+        !openConflicts.length &&
+          reviewOutcome &&
+          nextQuery === reviewOutcome.recall.query,
+      ),
+    );
     setRankingUpdate(null);
     timeBaseline.current = null;
     setSelectedId(null);
     setHoverId(null);
     setTraceRun((run) => run + 1);
-    setNotice(`Recall scored ${rows.length} active memories.`);
+    setNotice(
+      verifying && !openConflicts.length && nextQuery === activeQuery
+        ? reviewOutcome
+          ? "Recall complete. Compare the captured context before and after review below."
+          : "Recall complete. Inspect the returned context below."
+        : `Recall scored ${rows.length} active memories.`,
+    );
     timers.current.forEach(window.clearTimeout);
     timers.current = [];
     if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -245,6 +280,12 @@ export function useWorkbench() {
     const result = add(draft.trim(), 3);
     setRankingUpdate(null);
     setReviewOutcome(null);
+    setReviewVerified(false);
+    setJourneyStage(
+      result.contradictions.length || openConflicts.length
+        ? "review"
+        : "verify",
+    );
     setNotice(
       `Stored a memory. ${result.contradictions.length} possible ${result.contradictions.length === 1 ? "conflict" : "conflicts"} flagged.`,
     );
@@ -257,6 +298,14 @@ export function useWorkbench() {
       `${result.contradictions.length} possible ${result.contradictions.length === 1 ? "conflict" : "conflicts"}`,
     );
   }
+  function verifyRecall() {
+    runRecall(activeQuery);
+    const target = document.getElementById("context-title");
+    if (target) {
+      target.focus({ preventScroll: true });
+      scrollToElement(target);
+    }
+  }
   function tryConflict() {
     setDraft(scenario.change);
     document.getElementById("wb-store")?.focus();
@@ -264,10 +313,13 @@ export function useWorkbench() {
   function chooseScenario(next: MemoryScenario) {
     setScenario(next);
     setReviewOutcome(null);
+    setReviewVerified(false);
     setSelectedId(null);
     setHoverId(null);
     setDraft(next.change);
     runRecall(next.query);
+    setReviewVerified(false);
+    setJourneyStage("store");
     setNotice(
       `${next.label} scenario ready. Store the suggested change, then review both facts.`,
     );
@@ -279,17 +331,44 @@ export function useWorkbench() {
     const winner = candidates.find((memory) => memory.id === winnerId);
     const loser = candidates.find((memory) => memory.id !== winnerId);
     if (!winner || !loser) return;
-    resolve(contradictionId, winnerId);
+    const resolved = resolve(contradictionId, winnerId);
+    const activeIds = new Set(
+      resolved.memories
+        .filter((memory) => memory.is_active)
+        .map((memory) => memory.id),
+    );
+    const context = (items: Row[]) =>
+      recallMatches(items).map(({ memory }) => ({
+        id: memory.id,
+        content: memory.content,
+      }));
     setRankingUpdate(null);
     setReviewOutcome({
       previous: conflict.existing_memory.content,
       incoming: conflict.new_memory.content,
       kept: winner.content,
       archived: loser.content,
+      recall: {
+        query: activeQuery,
+        mode,
+        timeOffset,
+        before: context(ranked),
+        after: context(ranked.filter((row) => activeIds.has(row.memory.id))),
+      },
     });
+    setReviewVerified(false);
+    const pending = resolved.contradictions.some(
+      (item) =>
+        item.status === "open" &&
+        activeIds.has(item.new_memory.id) &&
+        activeIds.has(item.existing_memory.id),
+    );
+    setJourneyStage(pending ? "review" : "verify");
     setSelectedId(winnerId);
     setHoverId(null);
-    setNotice("Conflict resolved. The losing memory is inactive.");
+    setNotice(
+      "Conflict resolved. The losing memory is inactive. Recall again to compare context.",
+    );
     pushLog(
       "POST",
       "/v1/contradictions/resolve",
@@ -312,6 +391,8 @@ export function useWorkbench() {
     setDraft("");
     setScenario(MEMORY_SCENARIOS[0]);
     setReviewOutcome(null);
+    setReviewVerified(false);
+    setJourneyStage("recall");
     setPulseRank(0);
     setScanning(false);
     setTraceRun(0);
@@ -350,6 +431,8 @@ export function useWorkbench() {
     traceRun,
     resetVersion,
     notice,
+    journeyStage,
+    reviewVerified,
     logs,
     rows,
     ranked,
@@ -357,6 +440,7 @@ export function useWorkbench() {
     inactive,
     positions,
     runRecall,
+    verifyRecall,
     handleStore,
     tryConflict,
     keep,
