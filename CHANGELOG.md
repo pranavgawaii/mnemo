@@ -29,6 +29,7 @@ versions follow [SemVer](https://semver.org/).
 ### Focused product frontend
 - Keep the existing hero and fonts; reduce the landing to five sections.
 - Add a user-controlled agent memory example with reduced-motion support.
+- Keep its action and guidance stacked on narrow screens to prevent label-dependent height changes.
 - Split documentation into Get started, Concepts, API reference and Evaluation.
 - Generate operation fields from OpenAPI and add copyable store/search requests.
 - Present recall, store and conflict review first; disclose advanced experiments on demand.

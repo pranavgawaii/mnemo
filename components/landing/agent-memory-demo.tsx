@@ -178,7 +178,7 @@ export function AgentMemoryDemo() {
                   : "No model credentials or backend requests in this example."}
             </p>
           </div>
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
+          <div className="mt-5 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
             <button
               type="button"
               onClick={advance}

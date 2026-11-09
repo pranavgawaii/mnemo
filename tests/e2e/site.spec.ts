@@ -856,6 +856,15 @@ for (const width of [320, 390, 1280]) {
       "Keep the new fact",
       "Replay example",
     ]) {
+      if (width < 640) {
+        const button = await demo
+          .getByRole("button", { name: action, exact: true })
+          .boundingBox();
+        const hint = await demo
+          .getByText("You control the next step", { exact: true })
+          .boundingBox();
+        expect(hint!.y).toBeGreaterThanOrEqual(button!.y + button!.height);
+      }
       await demo.getByRole("button", { name: action, exact: true }).click();
       expect(
         await demo.evaluate(
