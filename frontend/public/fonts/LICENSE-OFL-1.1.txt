@@ -1,4 +1,4 @@
-Fonts bundled with this kit
+Fonts used by Mnemo
 
 Outfit
 Copyright 2021 The Outfit Project Authors (https://github.com/Outfitio/Outfit-Fonts)
