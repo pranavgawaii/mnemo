@@ -20,6 +20,9 @@ from app.services import memory_service
 
 
 def build_context(db: Session, payload: ContextRequest) -> ContextResponse:
+    # Readers share this lock; mutations take its exclusive counterpart. The
+    # retrieval/conflict queries therefore agree on the namespace's write state.
+    memory_service._lock_namespace(db, payload.namespace, shared=True)
     ranked = memory_service.search(
         db, query=payload.query, namespace=payload.namespace, limit=payload.candidate_limit,
         tags=payload.tags or None, keyword_weight=payload.keyword_weight, diversity=payload.diversity,
@@ -31,6 +34,7 @@ def build_context(db: Session, payload: ContextRequest) -> ContextResponse:
             Contradiction.new_memory_id, Contradiction.existing_memory_id,
         ).where(
             Contradiction.namespace == payload.namespace, Contradiction.status == "open",
+            memory_service.active_conflict_condition(),
             or_(Contradiction.new_memory_id.in_(ids), Contradiction.existing_memory_id.in_(ids)),
         )).all()
         pending = {memory_id for pair in pairs for memory_id in pair}

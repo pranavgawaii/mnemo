@@ -112,4 +112,7 @@ def list_contradictions_page(
     conditions: list[Any] = [Contradiction.namespace == namespace]
     if status is not None:
         conditions.append(Contradiction.status == status)
+    if status == "open":
+        from app.services.memory_service import active_conflict_condition
+        conditions.append(active_conflict_condition())
     return _page(db, Contradiction, conditions=conditions, limit=limit, cursor=cursor)

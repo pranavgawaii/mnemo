@@ -11,8 +11,8 @@ from collections import Counter
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import ColumnElement, func, select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import ColumnElement, and_, func, select, text
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
 from app.core import hybrid, llm
@@ -28,6 +28,7 @@ from app.services.namespace_service import ScoringConfig
 
 # How many nearest neighbours to inspect for contradictions when adding.
 _CONTRADICTION_CANDIDATES = 5
+_NAMESPACE_LOCK_TIMEOUT_MS = 5000
 # How many nearest neighbours to pull before re-ranking by relevance in search.
 _SEARCH_OVERFETCH = 4
 
@@ -37,6 +38,29 @@ _UNSET: object = object()
 
 class DuplicateMemoryError(ValueError):
     """Raised in dedup mode ``reject`` when a write is a near-duplicate."""
+
+
+
+class NamespaceBusyError(RuntimeError):
+    """The namespace writer did not become available within its lock budget."""
+
+
+def _lock_namespace(db: Session, namespace: str, *, shared: bool = False) -> None:
+    # A transaction-scoped lock works across API processes, not just threads.
+    # Bound queueing and restore the connection's prior setting after acquisition.
+    previous = db.scalar(text("SELECT current_setting('lock_timeout')"))
+    db.execute(text("SELECT set_config('lock_timeout', :timeout, true)"),
+               {"timeout": f"{_NAMESPACE_LOCK_TIMEOUT_MS}ms"})
+    try:
+        statement = ("SELECT pg_advisory_xact_lock_shared(hashtextextended(:name, 0))" if shared
+                     else "SELECT pg_advisory_xact_lock(hashtextextended(:name, 0))")
+        db.execute(text(statement), {"name": "mnemo:memory:" + namespace})
+    except OperationalError as exc:
+        if getattr(exc.orig, "sqlstate", None) not in {"55P03", "40P01", "40001"}:
+            raise
+        db.rollback()
+        raise NamespaceBusyError("Namespace is busy. Retry shortly.") from exc
+    db.execute(text("SELECT set_config('lock_timeout', :previous, true)"), {"previous": previous})
 
 
 def _utc(value: datetime) -> datetime:
@@ -49,6 +73,15 @@ def _not_expired() -> ColumnElement[bool]:
     from sqlalchemy import or_
 
     return or_(Memory.expires_at.is_(None), Memory.expires_at > datetime.now(timezone.utc))
+
+
+def active_conflict_condition() -> ColumnElement[bool]:
+    """A dispute is actionable only while both source rows are live."""
+    live = and_(Memory.namespace == Contradiction.namespace, Memory.is_active.is_(True), _not_expired())
+    return and_(
+        select(Memory.id).where(Memory.id == Contradiction.new_memory_id, live).exists(),
+        select(Memory.id).where(Memory.id == Contradiction.existing_memory_id, live).exists(),
+    )
 
 
 def _age_days(created_at: datetime) -> float:
@@ -79,6 +112,7 @@ def add_memory(
     :class:`DuplicateMemoryError` instead.
     """
     vector = embed(content)
+    _lock_namespace(db, namespace)
 
     llm_check = llm_check or llm.build_llm_check(settings)
 
@@ -221,6 +255,8 @@ def _flag_contradictions(
     request_id: str | None = None,
 ) -> list[Contradiction]:
     """Compare a new memory against its nearest neighbours and flag conflicts."""
+    if not memory.is_active or (memory.expires_at is not None and _utc(memory.expires_at) <= datetime.now(timezone.utc)):
+        return []
     if scoring is None:
         scoring = namespace_service.resolve_scoring(db, namespace=namespace)
     distance = Memory.embedding.cosine_distance(vector)
@@ -499,6 +535,8 @@ def soft_delete_memory(
     memory = get_memory(db, memory_id=memory_id, namespace=namespace)
     if memory is None:
         return None
+    _lock_namespace(db, memory.namespace)
+    db.refresh(memory, with_for_update=True)
     memory.is_active = False
     audit_service.record(
         db,
@@ -536,6 +574,8 @@ def update_memory(
     memory = get_memory(db, memory_id=memory_id, namespace=namespace)
     if memory is None:
         return None
+    _lock_namespace(db, memory.namespace)
+    db.refresh(memory, with_for_update=True)
 
     changed: dict[str, object] = {}
     if importance is not None:
@@ -593,6 +633,8 @@ def list_contradictions(
     conditions = [Contradiction.namespace == namespace]
     if status is not None:
         conditions.append(Contradiction.status == status)
+    if status == "open":
+        conditions.append(active_conflict_condition())
 
     total = db.scalar(
         select(func.count()).select_from(Contradiction).where(*conditions)
@@ -625,7 +667,7 @@ def sweep_expired(
     ]
     if namespace is not None:
         conditions.append(Memory.namespace == namespace)
-    rows = db.execute(select(Memory).where(*conditions)).scalars().all()
+    rows = db.execute(select(Memory).where(*conditions).order_by(Memory.id).with_for_update()).scalars().all()
     for memory in rows:
         memory.is_active = False
         # One audit row per swept memory (namespaced + resource-scoped) so
@@ -664,6 +706,10 @@ def resolve_contradiction(
     statement = select(Contradiction).where(Contradiction.id == contradiction_id)
     if allowed_namespaces is not None:
         statement = statement.where(Contradiction.namespace.in_(allowed_namespaces))
+    target_namespace = db.scalar(statement.with_only_columns(Contradiction.namespace))
+    if target_namespace is None:
+        return None, "Contradiction not found."
+    _lock_namespace(db, target_namespace)
     contradiction = db.execute(
         statement
         .with_for_update(of=Contradiction)
@@ -724,6 +770,7 @@ def export_namespace(
     Soft-deleted memories are included on purpose: an export is a backup of the
     audit trail, not just the active recall set.
     """
+    _lock_namespace(db, namespace, shared=True)
     memories = (
         db.execute(
             select(Memory)
@@ -774,7 +821,9 @@ def namespace_stats(db: Session, *, namespace: str) -> dict[str, Any]:
         "total_memories": total,
         "active_memories": active,
         "inactive_memories": total - active,
-        "open_contradictions": contradiction_counts.get("open", 0),
+        "open_contradictions": int(db.scalar(select(func.count()).select_from(Contradiction).where(
+            Contradiction.namespace == namespace, Contradiction.status == "open", active_conflict_condition(),
+        )) or 0),
         "resolved_contradictions": contradiction_counts.get("resolved", 0),
         "average_importance": (
             sum(row.importance for row in memory_rows) / total if total else None
@@ -806,6 +855,7 @@ def import_namespace(
     live data. Text is re-embedded with the configured model; the export
     deliberately does not carry vectors.
     """
+    _lock_namespace(db, namespace)
     existing = db.scalar(
         select(func.count()).select_from(Memory).where(Memory.namespace == namespace)
     )
@@ -830,21 +880,21 @@ def import_namespace(
         for mem_item in payload.memories:
             new_id = mem_item.id if preserve_ids else uuid.uuid4()
             memory_ids_map[mem_item.id] = new_id
-            db.add(
-                Memory(
-                    id=new_id,
-                    namespace=namespace,
-                    content=mem_item.content,
-                    importance=mem_item.importance,
-                    embedding=embed(mem_item.content),
-                    is_active=mem_item.is_active,
-                    tags=list(mem_item.tags),
-                    meta=mem_item.meta,
-                    expires_at=mem_item.expires_at,
-                    created_at=mem_item.created_at,
-                    updated_at=mem_item.updated_at,
-                )
+            memory = Memory(
+                id=new_id,
+                namespace=namespace,
+                content=mem_item.content,
+                importance=mem_item.importance,
+                embedding=embed(mem_item.content),
+                is_active=mem_item.is_active,
+                tags=list(mem_item.tags),
+                meta=mem_item.meta,
+                expires_at=mem_item.expires_at,
+                created_at=mem_item.created_at,
+                updated_at=mem_item.updated_at,
             )
+            db.add(memory)
+
         db.flush()
 
         for con_item in payload.contradictions:

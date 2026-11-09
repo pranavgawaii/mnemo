@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -25,6 +26,7 @@ from app.core.logging_setup import configure_logging
 from app.core.metrics import registry
 from app.db.session import get_db
 from app.services import job_worker
+from app.services.memory_service import NamespaceBusyError
 
 configure_logging()
 
@@ -155,6 +157,16 @@ def _observe_metrics(request: Request, status_code: int, duration_s: float) -> N
 
 def _request_logger() -> logging.Logger:
     return logging.getLogger("mnemo.request")
+
+
+
+
+@app.exception_handler(NamespaceBusyError)
+async def namespace_busy_handler(request: Request, exc: NamespaceBusyError) -> JSONResponse:
+    return JSONResponse(status_code=503, content={"detail": str(exc)}, headers={"Retry-After": "1"})
+
+
+
 
 
 @app.get("/metrics", tags=["meta"])

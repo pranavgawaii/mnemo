@@ -22,14 +22,20 @@ _lock = threading.Lock()
 
 
 @lru_cache(maxsize=1)
-def _load_model() -> "SentenceTransformer":
+def _cached_model() -> "SentenceTransformer":
     """Load and cache the embedding model (thread-safe, one-time)."""
     # Imported here so the heavy dependency is only pulled in when embedding is
     # actually needed.
     from sentence_transformers import SentenceTransformer
 
+    return SentenceTransformer(settings.embedding_model)
+
+
+def _load_model() -> "SentenceTransformer":
+    # lru_cache alone allows duplicate initial calls on concurrent cache misses.
+    # Acquire the lock before entering the cache, not inside its loader.
     with _lock:
-        return SentenceTransformer(settings.embedding_model)
+        return _cached_model()
 
 
 def embed(text: str) -> list[float]:
@@ -42,11 +48,13 @@ def embed(text: str) -> list[float]:
     model = _load_model()
     vec = model.encode(text, normalize_embeddings=True)
     arr = np.asarray(vec, dtype=np.float32)
-    if arr.shape[0] != settings.embedding_dim:
+    if arr.shape != (settings.embedding_dim,):
         raise ValueError(
-            f"Embedding dim {arr.shape[0]} != configured EMBEDDING_DIM "
+            f"Embedding shape {arr.shape} != configured EMBEDDING_DIM "
             f"{settings.embedding_dim}. Model/config are out of sync."
         )
+    if not np.isfinite(arr).all() or float(np.linalg.norm(arr)) == 0:
+        raise ValueError("Embedding must contain a finite, nonzero vector.")
     return arr.tolist()
 
 
@@ -65,4 +73,4 @@ def cosine_similarity(a: list[float], b: list[float]) -> float:
 
 def is_model_loaded() -> bool:
     """Report cached encoder readiness without triggering a download or load."""
-    return bool(_load_model.cache_info().currsize)
+    return bool(_cached_model.cache_info().currsize)
