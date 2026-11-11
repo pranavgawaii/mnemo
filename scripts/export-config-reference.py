@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
-from app.core.config import Settings  # noqa: E402
+from app.core.config import Settings
 
 START = "<!-- configuration-reference:start -->"
 END = "<!-- configuration-reference:end -->"

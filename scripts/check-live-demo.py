@@ -29,8 +29,8 @@ def main() -> None:
         "learning": ("Demo user is learning Rust on weekends",
                      "Demo user switched from learning Rust on weekends to learning Go on weekends"),
         "routine": ("Demo user runs 5 kilometres three mornings a week",
-                    "Demo user changed running routine from 5 kilometres three mornings a week "
-                    "to 3 kilometres twice a week"),
+                    ("Demo user changed running routine from 5 kilometres three mornings a week "
+                     "to 3 kilometres twice a week")),
     }
     views = {
         "relocation": "Demo user lives in Pune",
