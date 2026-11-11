@@ -37,7 +37,7 @@ https://github.com/user-attachments/assets/60b99a36-2ebe-461e-a7c0-93d64099b7be
 - **Inspect retrieval policy.** Vector candidates receive age and importance
   weights, a default keyword boost, and optional diversity selection. Responses
   expose the memory, similarity, final score and age.
-- **Review possible conflicts.** English negation checks and narrow source-matched relocation/revision rules flag
+- **Review possible conflicts.** English assertion and negation checks, plus narrow source-matched relocation/revision rules, flag
   nearby statements for explicit resolution. Keeping one fact makes the other
   inactive; the row remains available for inspection.
 - **Integrate through an API.** Scoped keys, cursor pagination, export/import,
@@ -196,11 +196,11 @@ frontend/                Next.js app, dependencies, configuration and browser te
   public/                fonts, OpenAPI schema and saved benchmark
   tests/e2e/             browser regressions
 backend/                 FastAPI, migrations, workers, benchmark and tests
-  evaluation/            labelled, read-only context selection runner
+  evaluation/            context, lifecycle, conflict, load and recovery evaluation
 sdk/                     typed sync/async Python client and client tests
 scripts/                 shared schema export and documentation contract checks
 docs/                    API, architecture, deployment and maintainer guides
-  assets/                repository screenshots
+  assets/                repository banner and architecture diagram
   licenses/              third-party asset attribution
 ```
 
@@ -213,10 +213,11 @@ rule data is generated and checked in CI.
 - Namespace grants restrict issued keys at the HTTP API. Existing unrestricted
   keys and the bootstrap key retain deployment-wide access. There is no database
   row-level security or tenant account/provisioning system.
-- The default conflict detector is English-only and heuristic. Explicit from/to
-  rules cover relocation, favourite cuisine, learning goals and running routines
-  when the subject and recorded previous value match. Other changed numbers,
-  dates and names can be missed, and false positives remain possible. These
+- The default conflict detector is English-only and heuristic. Current assertion
+  rules cover residence, employer, favourite cuisine, same-currency grocery
+  budgets and work start time. Explicit from/to rules also cover learning goals
+  and running routines when the subject and recorded previous value match.
+  Unsupported wording, numbers, dates and names can be missed, and false positives remain possible. These
   examples are regression coverage, not a held-out quality benchmark.
 - Soft deletion preserves a row; content updates replace text in place and do
   not create immutable versions of earlier content.
