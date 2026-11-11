@@ -27,6 +27,8 @@ The browser demo runs offline. Connect the optional Live API walkthrough for bac
 
 </div>
 
+https://github.com/user-attachments/assets/60b99a36-2ebe-461e-a7c0-93d64099b7be
+
 ## What it does
 
 - **Store and retrieve facts.** Keep text, vectors, tags, importance and optional
