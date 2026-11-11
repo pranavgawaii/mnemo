@@ -1,6 +1,8 @@
 <div align="center">
 
-<h1><img src="docs/assets/wordmark.svg" alt="Mnemo" width="190" height="56" /></h1>
+<a href="https://trymnemo.pranavx.in">
+<img src="docs/assets/banner.svg" alt="Mnemo" width="1200" />
+</a>
 
 <p><strong>An inspectable memory API for AI agents.</strong></p>
 
@@ -17,10 +19,6 @@ and review possible conflicts when facts change.
 <a href="sdk/README.md">Python SDK</a> ·
 <a href="docs/architecture.md">Architecture</a>
 </p>
-
-<a href="https://trymnemo.pranavx.in">
-<img src="docs/assets/overview.jpg" alt="Mnemo landing page and illustrative memory interface" width="1200" />
-</a>
 
 <p>
 <strong>Early, single-tenant prototype.</strong><br />
