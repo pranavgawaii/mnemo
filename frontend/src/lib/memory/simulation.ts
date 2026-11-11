@@ -222,12 +222,6 @@ export const EXAMPLE_QUERIES = [
   "How often does he run?",
 ] as const;
 
-export const EXAMPLE_MEMORIES = [
-  "Pranav lives in Bengaluru",
-  "Pranav no longer lives in Bengaluru",
-  "Pranav moved to Pune",
-] as const;
-
 // --------------------------------------------------------------------------- //
 // Operations: mirror `backend/app/services/memory_service.py`
 // --------------------------------------------------------------------------- //

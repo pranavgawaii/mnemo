@@ -11,14 +11,6 @@ export const CENTER = SIZE / 2;
  */
 export const TRACKS = [118, 180, 242] as const;
 
-export const IMPORTANCE_LABELS = [
-  "low",
-  "slight",
-  "neutral",
-  "high",
-  "critical",
-];
-
 /**
  * The field's motion. Every orbit turns (alternating direction, different
  * speeds) and a slow sweep crosses the stage, so the picture reads as a live

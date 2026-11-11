@@ -29,14 +29,3 @@ export function LogoMark({ className = "" }: { className?: string }) {
     </svg>
   );
 }
-
-export function Wordmark({ className = "" }: { className?: string }) {
-  return (
-    <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      <LogoMark className="h-[26px] w-[26px] text-ink" />
-      <span className="text-[21px] font-semibold tracking-tight text-ink">
-        Mnemo
-      </span>
-    </span>
-  );
-}

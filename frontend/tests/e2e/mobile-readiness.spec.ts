@@ -1,4 +1,4 @@
-import { chooseScenario, showResults } from "./helpers";
+import { chooseScenario } from "./helpers";
 import { expect, test } from "@playwright/test";
 import { MEMORY_SCENARIOS } from "../../src/lib/memory/scenarios";
 import { LIVE_SCENARIOS } from "../../src/lib/api/demo-scenarios";

@@ -1,4 +1,4 @@
-import { chooseScenario, showResults } from "./helpers";
+import { chooseScenario } from "./helpers";
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
