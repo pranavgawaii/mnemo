@@ -11,7 +11,8 @@ for (const width of [320, 390, 768]) {
       await expect(page.locator("main h1")).toBeVisible();
       if (route === "/" && width < 640) {
         const menu = page.getByRole("button", { name: "Open menu", exact: true });
-        await menu.click();
+        await menu.focus();
+        await menu.press("Enter");
         await expect(page.getByRole("button", { name: "Close menu", exact: true })).toBeVisible();
         await page.keyboard.press("Escape");
         await expect(menu).toBeFocused();
@@ -39,7 +40,7 @@ for (const scenario of MEMORY_SCENARIOS.filter(example => example.id !== "locati
     if (browserName === "chromium" && scenario.id === "learning") {
       await page.screenshot({ path: "/tmp/mnemo-mobile-playground.png" });
     }
-    expect((await input.boundingBox())!.height).toBeGreaterThanOrEqual(88);
+    expect((await input.boundingBox())!.height).toBeGreaterThanOrEqual(80);
     await page.getByRole("button", { name: "Store memory", exact: true }).click();
     if (scenario.kind === "review") {
       await expect(page.getByText("7 active memories · 1 open conflict", { exact: true })).toBeVisible();

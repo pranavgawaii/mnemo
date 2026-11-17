@@ -37,7 +37,7 @@ export default defineConfig({
     },
     {
       name: "firefox-mobile-layout",
-      testMatch: "**/mobile-readiness.spec.ts",
+      testMatch: ["**/mobile-readiness.spec.ts", "**/modern-web-guidance.spec.ts", "**/product-onboarding.spec.ts"],
       use: {
         ...devices["Desktop Firefox"],
         hasTouch: true,
@@ -46,7 +46,7 @@ export default defineConfig({
     },
     {
       name: "webkit-mobile",
-      testMatch: "**/mobile-readiness.spec.ts",
+      testMatch: ["**/mobile-readiness.spec.ts", "**/modern-web-guidance.spec.ts", "**/product-onboarding.spec.ts"],
       use: { ...devices["iPhone 13"] },
     },
   ],

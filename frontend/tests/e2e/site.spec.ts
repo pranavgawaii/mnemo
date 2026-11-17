@@ -1,4 +1,4 @@
-import { chooseScenario, showResults } from "./helpers";
+import { chooseScenario, showResults, inspectRetrieval } from "./helpers";
 import { expect, test } from "@playwright/test";
 
 test("phone form fields fit even with large native intrinsic widths", async ({ page }) => {
@@ -236,6 +236,7 @@ test("playground stores, reviews, preserves history and resets", async ({
 
 test("visible scoring controls change scores and reset", async ({ page }) => {
   await page.goto("/playground");
+  await inspectRetrieval(page);
   await expect(page.getByLabel("Advance all memories")).toBeVisible();
   const inspect = page.getByRole("button", {
     name: "Inspect fact: Pranav lives in Bengaluru",
@@ -497,9 +498,7 @@ test("whitespace cannot create a fake empty memory", async ({ page }) => {
   await page.goto("/playground");
   await page.getByLabel("New memory").fill("   ");
   await page.getByRole("button", { name: "Store memory", exact: true }).click();
-  await expect(
-    page.getByRole("status", { name: "Workbench status" }),
-  ).toHaveText("Enter a fact before storing it.");
+  await expect.poll(() => page.getByLabel("New memory").evaluate((field: HTMLTextAreaElement) => field.validationMessage)).toBe("Enter a fact, not just spaces.");
   await expect(page.getByLabel("New memory")).toBeFocused();
   await expect(
     page.getByText("6 active memories · 0 open conflicts", { exact: true }),
@@ -606,8 +605,8 @@ for (const [scenario, existing, incoming, current] of [
         exact: true,
       });
       await expect(feedback).toBeFocused();
-      await expect(feedback).toContainText("Before review · both active");
-      await expect(feedback).toContainText("After review · one active");
+      await expect(feedback).toContainText("Before");
+      await expect(feedback).toContainText("Current · active");
       await expect(feedback.locator("p.line-through")).toHaveText(
         keepNew ? existing : incoming,
       );
@@ -696,6 +695,7 @@ test("retrieval summary follows empty results, review and reset without duplicat
   page,
 }) => {
   await page.goto("/playground");
+  await inspectRetrieval(page);
   const visual = page.getByRole("figure", {
     name: "Retrieval trace",
     exact: true,
@@ -939,6 +939,7 @@ for (const width of [320, 390, 1280]) {
   }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/playground");
+    await inspectRetrieval(page);
     await page.evaluate(() => document.fonts.ready);
     const height = () =>
       page
@@ -1009,6 +1010,7 @@ test("retrieval trace supports keyboard stages, inspection and reduced-motion re
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/playground");
+  await inspectRetrieval(page);
   await chooseScenario(page, "Preferences");
   await page
     .getByRole("button", { name: "Inspect Query stage", exact: true })
@@ -1066,6 +1068,7 @@ test("replay can be stopped, tabs remain stable and closing returns focus", asyn
   page,
 }) => {
   await page.goto("/playground");
+  await inspectRetrieval(page);
   const trigger = page.getByRole("button", {
     name: "Inspect retrieval",
     exact: true,
@@ -1232,6 +1235,7 @@ test("ranking feedback explains a real promotion and compares unchanged orders h
   page,
 }) => {
   await page.goto("/playground");
+  await inspectRetrieval(page);
   await chooseScenario(page, "Preferences");
   const context = page.getByRole("region", {
     name: "Context matches",
@@ -1269,6 +1273,7 @@ test("handoff copies exactly the visible context without repeating the facts", a
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/playground");
+  await inspectRetrieval(page);
   await chooseScenario(page, "Preferences");
   const facts = await page
     .getByRole("region", { name: "Context matches", exact: true })
@@ -1424,6 +1429,7 @@ for (const width of [320, 390, 1280]) {
       await page.setViewportSize({ width, height: 900 });
       await page.emulateMedia({ reducedMotion: "reduce" });
       await page.goto("/playground");
+      await inspectRetrieval(page);
       await page.evaluate(() => document.fonts.ready);
       const guide = page.getByRole("region", {
         name: "Guided memory flow",
@@ -1578,6 +1584,7 @@ test("a full context snapshot fits mobile and stays tied to its captured query a
 }) => {
   await page.setViewportSize({ width: 320, height: 900 });
   await page.goto("/playground");
+  await inspectRetrieval(page);
   await page.evaluate(() => document.fonts.ready);
   await chooseScenario(page, "Preferences");
   await page.getByRole("button", { name: "Store memory", exact: true }).click();

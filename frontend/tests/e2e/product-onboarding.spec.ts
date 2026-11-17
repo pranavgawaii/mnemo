@@ -60,3 +60,52 @@ test("evaluation separates saved scopes and makes missed conflicts visible", asy
   expect(report.true_positive + report.false_negative).toBe(12);
   expect(report.false_negative).toBe(5);
 });
+
+for (const width of [320, 390, 1280]) {
+  test(`main journey stays focused and preserves review space at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/playground");
+    await page.evaluate(() => document.fonts.ready);
+    const guide = page.getByRole("region", { name: "Guided memory flow", exact: true });
+    await expect(guide).toContainText("Start with Search");
+    const tools = page.locator("#retrieval-tools");
+    await expect(tools).not.toHaveAttribute("open");
+    await expect(page.getByRole("region", { name: "Retrieval controls", exact: true })).not.toBeVisible();
+    const initial = await page.locator("#workbench").evaluate(el => el.getBoundingClientRect().height);
+    await page.getByRole("button", { name: "Search", exact: true }).click();
+    await expect(guide).toContainText("Next: store");
+    await page.getByRole("button", { name: "Store memory", exact: true }).click();
+    await expect(guide).toContainText("Next: compare both facts");
+    await page.getByRole("button", { name: "Keep new", exact: true }).click();
+    const change = page.getByRole("region", { name: "Review complete", exact: true });
+    await expect(change.locator("dl > div").first()).toContainText("Pranav lives in Bengaluru");
+    await expect(change.locator("dl > div").last()).toContainText("Pranav lives in Pune");
+    await expect(change).toContainText("Inactive history · excluded from recall");
+    const fits = await change.evaluate(el => el.getBoundingClientRect().bottom <= document.querySelector('#review button[aria-haspopup="dialog"]')!.getBoundingClientRect().top);
+    expect(fits).toBe(true);
+    await page.getByRole("button", { name: "Recall and compare", exact: true }).click();
+    await expect(page.getByRole("region", { name: "Context before and after review", exact: true })).toBeVisible();
+    expect(await page.locator("#workbench").evaluate(el => el.getBoundingClientRect().height)).toEqual(initial);
+    await tools.locator("summary").focus();
+    await tools.locator("summary").press("Enter");
+    await expect(page.getByRole("region", { name: "Retrieval controls", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "+90d", exact: true }).click();
+    await expect(page.getByLabel("Advance all memories")).toHaveValue("90");
+    await tools.locator("summary").press("Space");
+    await expect(tools).not.toHaveAttribute("open");
+  });
+}
+
+test("optional local API setup is disclosed after the successful quickstart", async ({ page }) => {
+  await page.goto("/docs#live-api-setup");
+  const setup = page.locator("#live-api-setup");
+  await expect(setup.getByRole("heading", { name: "Optional live API demo", exact: true })).toBeVisible();
+  await expect(setup.locator("pre").first()).not.toBeVisible();
+  const trigger = setup.locator("summary");
+  await trigger.focus();
+  await trigger.press("Enter");
+  await expect(setup.locator("pre").first()).toBeVisible();
+  await expect(setup).toContainText("MNEMO_DEMO_API_URL=http://127.0.0.1:8000");
+  await expect(setup).toContainText("server-only, never NEXT_PUBLIC_");
+});

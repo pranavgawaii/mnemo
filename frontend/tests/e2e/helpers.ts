@@ -11,3 +11,11 @@ export async function showResults(page: Page, panel: "Context" | "Review") {
   const tabs = page.getByRole("tablist", { name: "Memory results", exact: true });
   if (await tabs.isVisible()) await tabs.getByRole("tab", { name: panel === "Context" ? "Context" : /^Review/, exact: panel === "Context" }).click();
 }
+
+/** Secondary controls are deliberately opt-in in the default journey. */
+export async function inspectRetrieval(page: Page) {
+  const disclosure = page.locator("#retrieval-tools");
+  if ((await disclosure.getAttribute("open")) === null) {
+    await disclosure.locator("summary").click();
+  }
+}
