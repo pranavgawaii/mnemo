@@ -12,14 +12,12 @@ export default function GetStartedPage() {
   return (
     <>
       <DocsHeading title="Your first memory.">
-        Run Mnemo locally, send it a fact, then retrieve that fact through the
-        API. Your application supplies the memories; Mnemo stores and searches
-        them.
+        Start the API, store a fact and search for it. Your app supplies the facts; Mnemo keeps them between sessions.
       </DocsHeading>
       <DocsSection
         id="quickstart"
         title="1. Run the service"
-        intro="You need Git, Docker and Docker Compose. The API and PostgreSQL start together; database migrations run on boot."
+        intro="Requires Git and Docker Compose. One command starts the API, PostgreSQL and database migrations."
       >
         <CodeBlock label="Start Mnemo" code={START_SERVICE} />
         <p>
@@ -27,7 +25,7 @@ export default function GetStartedPage() {
           <code className="text-ink">curl http://localhost:8000/health</code>.
           The response is <code className="text-ink">{`{"status":"ok"}`}</code>.
           Docker loads and validates the local embedding model before serving
-          requests. The first image build downloads the model files.
+          requests. The first build downloads the model files.
         </p>
         <details className="rounded-xl border border-line bg-white px-5 py-4">
           <summary className="cursor-pointer text-[13px] font-medium text-ink">
@@ -58,40 +56,44 @@ export default function GetStartedPage() {
       <AgentIntegration />
       <DocsSection id="live-api-setup" title="Optional live API demo">
         <p>
-          Browser demo works immediately without a backend. To use real writes,
-          embeddings and database reads, run both the API and website on your
-          computer. No new hosting is needed; the public website cannot reach
-          your laptop’s localhost.
+          The browser simulation needs no backend. For real embeddings and database writes, run the API and website locally. The public website cannot reach your laptop’s localhost.
         </p>
-        <CodeBlock
-          label="Live demo configuration"
-          code={`# frontend/.env.local — server-only, never NEXT_PUBLIC_\nMNEMO_DEMO_API_URL=http://127.0.0.1:8000\nMNEMO_DEMO_API_KEY=your-api-key`}
-        />
-        <p>
-          First start the API using the quickstart. Set its key above, then run
-          the frontend commands below. If it is already running, restart it to
-          load the new environment. Open the local playground and choose Live
-          API; its availability badge checks the connection and key permissions.
-        </p>
-        <CodeBlock label="Start the local website" code={"# From the repository root, in a second terminal:\ncd frontend\npnpm install --frozen-lockfile\npnpm dev\n# Open http://localhost:3005/playground"} />
-        <p>
-          The key stays on the Next.js server. This walkthrough returns context;
-          it does not call a generation model. For automatic key setup, see the{" "}
-          <a href="https://github.com/pranavgawaii/mnemo/blob/main/docs/deployment.md#connect-the-live-api-walkthrough" className="text-accent-ink underline underline-offset-4">local deployment guide</a>.
-        </p>
-        <p>
-          Each run creates a separate namespace with synthetic facts that expire
-          after 15 minutes. Rows can remain in history. The server permits only
-          the fixed walkthrough, keeps the key private and signs the run’s
-          record IDs. For a public deployment, use a dedicated read/write key
-          with backend rate limiting enabled.
-        </p>
-        <a
-          href="/playground"
-          className="text-accent-ink underline underline-offset-4"
-        >
-          Open the playground
-        </a>
+        <details className="rounded-xl border border-line bg-white p-4 sm:p-5">
+          <summary className="cursor-pointer text-[13px] font-medium text-ink">
+            Set up the optional live walkthrough
+          </summary>
+          <div className="mt-4 space-y-4">
+            <CodeBlock
+              label="Live demo configuration"
+              code={`# frontend/.env.local — server-only, never NEXT_PUBLIC_\nMNEMO_DEMO_API_URL=http://127.0.0.1:8000\nMNEMO_DEMO_API_KEY=your-api-key`}
+            />
+            <p>
+              First start the API using the quickstart. Set its key above, then run
+              the frontend commands below. If it is already running, restart it to
+              load the new environment. Open the local playground and choose Live
+              API; its availability badge checks the connection and key permissions.
+            </p>
+            <CodeBlock label="Start the local website" code={"# From the repository root, in a second terminal:\ncd frontend\npnpm install --frozen-lockfile\npnpm dev\n# Open http://localhost:3005/playground"} />
+            <p>
+              The key stays on the Next.js server. This walkthrough returns context;
+              it does not call a generation model. For automatic key setup, see the{" "}
+              <a href="https://github.com/pranavgawaii/mnemo/blob/main/docs/deployment.md#connect-the-live-api-walkthrough" className="text-accent-ink underline underline-offset-4">local deployment guide</a>.
+            </p>
+            <p>
+              Each run creates a separate namespace with synthetic facts that expire
+              after 15 minutes. Rows can remain in history. The server permits only
+              the fixed walkthrough, keeps the key private and signs the run’s
+              record IDs. For a public deployment, use a dedicated read/write key
+              with backend rate limiting enabled.
+            </p>
+            <a
+              href="/playground"
+              className="text-accent-ink underline underline-offset-4"
+            >
+              Open the playground
+            </a>
+          </div>
+        </details>
       </DocsSection>
       <DocsSection id="troubleshooting" title="If something goes wrong">
         <div className="divide-y divide-line rounded-xl border border-line bg-white px-5">

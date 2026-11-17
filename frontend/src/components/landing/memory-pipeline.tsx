@@ -9,26 +9,26 @@ const STEPS = [
   {
     icon: Database,
     title: "Store the fact",
-    text: "Send a confirmed fact. Mnemo keeps its text and local embedding together in PostgreSQL.",
+    text: "Text and local embeddings live together in PostgreSQL.",
     detail: "One database · local embeddings",
   },
   {
     icon: ScanSearch,
     title: "Retrieve the context",
-    text: "Ask a question. Get matching facts and scores to pass to your agent as context.",
+    text: "Vector search finds candidates. Age, importance and optional keyword evidence shape the order.",
     detail: "Cosine candidates · explicit ranking policy",
   },
   {
     icon: GitCompareArrows,
     title: "Review the change",
-    text: "Review a possible conflict and choose what stays active. The other row remains inspectable.",
+    text: "Conflict records keep the decision explicit. Inactive facts remain inspectable.",
     detail: "Potential conflict · explicit resolution",
   },
 ];
 
 export function MemoryPipeline() {
   return (
-    <section id="how-it-works" className="relative scroll-mt-20 py-16 md:py-24">
+    <section id="how-it-works" className="relative scroll-mt-20 py-10 sm:py-16 md:py-24">
       <span
         id="features"
         className="absolute top-0 scroll-mt-20"
@@ -37,9 +37,9 @@ export function MemoryPipeline() {
       <div className="mx-auto max-w-frame px-6">
         <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
           <h2 className="max-w-[590px] text-balance text-[32px] font-medium leading-[1.15] tracking-[-0.03em] text-ink md:text-[40px]">
-            Store a fact. Recall it.
+            One database.
             <br />
-            Review what changes.
+            An inspectable retrieval path.
           </h2>
           <a
             href="/docs/concepts"
@@ -49,7 +49,7 @@ export function MemoryPipeline() {
             <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
           </a>
         </div>
-        <div className="mt-10 grid gap-8 md:grid-cols-3 md:gap-10">
+        <div className="mt-7 grid gap-6 sm:mt-10 sm:gap-8 md:grid-cols-3 md:gap-10">
           {STEPS.map((step, index) => (
             <div key={step.title} className="border-t border-line pt-6">
               <div className="flex items-center gap-3 text-accent-ink">

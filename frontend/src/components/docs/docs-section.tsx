@@ -15,7 +15,7 @@ export function DocsSection({
   return (
     <section
       id={id}
-      className="group/section mt-10 scroll-mt-24 border-t border-line pt-10"
+      className="group/section mt-7 scroll-mt-24 border-t border-line pt-7 sm:mt-10 sm:pt-10"
     >
       <div className="flex items-start gap-3">
         {index && (
@@ -43,7 +43,7 @@ export function DocsSection({
         </p>
       )}
 
-      <div className="mt-6 flex flex-col gap-5 text-[14px] [&>p]:max-w-[72ch] leading-[1.75] text-muted">
+      <div className="mt-4 flex flex-col gap-4 text-[14px] [&>p]:max-w-[72ch] leading-[1.75] text-muted sm:mt-6 sm:gap-5">
         {children}
       </div>
     </section>

@@ -19,7 +19,7 @@ export function QuickstartRequests() {
       <DocsSection
         id="first-memory"
         title="2. Store a fact"
-        intro="Use cURL with no client installation, or the typed Python SDK. Both examples call the same local API with its development key."
+        intro="Choose cURL or Python. Both call the local API with its development key."
       >
         <fieldset className="min-w-0">
           <legend className="mb-3 text-[12px] font-medium text-muted">
@@ -84,7 +84,7 @@ export function QuickstartRequests() {
       <DocsSection
         id="first-recall"
         title="3. Recall it"
-        intro="Search the same namespace with a question. Your application uses the returned facts as context when generating an answer."
+        intro="Ask a question in the same namespace. The response contains matching facts and their scores."
       >
         <CodeBlock
           key={`search-${language}`}
@@ -106,9 +106,7 @@ export function QuickstartRequests() {
           />
         </details>
         <p>
-          Read <code>hits</code> to inspect the returned memory, cosine
-          similarity, relevance score and age. Mnemo returns context; your
-          application decides how to use it.
+          A successful response includes your fact in <code>hits</code>. You now have the store–search loop working; connect an agent below when you are ready.
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           {[

@@ -61,9 +61,9 @@ export function AgentMemoryDemo() {
   return (
     <section
       id="agent-example"
-      className="scroll-mt-20 border-y border-line bg-white py-16 md:py-24"
+      className="scroll-mt-20 border-y border-line bg-white py-10 sm:py-16 md:py-24"
     >
-      <div className="mx-auto grid max-w-frame items-center gap-10 px-6 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+      <div className="mx-auto grid max-w-frame items-center gap-7 px-6 sm:gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
         <div>
           <p className="text-[12px] font-medium text-accent-ink">
             An agent, across sessions
@@ -74,8 +74,7 @@ export function AgentMemoryDemo() {
             The context stays.
           </h2>
           <p className="mt-5 max-w-[390px] text-[14px] leading-[1.8] text-muted">
-            Your app supplies confirmed facts. Follow one across sessions,
-            introduce a change and choose which fact stays active.
+            See how an agent recalls a saved fact in a later session, then reviews a change.
           </p>
           <AgentUseCases />
           <ol className="mt-7 space-y-3">
@@ -136,7 +135,7 @@ export function AgentMemoryDemo() {
             tabIndex={0}
             role="region"
             aria-label="Agent example state"
-            className="h-[360px] scroll-stable overflow-y-auto rounded-xl border border-line bg-white p-5 sm:h-[310px] sm:p-6"
+            className="h-[300px] scroll-stable overflow-y-auto rounded-xl border border-line bg-white p-5 sm:h-[310px] sm:p-6"
           >
             <p className="text-[12px] text-muted">
               {phase === 0

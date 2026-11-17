@@ -8,17 +8,17 @@ export function AgentIntegration() {
     <DocsSection
       id="agent-integration"
       title="4. Connect your agent"
-      intro="Start with the complete Python assistant. Your app supplies confirmed facts; Mnemo returns bounded, cited context across sessions."
+      intro="Once store and search work, use the Python assistant to pass cited facts to your model."
     >
       <ol className="grid gap-4 sm:grid-cols-3">
         {[
           [
             "Save confirmed facts",
-            "Call add_memory when the user confirms a fact, rather than saving every model reply.",
+            "Use add_memory for user-confirmed facts.",
           ],
           [
             "Retrieve for the question",
-            "Call client.context in the same namespace. It excludes disputed facts and returns citations with an exact character budget.",
+            "Use client.context for cited context within a character budget; disputed facts are excluded.",
           ],
           [
             "Generate with context",
@@ -37,10 +37,7 @@ export function AgentIntegration() {
         ))}
       </ol>
       <p>
-        Run the terminal assistant in evidence mode first. Remember a fact,
-        ask a question, store a change, then use <code>/review</code> and
-        <code>/keep</code> to choose the current fact. Reopen the same namespace
-        to check persistence.
+        Evidence mode works without a model. Save a fact, ask a question, then use <code>/review</code> and <code>/keep</code> after a change. Reopen the same namespace to check persistence.
       </p>
       <CodeBlock label="Run the Python assistant" code={ASSISTANT_SETUP} />
       <p>

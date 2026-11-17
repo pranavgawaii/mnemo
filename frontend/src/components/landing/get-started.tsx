@@ -7,16 +7,15 @@ export function GetStarted() {
   return (
     <section
       id="get-started"
-      className="scroll-mt-20 pb-10 pt-16 md:pb-14 md:pt-24"
+      className="scroll-mt-20 pb-8 pt-10 sm:pb-10 sm:pt-16 md:pb-14 md:pt-24"
     >
-      <div className="mx-auto grid max-w-frame items-start gap-10 px-6 lg:grid-cols-[0.75fr_1.25fr] lg:gap-16">
+      <div className="mx-auto grid max-w-frame items-start gap-7 px-6 sm:gap-10 lg:grid-cols-[0.75fr_1.25fr] lg:gap-16">
         <div>
           <h2 className="text-balance text-[32px] font-medium leading-[1.15] tracking-[-0.03em] text-ink md:text-[40px]">
             Start with one fact.
           </h2>
           <p className="mt-5 max-w-[370px] text-[14px] leading-[1.8] text-muted">
-            Run Mnemo locally and store a confirmed fact. Follow the guide to
-            retrieve it as context for your agent.
+            Run the API and PostgreSQL with Docker. Store and search your first fact with cURL or Python.
           </p>
           <a
             href="/docs#quickstart"

@@ -11,14 +11,14 @@ export function RetrievalEvidence() {
   return (
     <section
       id="evidence"
-      className="relative scroll-mt-20 border-y border-line bg-white py-16 md:py-24"
+      className="relative scroll-mt-20 border-y border-line bg-white py-10 sm:py-16 md:py-24"
     >
       <span
         id="principle"
         className="absolute top-0 scroll-mt-20"
         aria-hidden="true"
       />
-      <div className="mx-auto grid max-w-frame gap-10 px-6 lg:grid-cols-2 lg:gap-20">
+      <div className="mx-auto grid max-w-frame gap-7 px-6 sm:gap-10 lg:grid-cols-2 lg:gap-20">
         <div>
           <p className="text-[12px] font-medium text-accent-ink">
             Evidence, with context
@@ -27,8 +27,7 @@ export function RetrievalEvidence() {
             Results you can reproduce.
           </h2>
           <p className="mt-5 max-w-[440px] text-[14px] leading-[1.8] text-muted">
-            Three retrieval policies. 60 memories. 50 queries. Raw cosine wins
-            this local run; additional ranking signals did not improve it.
+            On 60 memories and 50 queries, raw cosine outperformed the two weighted policies in this local run.
           </p>
           <a
             href="/docs/evaluation"
@@ -46,10 +45,10 @@ export function RetrievalEvidence() {
               </caption>
               <thead className="bg-background">
                 <tr>
-                  <th className="px-5 py-3 font-medium text-muted">
+                  <th scope="col" className="px-5 py-3 font-medium text-muted">
                     Retrieval policy
                   </th>
-                  <th className="px-5 py-3 text-right font-medium text-muted">
+                  <th scope="col" className="px-5 py-3 text-right font-medium text-muted">
                     Top-1 accuracy
                   </th>
                 </tr>
@@ -59,11 +58,12 @@ export function RetrievalEvidence() {
                   .sort((a, b) => b.top1_accuracy - a.top1_accuracy)
                   .map((row) => (
                     <tr key={row.mode}>
-                      <td
-                        className={`px-5 py-4 ${row.mode === "cosine" ? "font-medium text-ink" : "text-muted"}`}
+                      <th
+                        scope="row"
+                        className={`px-5 py-4 ${row.mode === "cosine" ? "font-medium text-ink" : "font-normal text-muted"}`}
                       >
                         {LABELS[row.mode]}
-                      </td>
+                      </th>
                       <td className="px-5 py-4 text-right font-mono text-[12px] tabular-nums text-ink">
                         {(row.top1_accuracy * 100).toFixed(0)}%
                       </td>
