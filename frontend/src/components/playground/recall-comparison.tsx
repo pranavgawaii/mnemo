@@ -35,21 +35,21 @@ export function RecallComparison({
   return (
     <div role="region" aria-label="Context before and after review">
       <p className="mb-2 text-[11px] leading-4 text-muted">
-        Captured at review · current values shown after review ·{" "}
+        Snapshot at review ·{" "}
         {recall.mode === "relevance" ? "base relevance" : "similarity only"} · +
         {recall.timeOffset} days
       </p>
       <div className="grid grid-cols-2 gap-3">
         <section aria-label="Before review context" className="min-w-0">
           <h3 className="text-[12px] font-medium text-muted">
-            Before review{" "}
+            Before{" "}
             <span className="font-mono">({recall.before.length})</span>
           </h3>
           {facts(recall.before, true)}
         </section>
         <section aria-label="After review context" className="min-w-0">
           <h3 className="text-[12px] font-medium text-accent-ink">
-            After review{" "}
+            After{" "}
             <span className="font-mono">({recall.after.length})</span>
           </h3>
           {facts(recall.after, false)}

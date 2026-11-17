@@ -1,6 +1,7 @@
 "use client";
 
 import { RotateCcw } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { AdvancedControls } from "./advanced-controls";
 import { MemoryComposer } from "./memory-composer";
 import { RecallQuery } from "./recall-query";
@@ -14,9 +15,19 @@ import { JourneyGuide } from "./journey-guide";
 
 export function MemoryWorkbench() {
   const model = useWorkbench();
+  const retrieval = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const reveal = () => {
+      if (["#retrieval-trace", "#retrieval-tools"].includes(window.location.hash) && retrieval.current) retrieval.current.open = true;
+    };
+    reveal();
+    window.addEventListener("hashchange", reveal);
+    return () => window.removeEventListener("hashchange", reveal);
+  }, []);
   return (
     <section
       id="workbench"
+      tabIndex={-1}
       className="mx-auto w-full max-w-frame scroll-mt-24 px-4 pb-12 pt-4 sm:px-6"
     >
       <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-soft">
@@ -46,9 +57,14 @@ export function MemoryWorkbench() {
         </div>
         <JourneyGuide model={model} />
         <ResultPanels model={model} />
-        <RetrievalControls model={model} />
-        <RankingFeedback model={model} />
-        <RetrievalTrace key={model.resetVersion} model={model} />
+        <details ref={retrieval} id="retrieval-tools" className="scroll-mt-24 border-t border-line">
+          <summary className="cursor-pointer px-4 py-3 text-[13px] font-medium text-muted hover:text-accent-ink sm:px-6 sm:py-4">
+            Inspect retrieval &amp; ranking
+          </summary>
+          <RetrievalControls model={model} />
+          <RankingFeedback model={model} />
+          <RetrievalTrace key={model.resetVersion} model={model} />
+        </details>
       </div>
       <MemoryInspector model={model} />
       <AdvancedControls model={model} />

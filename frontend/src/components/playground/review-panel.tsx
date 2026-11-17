@@ -12,7 +12,7 @@ export function ReviewPanel({ model }: { model: WorkbenchModel }) {
     <section
       id="review"
       aria-labelledby="review-title"
-      className="flex h-[420px] min-w-0 scroll-mt-24 flex-col border-t border-line p-4 sm:h-[460px] sm:p-6 lg:h-[500px] lg:border-l"
+      className="flex h-[400px] min-w-0 scroll-mt-24 flex-col border-t border-line p-4 sm:h-[460px] sm:p-6 lg:h-[500px] lg:border-l"
     >
       <div className="shrink-0">
         <h2 id="review-title" className="text-[17px] font-medium text-ink">
@@ -32,7 +32,6 @@ export function ReviewPanel({ model }: { model: WorkbenchModel }) {
           <ChangeFeedback
             outcome={model.reviewOutcome}
             compact
-            summaryOnly={model.reviewVerified}
             onRecall={
               !model.reviewVerified && !model.openConflicts.length
                 ? model.verifyRecall

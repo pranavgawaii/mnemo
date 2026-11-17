@@ -57,7 +57,7 @@ export function ContextResults({ model }: { model: WorkbenchModel }) {
   return (
     <section
       aria-labelledby="context-title"
-      className="flex h-[420px] min-w-0 flex-col border-t border-line p-4 sm:h-[460px] sm:p-6 lg:h-[500px]"
+      className="flex h-[400px] min-w-0 flex-col border-t border-line p-4 sm:h-[460px] sm:p-6 lg:h-[500px]"
     >
       <div className="flex h-10 shrink-0 lg:h-11 items-start justify-between gap-3">
         <div>
@@ -110,7 +110,7 @@ export function ContextResults({ model }: { model: WorkbenchModel }) {
       <div
         role="region"
         aria-label="Context matches"
-        className="mt-2 h-[248px] shrink-0 lg:mt-3 lg:h-[262px]"
+        className="mt-2 h-[228px] shrink-0 sm:h-[248px] lg:mt-3 lg:h-[262px]"
       >
         {comparing && model.reviewOutcome ? (
           <RecallComparison

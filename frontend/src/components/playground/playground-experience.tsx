@@ -37,7 +37,7 @@ export function PlaygroundExperience() {
             </button>
           ))}
         </div>
-        <p aria-live="polite" className="flex h-[60px] items-center gap-2 text-[12px] sm:h-11 text-muted">
+        <p aria-live="polite" className="flex h-[52px] items-center gap-2 text-[12px] sm:h-11 text-muted">
           {checking ? "Checking local API availability…" : availability?.status === "available"
             ? "Live API connected. Browser demo works offline."
             : availability?.status === "unconfigured"
