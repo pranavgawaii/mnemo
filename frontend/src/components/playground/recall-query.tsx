@@ -10,6 +10,7 @@ export function RecallQuery({ model }: { model: WorkbenchModel }) {
         fact
       </h2>
       <form
+        aria-busy={!model.ready}
         aria-labelledby="wb-recall-heading"
         className="mt-3 flex gap-2 sm:mt-4"
         onSubmit={(event) => {
@@ -22,6 +23,7 @@ export function RecallQuery({ model }: { model: WorkbenchModel }) {
         </label>
         <input
           id="wb-query"
+          disabled={!model.ready}
           name="query"
           type="search"
           enterKeyHint="search"
@@ -45,6 +47,7 @@ export function RecallQuery({ model }: { model: WorkbenchModel }) {
         />
         <button
           type="submit"
+          disabled={!model.ready}
           className="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-ink px-3.5 text-[12px] font-medium text-white transition-colors hover:bg-[#27272A]"
         >
           Search{" "}
@@ -63,6 +66,7 @@ export function RecallQuery({ model }: { model: WorkbenchModel }) {
         <label htmlFor="sample-scenario" className="self-center text-[12px] text-muted">Sample scenario</label>
         <select
           id="sample-scenario"
+          disabled={!model.ready}
           value={model.scenario.id}
           onChange={(event) => {
             const selected = MEMORY_SCENARIOS.find(item => item.id === event.target.value);

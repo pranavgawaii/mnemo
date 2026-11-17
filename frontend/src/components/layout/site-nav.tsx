@@ -172,39 +172,38 @@ function GitHubLink() {
 /** A translucent, constant-height header with one clear navigation hierarchy. */
 export function SiteNav() {
   const [open, setOpen] = useState(false);
-  const [nativePopover, setNativePopover] = useState(false);
+  // Null keeps native controls in the server HTML, before hydration discovers
+  // whether this browser needs the manual fallback.
+  const [nativePopover, setNativePopover] = useState<boolean | null>(null);
   const menuId = useId();
   const menuButton = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
-  const wasNativePopover = useRef(false);
-
   useLayoutEffect(() => {
-    const upgrading = nativePopover && !wasNativePopover.current;
-    wasNativePopover.current = nativePopover;
-    // Preserve an early fallback opening when hydration upgrades to native UI.
-    // Transfer only once; reopening on every `open` update would defeat Escape.
-    if (upgrading && open && menu.current && !menu.current.matches(":popover-open")) menu.current.showPopover();
-  }, [nativePopover, open]);
+    const supported = "popover" in HTMLElement.prototype;
+    setNativePopover(supported);
+    // An early native opening must survive hydration, without being toggled again.
+    setOpen(supported && Boolean(menu.current?.matches(":popover-open")));
+  }, []);
 
   useEffect(() => {
-    setNativePopover("popover" in HTMLElement.prototype);
     const wide = window.matchMedia("(min-width: 768px)");
     const closeWhenWide = () => {
       if (!wide.matches) return;
       if ("popover" in HTMLElement.prototype && menu.current?.matches(":popover-open")) menu.current.hidePopover();
       setOpen(false);
     };
+    closeWhenWide();
     wide.addEventListener("change", closeWhenWide);
     return () => wide.removeEventListener("change", closeWhenWide);
   }, []);
 
   function closeMenu() {
-    if (nativePopover && menu.current?.matches(":popover-open")) menu.current.hidePopover();
+    if (nativePopover !== false && menu.current?.matches(":popover-open")) menu.current.hidePopover();
     setOpen(false);
   }
 
   useEffect(() => {
-    if (!open || nativePopover) return;
+    if (!open || nativePopover !== false) return;
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key !== "Escape") return;
       event.preventDefault();
@@ -245,10 +244,10 @@ export function SiteNav() {
             type="button"
             ref={menuButton}
             aria-label={open ? "Close menu" : "Open menu"}
-            aria-expanded={open}
+            aria-expanded={nativePopover === null ? undefined : open}
             aria-controls={menuId}
-            popoverTarget={nativePopover ? menuId : undefined}
-            onClick={() => { if (!nativePopover) setOpen((value) => !value); }}
+            popoverTarget={nativePopover !== false ? menuId : undefined}
+            onClick={() => { if (nativePopover === false) setOpen((value) => !value); }}
             className="-mr-2 grid h-11 w-11 place-items-center rounded-lg text-ink transition-colors hover:bg-black/[0.04] md:hidden"
           >
             <svg
@@ -270,10 +269,10 @@ export function SiteNav() {
         <div
           ref={menu}
           id={menuId}
-          popover={nativePopover ? "auto" : undefined}
-          hidden={!nativePopover && !open}
+          popover={nativePopover !== false ? "auto" : undefined}
+          hidden={nativePopover === false && !open}
           onToggle={(event) => {
-            if (nativePopover) setOpen(event.currentTarget.matches(":popover-open"));
+            if (nativePopover !== false) setOpen(event.currentTarget.matches(":popover-open"));
           }}
           className="site-mobile-menu fixed inset-auto left-0 top-16 m-0 max-h-[calc(100dvh-4rem)] w-full max-w-none overflow-y-auto border-t border-line bg-background px-6 py-5 text-ink md:hidden"
         >

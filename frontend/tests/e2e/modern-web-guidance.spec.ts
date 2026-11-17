@@ -70,6 +70,8 @@ test("mobile navigation keeps its keyboard fallback without Popover support", as
   await page.addInitScript(() => { Reflect.deleteProperty(HTMLElement.prototype, "popover"); });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
+  // Unsupported browsers need script to install the manual fallback.
+  await expect(page.locator(".site-mobile-menu")).not.toHaveAttribute("popover");
   const trigger = page.getByRole("button", { name: "Open menu", exact: true });
   await trigger.click();
   await page.locator("header").getByRole("link", { name: "Playground", exact: true }).filter({ visible: true }).focus();
@@ -205,4 +207,81 @@ test("landing benchmark exposes column and row headers", async ({ page }) => {
   const table = page.getByRole("table", { name: "Local in-sample retrieval benchmark", exact: true });
   await expect(table.getByRole("columnheader")).toHaveCount(2);
   await expect(table.getByRole("rowheader")).toHaveCount(3);
+});
+
+for (const width of [320, 390]) {
+  test(`mobile navigation works without JavaScript at ${width}px`, async ({ browser, baseURL }) => {
+    const context = await browser.newContext({ baseURL, javaScriptEnabled: false, viewport: { width, height: 844 } });
+    try {
+      const page = await context.newPage();
+      await page.goto("/");
+      const nav = page.getByRole("navigation", { name: "Primary", exact: true });
+      const trigger = nav.getByRole("button", { name: "Open menu", exact: true });
+      const playground = nav.getByRole("link", { name: "Playground", exact: true });
+      await expect(playground).not.toBeVisible();
+      await trigger.focus();
+      await trigger.press("Enter");
+      await expect(playground).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(playground).not.toBeVisible();
+      await expect(trigger).toBeFocused();
+    } finally {
+      await context.close();
+    }
+  });
+}
+
+test("an early native menu opening survives delayed hydration", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 844 });
+  let release!: () => void;
+  const scripts = new Promise<void>(resolve => { release = resolve; });
+  await page.route("**/_next/static/**/*.js", async route => {
+    await scripts;
+    await route.continue();
+  });
+  try {
+    await page.goto("/", { waitUntil: "commit" });
+    const nav = page.getByRole("navigation", { name: "Primary", exact: true });
+    const trigger = nav.getByRole("button", { name: "Open menu", exact: true });
+    const playground = nav.getByRole("link", { name: "Playground", exact: true });
+    await trigger.focus();
+    await trigger.press("Enter");
+    await expect(playground).toBeVisible();
+    release();
+    await expect(nav.getByRole("button", { name: "Close menu", exact: true })).toHaveAttribute("aria-expanded", "true");
+    await expect(playground).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(playground).not.toBeVisible();
+    await expect(trigger).toBeFocused();
+  } finally {
+    release();
+  }
+});
+
+test("playground waits for hydration before accepting facts", async ({ page }) => {
+  let release!: () => void;
+  const scripts = new Promise<void>(resolve => { release = resolve; });
+  await page.route("**/_next/static/**/*.js", async route => {
+    await scripts;
+    await route.continue();
+  });
+  try {
+    await page.goto("/playground", { waitUntil: "commit" });
+    const memory = page.getByLabel("New memory", { exact: true });
+    const query = page.getByLabel("Recall query", { exact: true });
+    await expect(memory).toBeDisabled();
+    await expect(query).toBeDisabled();
+    release();
+    await expect(memory).toBeEnabled();
+    await query.fill("Where does Pranav live?");
+    await memory.fill("   ");
+    await page.getByRole("button", { name: "Store memory", exact: true }).click();
+    await expect.poll(() => memory.evaluate((el: HTMLTextAreaElement) => el.validationMessage)).toContain("not just spaces");
+    await expect(page.getByText("6 active memories · 0 open conflicts", { exact: true })).toBeVisible();
+    await memory.fill("Pranav prefers short answers");
+    await page.getByRole("button", { name: "Store memory", exact: true }).click();
+    await expect(page.getByText("7 active memories · 0 open conflicts", { exact: true })).toBeVisible();
+  } finally {
+    release();
+  }
 });

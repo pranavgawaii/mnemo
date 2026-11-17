@@ -7,6 +7,7 @@ export function MemoryComposer({ model }: { model: WorkbenchModel }) {
         <span className="mr-2 text-[12px] text-accent-ink">2</span> Store a fact
       </h2>
       <form
+        aria-busy={!model.ready}
         aria-labelledby="wb-store-heading"
         onSubmit={(event) => {
           const field = event.currentTarget.elements.namedItem("memory") as HTMLTextAreaElement;
@@ -26,6 +27,7 @@ export function MemoryComposer({ model }: { model: WorkbenchModel }) {
         </label>
         <textarea
           id="wb-store"
+          disabled={!model.ready}
           name="memory"
           aria-describedby="wb-store-hint"
           autoComplete="off"
@@ -42,6 +44,7 @@ export function MemoryComposer({ model }: { model: WorkbenchModel }) {
         />
         <button
           type="submit"
+          disabled={!model.ready}
           className="h-11 shrink-0 rounded-lg border border-accent/20 bg-accent-soft px-3.5 text-[12px] font-medium text-accent-ink transition-colors hover:bg-[#E0E4FF]"
         >
           Store memory
@@ -49,6 +52,7 @@ export function MemoryComposer({ model }: { model: WorkbenchModel }) {
       </form>
       <button
         type="button"
+        disabled={!model.ready}
         onClick={model.tryConflict}
         className="mt-3 min-h-8 text-[12px] text-muted underline decoration-line underline-offset-4 transition-colors hover:text-accent-ink"
       >

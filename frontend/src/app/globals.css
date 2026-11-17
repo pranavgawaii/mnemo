@@ -6,6 +6,13 @@
 html.lenis, html.lenis body { height: auto; }
 html.lenis { scroll-behavior: auto; }
 
+/* Native menus work before hydration; unsupported browsers stay closed until
+   the feature check removes `popover` and enables the manual fallback. */
+.site-mobile-menu[popover] { display: none; }
+@media (max-width: 767px) {
+  .site-mobile-menu[popover]:popover-open { display: block; }
+}
+
 .architecture-panel { container-type: inline-size; }
 
 /* Keep editable boundaries distinguishable; focused fields retain their accent. */

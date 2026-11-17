@@ -36,6 +36,8 @@ export const AGE_PRESETS = [
 ] as const;
 
 export function useWorkbench() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
   const {
     store,
     openContradictions: openConflicts,
@@ -415,6 +417,7 @@ export function useWorkbench() {
     setNotice("Playground reset to six sample memories.");
   }
   return {
+    ready,
     store,
     query,
     setQuery,
