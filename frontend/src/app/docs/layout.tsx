@@ -21,9 +21,9 @@ export default function DocsLayout({
       <SiteNav />
       <DocsProgress />
       <LegacyDocLinks />
-      <main id="main" className="relative w-full flex-1">
+      <main id="main" tabIndex={-1} className="relative w-full flex-1">
         <div className="mx-auto max-w-frame px-6 pb-12 pt-24 sm:pb-16 lg:pt-28">
-          <div className="grid items-start gap-9 lg:grid-cols-[204px_minmax(0,1fr)] xl:gap-16">
+          <div className="grid items-start gap-6 sm:gap-9 lg:grid-cols-[204px_minmax(0,1fr)] xl:gap-16">
             <DocsToc />
             <article className="min-w-0">
               {children}

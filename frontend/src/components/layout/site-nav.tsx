@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { LogoMark } from "@/components/layout/logo";
 import { usePathname } from "next/navigation";
 import { NAV_CTA, NAV_LINKS, type NavLink } from "@/lib/site";
+import { MotionToggle } from "./motion-toggle";
 
 const linkClass =
   "link-underline w-fit text-[13.5px] font-medium text-muted hover:text-accent";
@@ -38,8 +39,11 @@ const ctaArrowClass =
   "h-[11px] w-[11px] shrink-0 text-white/70 transition-[transform,color] duration-300 ease-[cubic-bezier(.16,1,.3,1)] group-hover:translate-x-[2.5px] group-hover:text-white motion-reduce:transition-none motion-reduce:group-hover:translate-x-0";
 
 function NavCta({ onClick }: { onClick?: () => void }) {
+  const pathname = usePathname();
+  const current = pathname === NAV_CTA.href ? "page" : pathname.startsWith(`${NAV_CTA.href}/`) ? "location" : undefined;
   return (
-    <a href={NAV_CTA.href} onClick={onClick} className={ctaClass}>
+    <a href={NAV_CTA.href} onClick={onClick} aria-current={current}
+      className={`${ctaClass} ${current ? "underline decoration-white/70 underline-offset-4" : ""}`}>
       <span className={ctaContentClass}>
         <svg
           className={ctaIconClass}
@@ -168,20 +172,55 @@ function GitHubLink() {
 /** A translucent, constant-height header with one clear navigation hierarchy. */
 export function SiteNav() {
   const [open, setOpen] = useState(false);
+  const [nativePopover, setNativePopover] = useState(false);
   const menuId = useId();
   const menuButton = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
+  const wasNativePopover = useRef(false);
+
+  useLayoutEffect(() => {
+    const upgrading = nativePopover && !wasNativePopover.current;
+    wasNativePopover.current = nativePopover;
+    // Preserve an early fallback opening when hydration upgrades to native UI.
+    // Transfer only once; reopening on every `open` update would defeat Escape.
+    if (upgrading && open && menu.current && !menu.current.matches(":popover-open")) menu.current.showPopover();
+  }, [nativePopover, open]);
 
   useEffect(() => {
-    if (!open) return;
+    setNativePopover("popover" in HTMLElement.prototype);
+    const wide = window.matchMedia("(min-width: 768px)");
+    const closeWhenWide = () => {
+      if (!wide.matches) return;
+      if ("popover" in HTMLElement.prototype && menu.current?.matches(":popover-open")) menu.current.hidePopover();
+      setOpen(false);
+    };
+    wide.addEventListener("change", closeWhenWide);
+    return () => wide.removeEventListener("change", closeWhenWide);
+  }, []);
+
+  function closeMenu() {
+    if (nativePopover && menu.current?.matches(":popover-open")) menu.current.hidePopover();
+    setOpen(false);
+  }
+
+  useEffect(() => {
+    if (!open || nativePopover) return;
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key !== "Escape") return;
       event.preventDefault();
       setOpen(false);
       menuButton.current?.focus();
     }
+    function closeOnOutsidePress(event: PointerEvent) {
+      if (event.target instanceof Node && !menu.current?.contains(event.target) && !menuButton.current?.contains(event.target)) setOpen(false);
+    }
     document.addEventListener("keydown", closeOnEscape);
-    return () => document.removeEventListener("keydown", closeOnEscape);
-  }, [open]);
+    document.addEventListener("pointerdown", closeOnOutsidePress);
+    return () => {
+      document.removeEventListener("keydown", closeOnEscape);
+      document.removeEventListener("pointerdown", closeOnOutsidePress);
+    };
+  }, [open, nativePopover]);
 
   return (
     <header className="site-header fixed inset-x-0 top-0 z-50 border-b border-black/[0.07]">
@@ -199,15 +238,17 @@ export function SiteNav() {
           <div className="hidden items-center gap-4 md:flex">
             <NavItem link={NAV_LINKS[0]} />
             <GitHubLink />
+            <MotionToggle />
           </div>
-          <NavCta onClick={() => setOpen(false)} />
+          <NavCta onClick={closeMenu} />
           <button
             type="button"
             ref={menuButton}
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             aria-controls={menuId}
-            onClick={() => setOpen((value) => !value)}
+            popoverTarget={nativePopover ? menuId : undefined}
+            onClick={() => { if (!nativePopover) setOpen((value) => !value); }}
             className="-mr-2 grid h-11 w-11 place-items-center rounded-lg text-ink transition-colors hover:bg-black/[0.04] md:hidden"
           >
             <svg
@@ -226,23 +267,28 @@ export function SiteNav() {
             </svg>
           </button>
         </div>
-      </nav>
-      {open && (
         <div
+          ref={menu}
           id={menuId}
-          className="border-t border-line bg-background px-6 py-5 md:hidden"
+          popover={nativePopover ? "auto" : undefined}
+          hidden={!nativePopover && !open}
+          onToggle={(event) => {
+            if (nativePopover) setOpen(event.currentTarget.matches(":popover-open"));
+          }}
+          className="site-mobile-menu fixed inset-auto left-0 top-16 m-0 max-h-[calc(100dvh-4rem)] w-full max-w-none overflow-y-auto border-t border-line bg-background px-6 py-5 text-ink md:hidden"
         >
           <div className="flex flex-col gap-5">
             {NAV_LINKS.map((link) => (
               <NavItem
                 key={link.href}
                 link={link}
-                onClick={() => setOpen(false)}
+                onClick={closeMenu}
               />
             ))}
+            <MotionToggle showText />
           </div>
         </div>
-      )}
+      </nav>
     </header>
   );
 }

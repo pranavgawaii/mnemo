@@ -20,7 +20,7 @@ export default function LandingPage() {
 
       <SiteNav />
 
-      <main id="main" className="flex-1 w-full relative z-10">
+      <main id="main" tabIndex={-1} className="flex-1 w-full relative z-10">
         <Hero />
         <AgentMemoryDemo />
         <MemoryPipeline />

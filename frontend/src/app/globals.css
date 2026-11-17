@@ -7,6 +7,11 @@ html.lenis, html.lenis body { height: auto; }
 html.lenis { scroll-behavior: auto; }
 
 .architecture-panel { container-type: inline-size; }
+
+/* Keep editable boundaries distinguishable; focused fields retain their accent. */
+:where(input:not([type="range"]):not([type="checkbox"]):not([type="radio"]), textarea, select):not(:focus) {
+  border-color: #8b8b96;
+}
 .architecture-map { display: none; }
 .architecture-mobile { display: block; }
 @container (min-width: 760px) {
@@ -15,7 +20,8 @@ html.lenis { scroll-behavior: auto; }
 }
 
 @layer base {
-  html:has(.mnemo-dialog[open]) { overflow: hidden; }
+  .mnemo-dialog:modal { overscroll-behavior: contain; }
+  .mnemo-dialog::backdrop { overflow: hidden; overscroll-behavior: contain; }
   .mnemo-dialog { height: min(820px, calc(100dvh - 2rem)); max-height: calc(100dvh - 2rem); }
   .code-highlight .hljs-keyword,
   .code-highlight .hljs-literal,
@@ -205,9 +211,15 @@ html.lenis { scroll-behavior: auto; }
   }
 
   .link-underline:hover,
-  .link-underline:focus-visible {
+  .link-underline:focus-visible,
+  .link-underline[aria-current="page"] {
     background-size: 100% 1px;
   }
+}
+
+/* Pause decorative loops without freezing loading indicators or UI feedback. */
+html[data-motion-paused="true"] :is(.hxo-spin, .hxo-spin-rev, .hxo-dot, .hxo-drift, .wb-ring, .wb-ring-rev, .wb-sweep, .wb-core, .animate-pulse, .animate-ping, .animate-marquee) {
+  animation-play-state: paused !important;
 }
 
 @keyframes fadeUp {

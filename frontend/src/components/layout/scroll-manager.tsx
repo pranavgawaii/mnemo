@@ -56,7 +56,22 @@ export function ScrollManager() {
 
       event.preventDefault();
       const url = new URL(href, window.location.href);
-      window.history.pushState(null, "", url.hash);
+      if (window.location.hash !== url.hash) window.history.pushState(null, "", url.hash);
+      {
+        // Preserve native fragment focus semantics across pointer and keyboard activation.
+        let fragment = url.hash.slice(1);
+        try { fragment = decodeURIComponent(fragment); } catch { /* Match scrollToHash's malformed-hash fallback. */ }
+        const target = document.getElementById(fragment);
+        const destination = target?.tagName === "MAIN" ? target.querySelector<HTMLElement>("h1") ?? target : target;
+        if (destination instanceof HTMLElement) {
+          const temporary = !destination.hasAttribute("tabindex") && destination.tabIndex < 0;
+          if (temporary) {
+            destination.setAttribute("tabindex", "-1");
+            destination.addEventListener("blur", () => destination.removeAttribute("tabindex"), { once: true });
+          }
+          destination.focus({ preventScroll: true });
+        }
+      }
     }
 
     document.addEventListener("click", onClick);
@@ -75,13 +90,14 @@ export function ScrollManager() {
     let tries = 0;
     let lastTop: number | null = null;
     let stableFrames = 0;
+    let disposed = false;
 
     // A final correction once the display face has swapped in: it changes the
     // height of everything below it, so the position we computed at first paint
     // can go stale.
     if (document.fonts) {
       document.fonts.ready.then(
-        () => scrollToHash(hash),
+        () => { if (!disposed) scrollToHash(hash); },
         () => {},
       );
     }
@@ -119,7 +135,7 @@ export function ScrollManager() {
     };
 
     raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
+    return () => { disposed = true; cancelAnimationFrame(raf); };
   }, [pathname]);
 
   // (3) Hash changes we did not intercept (back/forward, edited URL).
