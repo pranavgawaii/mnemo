@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type PointerEvent, type ReactNode } from "react";
 import { X } from "lucide-react";
 
 /** Native modal: one reading surface, with browser focus containment and Escape. */
@@ -22,24 +22,34 @@ export function ExpandedView({
   contentKey?: string | number;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const close = useRef<HTMLButtonElement>(null);
+  const pressedOutside = useRef(false);
   const id = useId();
   useEffect(() => {
     const element = dialog.current;
     if (!element || !open) return;
+    element.setAttribute("closedby", "any");
     element.showModal();
-    close.current?.focus({ preventScroll: true });
     return () => element.close();
   }, [open]);
+  function outside(event: PointerEvent<HTMLDialogElement>) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    return event.clientX < bounds.left || event.clientX > bounds.right ||
+      event.clientY < bounds.top || event.clientY > bounds.bottom;
+  }
   return (
     <dialog
       ref={dialog}
       aria-labelledby={`${id}-title`}
       aria-describedby={description ? `${id}-description` : undefined}
       onClose={onClose}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
+      onPointerDown={(event) => {
+        if (!("closedBy" in HTMLDialogElement.prototype)) pressedOutside.current = outside(event);
       }}
+      onPointerUp={(event) => {
+        if (!("closedBy" in HTMLDialogElement.prototype) && pressedOutside.current && outside(event)) event.currentTarget.close();
+        pressedOutside.current = false;
+      }}
+      onPointerCancel={() => { pressedOutside.current = false; }}
       data-lenis-prevent
       className="mnemo-dialog fixed inset-0 m-auto w-[calc(100%-1.5rem)] max-w-6xl overflow-hidden rounded-2xl border border-line bg-white p-0 text-ink shadow-xl backdrop:bg-ink/35 backdrop:backdrop-blur-sm sm:w-[calc(100%-3rem)]"
     >
@@ -60,7 +70,7 @@ export function ExpandedView({
               )}
             </div>
             <button
-              ref={close}
+              autoFocus
               type="button"
               aria-label={`Close ${title}`}
               onClick={onClose}

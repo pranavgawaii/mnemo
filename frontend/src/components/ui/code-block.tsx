@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Check, Copy } from "lucide-react";
+import { useClipboard } from "@/hooks/use-clipboard";
+import { CopyFeedback } from "./copy-feedback";
 import {
   codeLanguage,
   highlightCode,
@@ -19,41 +21,31 @@ export function CodeBlock({
   reserveCode?: readonly string[];
   language?: CodeLanguage;
 }) {
-  const [message, setMessage] = useState("");
+  const { copy, copied, message } = useClipboard(code);
   const syntax = language ?? codeLanguage(code);
   const highlighted = useMemo(
     () => highlightCode(code, syntax),
     [code, syntax],
   );
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(code);
-      setMessage("Copied");
-    } catch {
-      setMessage("Select the code to copy it.");
-    }
-  }
   return (
     <div className="min-w-0 overflow-hidden rounded-xl border border-line bg-white">
       <div className="flex items-center justify-between gap-3 border-b border-hairline px-4 py-2.5 text-[12px] text-muted">
         <span className="min-w-0 break-words">{label}</span>
-        <div className="flex items-center gap-3">
-          <span className="sr-only" role="status" aria-live="polite">
-            {message}
-          </span>
+        <div className="relative flex items-center gap-3">
           <button
             type="button"
             onClick={copy}
             aria-label={`Copy ${label}`}
             className="inline-flex min-h-9 w-[76px] shrink-0 items-center justify-center gap-1.5 rounded-md px-2.5 text-ink transition-colors hover:bg-background"
           >
-            {message === "Copied" ? (
+            {copied ? (
               <Check aria-hidden="true" className="h-3.5 w-3.5" />
             ) : (
               <Copy aria-hidden="true" className="h-3.5 w-3.5" />
             )}{" "}
-            {message === "Copied" ? "Copied" : "Copy"}
+            Copy
           </button>
+          <CopyFeedback message={message} />
         </div>
       </div>
       <div className="grid min-w-0">

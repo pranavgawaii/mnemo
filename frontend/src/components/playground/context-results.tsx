@@ -4,6 +4,8 @@ import type { WorkbenchModel } from "./use-workbench";
 import { DEMO_MATCH_THRESHOLD, recallMatches } from "./recall-matches";
 import { RecallComparison } from "./recall-comparison";
 import { currentStatement } from "@/lib/memory/changes";
+import { useClipboard } from "@/hooks/use-clipboard";
+import { CopyFeedback } from "@/components/ui/copy-feedback";
 
 export function CopyContext({
   model,
@@ -15,28 +17,14 @@ export function CopyContext({
   const context = recallMatches(model.ranked)
     .map((row) => currentStatement(row.memory.content) ?? row.memory.content)
     .join("\n");
-  const [copied, setCopied] = useState(false);
-  const [error, setError] = useState("");
-  useEffect(() => {
-    setCopied(false);
-    setError("");
-  }, [context]);
+  const { copy, copied, message } = useClipboard(context);
   return (
-    <span className="inline-flex shrink-0 items-center gap-2">
+    <span className="relative inline-flex shrink-0 items-center gap-2">
       <button
         type="button"
         aria-label="Copy recalled context"
-        title="Copy recalled context"
         disabled={!context}
-        onClick={async () => {
-          try {
-            await navigator.clipboard.writeText(context);
-            setCopied(true);
-            setError("");
-          } catch {
-            setError("Copy unavailable. Select a fact to read its full text.");
-          }
-        }}
+        onClick={copy}
         className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-line bg-white text-[13px] text-muted transition-colors hover:text-ink disabled:opacity-40 ${text ? "px-3" : "w-10"}`}
       >
         {copied ? (
@@ -44,11 +32,9 @@ export function CopyContext({
         ) : (
           <Copy aria-hidden="true" className="h-4 w-4" />
         )}
-        {text && (copied ? "Copied" : "Copy context")}
+        {text && "Copy recalled context"}
       </button>
-      <span role="status" className="sr-only">
-        {copied ? "Recalled context copied." : error}
-      </span>
+      <CopyFeedback message={message} />
     </span>
   );
 }
