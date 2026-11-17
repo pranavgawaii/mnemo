@@ -29,8 +29,10 @@ export const FIELD_CSS = `
 .wb-sweep { transform-origin: center; animation: wb-sweep 34s linear infinite; }
 .wb-core { transform-box: view-box; transform-origin: center; animation: wb-core 6.5s ease-in-out infinite; }
 .wb-label { display: none; }
+.memory-map-node { transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1); }
 @media (min-width: 640px) { .wb-label { display: inline; } }
 @media (prefers-reduced-motion: reduce) {
+  .memory-map-node { transition: none; }
   .wb-ring, .wb-ring-rev, .wb-sweep, .wb-core { animation: none; }
 }
 `;

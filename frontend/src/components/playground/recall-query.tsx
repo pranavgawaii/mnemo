@@ -5,11 +5,12 @@ import type { WorkbenchModel } from "./use-workbench";
 export function RecallQuery({ model }: { model: WorkbenchModel }) {
   return (
     <div className="min-w-0">
-      <h2 className="text-[16px] font-medium text-ink">
+      <h2 id="wb-recall-heading" className="text-[16px] font-medium text-ink">
         <span className="mr-2 text-[12px] text-accent-ink">1</span> Recall a
         fact
       </h2>
       <form
+        aria-labelledby="wb-recall-heading"
         className="mt-3 flex gap-2 sm:mt-4"
         onSubmit={(event) => {
           event.preventDefault();
@@ -22,10 +23,23 @@ export function RecallQuery({ model }: { model: WorkbenchModel }) {
         <input
           id="wb-query"
           name="query"
+          type="search"
+          enterKeyHint="search"
+          aria-describedby="wb-recall-hint"
           autoComplete="off"
           required
+          pattern=".*\S.*"
+          onInvalid={(event) => {
+            if (event.currentTarget.value && !event.currentTarget.value.trim()) {
+              event.currentTarget.setCustomValidity("Enter a question, not just spaces.");
+            }
+            event.currentTarget.focus();
+          }}
           value={model.query}
-          onChange={(event) => model.setQuery(event.target.value)}
+          onChange={(event) => {
+            event.target.setCustomValidity("");
+            model.setQuery(event.target.value);
+          }}
           placeholder="Where does Pranav live?…"
           className="h-11 min-w-0 flex-1 rounded-lg border border-line bg-white px-3 text-[16px] sm:text-[13px] text-ink placeholder:text-faint focus:border-accent"
         />
@@ -60,7 +74,7 @@ export function RecallQuery({ model }: { model: WorkbenchModel }) {
         </select>
 
       </div>
-      <p className="mt-1 h-9 text-[12px] leading-[18px] text-muted sm:mt-2">
+      <p id="wb-recall-hint" className="mt-1 min-h-9 text-[12px] leading-[18px] text-muted sm:mt-2">
         {model.scenario.hint}
       </p>
     </div>

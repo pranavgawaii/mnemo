@@ -44,15 +44,9 @@ export function Field({
     return map;
   }, [ranked]);
 
-  const drawOrder = useMemo(() => {
-    return [...ranked].sort((a, b) => {
-      const aHot =
-        a.memory.id === selectedId || a.memory.id === hoverId ? 1 : 0;
-      const bHot =
-        b.memory.id === selectedId || b.memory.id === hoverId ? 1 : 0;
-      return aHot - bHot;
-    });
-  }, [ranked, selectedId, hoverId]);
+  // Raising the hovered/focused node reordered the DOM and dropped SVG focus.
+  // Preserve the ranked reading and Tab order while its highlight changes.
+  const drawOrder = ranked;
 
   const hoverRow = rows.find((row) => row.memory.id === hoverId) ?? null;
   const hoverPosition = hoverRow ? positions.get(hoverRow.memory.id) : null;
@@ -383,6 +377,7 @@ export function Field({
           return (
             <g
               key={row.memory.id}
+              className="memory-map-node"
               role="button"
               tabIndex={0}
               aria-label={`Rank ${rank}. ${row.memory.content}. Relevance ${row.relevance.toFixed(3)}.`}
@@ -393,16 +388,21 @@ export function Field({
               onBlur={() => onHover(null)}
               onClick={() => onSelect(row.memory.id)}
               onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  onSelect(row.memory.id);
+                }
+                if (event.key === " ") event.preventDefault();
+              }}
+              onKeyUp={(event) => {
+                if (event.key === " ") {
                   event.preventDefault();
                   onSelect(row.memory.id);
                 }
               }}
               style={{
                 transform: `translate(${position.x}px, ${position.y}px)`,
-                transition: "transform 520ms cubic-bezier(0.22, 1, 0.36, 1)",
                 cursor: "pointer",
-                outline: "none",
                 opacity: selected || hovered ? 1 : 0.72 + freshness * 0.28,
               }}
             >
