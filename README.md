@@ -231,6 +231,3 @@ not model token counts, and retrieval evidence does not verify a fact's truth.
 <p align="center">
 <a href="LICENSE">MIT license</a> · Built by <a href="https://pranavx.in">Pranav Gawai</a>
 </p>
-
-<!-- Temporary Off Campus ownership verification; remove after verification. -->
-Off Campus verification code: **ZBEGEP**
